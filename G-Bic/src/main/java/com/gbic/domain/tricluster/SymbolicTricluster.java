@@ -217,8 +217,6 @@ public class SymbolicTricluster extends Tricluster {
 		Set<Integer> rows = template.getRows();
 		Set<Integer> columns = template.getColumns();
 		
-		StringBuilder res = new StringBuilder();
-		
 		tricluster.put("#rows", rows.size());
 		tricluster.put("#columns", columns.size());
 		tricluster.put("#contexts", contexts.size());
