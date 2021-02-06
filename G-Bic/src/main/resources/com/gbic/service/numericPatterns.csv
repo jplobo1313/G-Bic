@@ -1,0 +1,24 @@
+Order Preserving,None,None,op_n_n
+None,Order Preserving,None,n_op_n
+None,None,Order Preserving,n_n_op
+Constant,Constant,Constant,c_c_c
+None,Constant,Constant,n_c_c
+Constant,Constant,None,c_c_n
+Constant,None,Constant,c_n_c
+Constant,None,None,c_n_n
+None,Constant,None,n_c_n
+None,None,Constant,n_n_c
+Additive,Additive,Additive,a_a_a
+Additive,Additive,Constant,a_a_c
+Constant,Additive,Additive,c_a_a
+Additive,Constant,Additive,a_c_a
+Additive,Constant,Constant,a_c_c
+Constant,Additive,Constant,c_a_c
+Constant,Constant,Additive,c_c_a
+Multiplicative,Multiplicative,Multiplicative,m_m_m
+Multiplicative,Multiplicative,Constant,m_m_c
+Constant,Multiplicative,Multiplicative,c_m_m
+Multiplicative,Constant,Multiplicative,m_c_m
+Multiplicative,Constant,Constant,m_c_c
+Constant,Multiplicative,Constant,c_m_c
+Constant,Constant,Multiplicative,c_c_m

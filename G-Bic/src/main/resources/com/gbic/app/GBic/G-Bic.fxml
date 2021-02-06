@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gbic.app.GBic.controllers.MenuPrincipalController">
+   <children>
+      <VBox layoutX="155.0" layoutY="40.0" prefHeight="479.0" prefWidth="660.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <TabPane prefHeight="802.0" prefWidth="1500.0" style="-fx-tab-min-width: 165px; -fx-tab-min-height: 30px;" tabClosingPolicy="UNAVAILABLE">
+              <tabs>
+                <Tab style="-fx-font-size: 16;" text="Dataset Properties">
+                  <content>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="696.0" prefWidth="1300.0">
+                           <children>
+                              <GridPane layoutX="42.0" layoutY="44.0" prefHeight="405.0" prefWidth="1229.0">
+                                <columnConstraints>
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="260.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="544.0" minWidth="10.0" prefWidth="156.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="544.0" minWidth="10.0" prefWidth="118.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="544.0" minWidth="10.0" prefWidth="163.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="736.0" minWidth="0.0" prefWidth="192.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="583.0" minWidth="10.0" prefWidth="106.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="602.0" minWidth="10.0" prefWidth="133.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="583.0" minWidth="10.0" prefWidth="99.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                  <RowConstraints maxHeight="64.0" minHeight="10.0" prefHeight="64.0" vgrow="SOMETIMES" />
+                                  <RowConstraints maxHeight="82.0" minHeight="10.0" prefHeight="82.0" vgrow="SOMETIMES" />
+                                  <RowConstraints maxHeight="79.0" minHeight="10.0" prefHeight="73.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="69.0" minHeight="10.0" prefHeight="63.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="92.0" minHeight="7.0" prefHeight="75.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="196.0" minHeight="10.0" prefHeight="47.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                 <children>
+                                    <TextField fx:id="numRowsTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="1">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <Label text="Number of Rows:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <Label text="Number of Columns:" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <Label text="Number of Contexts:" GridPane.rowIndex="2">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <TextField fx:id="numColumnsTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="numContextsTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <Label fx:id="dataTypeLB" text="Data type: " GridPane.columnIndex="2" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <Label fx:id="minValueLB" text="Min value:" GridPane.columnIndex="4" GridPane.rowIndex="4">
+                                       <padding>
+                                          <Insets left="90.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <Label fx:id="maxValueLB" text="Max value:" GridPane.columnIndex="6" GridPane.rowIndex="4">
+                                       <padding>
+                                          <Insets left="30.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <Label text="Background type: " GridPane.rowIndex="5">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <TextField fx:id="minValueTF" prefHeight="27.0" prefWidth="345.0" promptText="-10" GridPane.columnIndex="5" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="maxValueTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="7" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <ComboBox fx:id="dataTypeCB" editable="true" onAction="#dataTypeSelecionado" prefHeight="32.0" prefWidth="163.0" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                                    <ComboBox fx:id="backgroundTypeCB" editable="true" onAction="#backgroundTypeSelecionado" prefHeight="32.0" prefWidth="163.0" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                    <Label text="Dataset Type:" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <RadioButton fx:id="symbolicTypeRB" mnemonicParsing="false" onAction="#symbolicTypeSelected" text="Symbolic" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                       <toggleGroup>
+                                          <ToggleGroup fx:id="datasetTypeGroup" />
+                                       </toggleGroup>
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </RadioButton>
+                                    <RadioButton fx:id="numericTypeRB" mnemonicParsing="false" onAction="#numericTypeSelected" text="Numeric" toggleGroup="$datasetTypeGroup" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></RadioButton>
+                                    <Label fx:id="symbolTypeLB" text="Symbol Type:" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <ComboBox fx:id="symbolTypeCB" editable="true" minHeight="-Infinity" minWidth="-Infinity" onAction="#symbolTypeSelected" prefHeight="32.0" prefWidth="163.0" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="3">
+                                       <styleClass>
+                                          <String fx:value="combo-box-base" />
+                                          <String fx:value="text" />
+                                       </styleClass></ComboBox>
+                                    <Label fx:id="symbolTypeParamLB" text="Number of symbols:" GridPane.columnIndex="4" GridPane.rowIndex="3">
+                                       <padding>
+                                          <Insets left="30.0" />
+                                       </padding>
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="symbolTypeParamTF" GridPane.columnIndex="5" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <Pane fx:id="discreteProbsPane" prefHeight="272.0" prefWidth="283.0" GridPane.columnIndex="3" GridPane.rowIndex="5">
+                                       <children>
+                                          <TableView fx:id="discreteProbsTV" layoutY="32.0" prefHeight="296.0" prefWidth="353.0" style="-fx-font-size: 18px;">
+                                            <columns>
+                                              <TableColumn fx:id="symbolTC" prefWidth="181.0" text="Symbol" />
+                                              <TableColumn fx:id="probTC" prefWidth="170.0" text="Probability" />
+                                            </columns>
+                                          </TableView>
+                                          <Text layoutY="22.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each symbol:">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font></Text>
+                                       </children>
+                                       <padding>
+                                          <Insets top="10.0" />
+                                       </padding>
+                                       <GridPane.margin>
+                                          <Insets top="20.0" />
+                                       </GridPane.margin>
+                                    </Pane>
+                                 </children>
+                              </GridPane>
+                              <Pane fx:id="backgroundParamsPane" layoutX="42.0" layoutY="454.0" prefHeight="186.0" prefWidth="454.0">
+                                 <children>
+                                    <Label fx:id="distMeanLabel" layoutY="35.0" text="Distribution's Mean: ">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <TextField fx:id="distMeanTF" layoutX="258.0" layoutY="30.0" prefHeight="27.0" prefWidth="184.0" promptText="5">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                    <Label fx:id="distStdLabel" layoutY="111.0" text="Distribution's Standard Deviation: ">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Label>
+                                    <TextField fx:id="distStdTF" layoutX="258.0" layoutY="106.0" prefHeight="27.0" prefWidth="184.0" promptText="2">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font></TextField>
+                                 </children>
+                              </Pane>
+                           </children>
+                        </AnchorPane>
+                  </content>
+                </Tab>
+                <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Triclusters Properties">
+                  <content>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="750.0" prefWidth="1300.0">
+                           <children>
+                              <Pane prefHeight="767.0" prefWidth="1300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <Text layoutX="40.0" layoutY="115.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Rows Structure:">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="60.0" layoutY="135.0" text="Distribution:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="rowDistParam1Label" layoutX="60.0" layoutY="183.0" text="Dist. Param 1:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="rowDistParam2Label" layoutX="60.0" layoutY="230.0" text="Dist. Param 2:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="rowDistParam1TF" layoutX="230.0" layoutY="177.0" maxWidth="-Infinity" prefHeight="27.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <TextField fx:id="rowDistParam2TF" layoutX="230.0" layoutY="224.0" maxWidth="-Infinity" prefHeight="9.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <ComboBox fx:id="rowStructureDistCB" editable="true" layoutX="230.0" layoutY="131.0" onAction="#rowStructureDistSelecionada" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
+                                    <Label layoutX="40.0" layoutY="42.0" text="Number of Triclusters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="numTricsTF" layoutX="230.0" layoutY="40.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <Text layoutX="40.0" layoutY="305.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Columns Structure:">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="60.0" layoutY="325.0" text="Distribution:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="columnDistParam1Label" layoutX="60.0" layoutY="373.0" text="Dist. Param 1:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="columnDistParam2Label" layoutX="60.0" layoutY="420.0" text="Dist. Param 2:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="columnDistParam1TF" layoutX="230.0" layoutY="367.0" maxWidth="-Infinity" prefHeight="27.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <TextField fx:id="columnDistParam2TF" layoutX="230.0" layoutY="414.0" maxWidth="-Infinity" prefHeight="9.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <ComboBox fx:id="columnStructureDistCB" editable="true" layoutX="230.0" layoutY="321.0" onAction="#columnStructureDistSelecionada" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
+                                    <Text layoutX="40.0" layoutY="495.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Contexts Structure:">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="60.0" layoutY="515.0" text="Distribution:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="contextDistParam1Label" layoutX="60.0" layoutY="562.0" text="Dist. Param 1:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="contextDistParam2Label" layoutX="60.0" layoutY="609.0" text="Dist. Param 2:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="contextDistParam1TF" layoutX="230.0" layoutY="556.0" maxWidth="-Infinity" prefHeight="27.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <TextField fx:id="contextDistParam2TF" layoutX="230.0" layoutY="603.0" maxWidth="-Infinity" prefHeight="9.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </TextField>
+                                    <ComboBox fx:id="contextStructureDistCB" editable="true" layoutX="230.0" layoutY="511.0" onAction="#contextStructureDistSelecionada" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
+                                    <Label layoutX="40.0" layoutY="684.0" text="Contiguity:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <ComboBox fx:id="contiguityCB" editable="true" layoutX="230.0" layoutY="680.0" onAction="#contiguitySelecionada" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
+                                    <Separator layoutX="24.0" layoutY="266.0" prefHeight="13.0" prefWidth="501.0" />
+                                    <Separator layoutX="14.0" layoutY="76.0" prefHeight="13.0" prefWidth="501.0" />
+                                    <Separator layoutX="24.0" layoutY="463.0" prefHeight="13.0" prefWidth="501.0" />
+                                    <Separator layoutX="23.0" layoutY="653.0" prefHeight="13.0" prefWidth="501.0" />
+                                 </children>
+                              </Pane>
+                           </children></AnchorPane>
+                  </content>
+                </Tab>
+                  <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Triclusters Patterns">
+                     <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <TableView fx:id="patternsTV" layoutX="24.0" layoutY="24.0" prefHeight="516.0" prefWidth="840.0" style="-fx-font-size: 18px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <columns>
+                                    <TableColumn fx:id="numTC" prefWidth="39.0" style="-fx-alignment: CENTER;" text="#" />
+                                  <TableColumn fx:id="rowTC" prefWidth="199.0" style="-fx-alignment: CENTER;" text="Row Pattern" />
+                                  <TableColumn fx:id="columnTC" minWidth="0.0" prefWidth="241.0" style="-fx-alignment: CENTER;" text="Columns Pattern" />
+                                    <TableColumn fx:id="contextTC" minWidth="0.0" prefWidth="230.0" style="-fx-alignment: CENTER;" text="Context Pattern" />
+                                    <TableColumn fx:id="timeProfileTC" minWidth="0.0" prefWidth="228.0" style="-fx-alignment: CENTER;" text="Time Profile" />
+                                    <TableColumn fx:id="exampleTC" maxWidth="187.0" minWidth="0.0" prefWidth="184.0" style="-fx-alignment: CENTER;" text="Example" />
+                                    <TableColumn fx:id="selectTC" prefWidth="178.0" style="-fx-alignment: CENTER;" text="Select" />
+                                </columns>
+                                 <opaqueInsets>
+                                    <Insets />
+                                 </opaqueInsets>
+                              </TableView>
+                           </children></AnchorPane>
+                     </content>
+                  </Tab>
+                  <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Overlapping">
+                     <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <Pane prefHeight="767.0" prefWidth="1300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <Text layoutX="1.0" layoutY="55.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Overlapping Settings" x="40.0" y="8.0">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="44.0" layoutY="134.0" text="Plaid Cohrency:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="percOverlappingTricsLB" layoutX="44.0" layoutY="196.0" text="\% of overlapping triclusters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="maxOverlappingTricsLB" layoutX="44.0" layoutY="258.0" text="Maximum number of tricluster interactions:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="percOverlappingRowsLB" layoutX="44.0" layoutY="382.0" text="\% of overlapping rows:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="percOverlappingColumnsLB" layoutX="44.0" layoutY="444.0" text="\% of overlapping columns:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="percOverlappingContextsLB" layoutX="44.0" layoutY="506.0" text="\% of overlapping contexts:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <ComboBox fx:id="plaidCoherencyCB" editable="true" layoutX="415.0" layoutY="129.0" onAction="#plaidCoherencySelecionada" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
+                                    <TextField fx:id="percOverlappingTricsTF" layoutX="415.0" layoutY="191.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="maxOverlappingTricsTF" layoutX="415.0" layoutY="253.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="percOverlappingRowsTF" layoutX="415.0" layoutY="377.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="percOverlappingColumnsTF" layoutX="415.0" layoutY="439.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="percOverlappingContextsTF" layoutX="415.0" layoutY="501.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <Label layoutX="623.0" layoutY="196.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="623.0" layoutY="382.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="623.0" layoutY="444.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="623.0" layoutY="506.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="percOverlappingElementsLB" layoutX="44.0" layoutY="320.0" text="\% of overlapping elements between triclusters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="percOverlappingElementsTF" layoutX="415.0" layoutY="315.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <Label layoutX="623.0" layoutY="320.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </Pane>
+                           </children></AnchorPane>
+                     </content>
+                  </Tab>
+                  <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Quality">
+                     <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <Pane prefHeight="767.0" prefWidth="1300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <Text layoutX="40.0" layoutY="503.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Errors:">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="60.0" layoutY="544.0" text="\% of errors on background:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="60.0" layoutY="596.0" text="\% of errors on planted triclusters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="percErrorsBackgroundTF" layoutX="405.0" layoutY="539.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="percErrorsTricsTF" layoutX="405.0" layoutY="591.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <Label layoutX="610.0" layoutY="544.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="610.0" layoutY="596.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Text layoutX="40.0" layoutY="263.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Noisy Elements:">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="60.0" layoutY="306.0" text="\% of noise on background:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="60.0" layoutY="358.0" text="\% of noise on planted triclusters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="percNoiseBackgroundTF" layoutX="405.0" layoutY="301.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="percNoiseTricsTF" layoutX="405.0" layoutY="353.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <Label layoutX="60.0" layoutY="409.0" text="Noise deviation:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="noiseDeviationTF" layoutX="405.0" layoutY="404.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <Label layoutX="610.0" layoutY="306.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="610.0" layoutY="358.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Text layoutX="40.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Missing Elements:">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Text>
+                                    <Label layoutX="60.0" layoutY="110.0" text="\% of missing values on background:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="60.0" layoutY="166.0" text="\% of missing values on planted triclusters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="percMissingBackgroundTF" layoutX="405.0" layoutY="105.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <TextField fx:id="percMissingTricsTF" layoutX="405.0" layoutY="161.0" prefHeight="32.0" prefWidth="200.0">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></TextField>
+                                    <Label layoutX="610.0" layoutY="166.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="610.0" layoutY="107.0" text="\%">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Separator layoutX="22.0" layoutY="213.0" prefHeight="13.0" prefWidth="659.0" />
+                                    <Separator layoutX="22.0" layoutY="455.0" prefHeight="13.0" prefWidth="659.0" />
+                                 </children>
+                              </Pane>
+                           </children></AnchorPane>
+                     </content>
+                  </Tab>
+                  <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Output">
+                     <content>
+                        <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="786.0" prefWidth="1300.0">
+                           <children>
+                              <VBox layoutX="274.0" layoutY="121.0" prefHeight="413.0" prefWidth="840.0" AnchorPane.bottomAnchor="103.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <GridPane prefHeight="319.0" prefWidth="1237.0">
+                                      <columnConstraints>
+                                          <ColumnConstraints hgrow="SOMETIMES" maxWidth="346.0" minWidth="10.0" prefWidth="345.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="381.0" minWidth="10.0" prefWidth="187.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="408.0" minWidth="10.0" prefWidth="290.0" />
+                                          <ColumnConstraints hgrow="SOMETIMES" maxWidth="573.0" minWidth="10.0" prefWidth="478.0" />
+                                      </columnConstraints>
+                                      <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      </rowConstraints>
+                                       <children>
+                                          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Output settings:">
+                                             <GridPane.margin>
+                                                <Insets left="50.0" top="25.0" />
+                                             </GridPane.margin>
+                                             <font>
+                                                <Font size="20.0" />
+                                             </font>
+                                          </Text>
+                                          <Label text="Save on:" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                             <GridPane.margin>
+                                                <Insets left="25.0" />
+                                             </GridPane.margin>
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <Label text="File name:" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                             <GridPane.margin>
+                                                <Insets left="25.0" />
+                                             </GridPane.margin>
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <Label text="Save to directory:" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                             <GridPane.margin>
+                                                <Insets left="25.0" />
+                                             </GridPane.margin>
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <TextField fx:id="directoryChooserTF" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font></TextField>
+                                          <Button fx:id="directoryChooserB" mnemonicParsing="false" onAction="#chooseDirectoryAction" prefHeight="27.0" prefWidth="102.0" text="Choose..." GridPane.columnIndex="3" GridPane.rowIndex="3">
+                                             <GridPane.margin>
+                                                <Insets left="15.0" />
+                                             </GridPane.margin>
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Button>
+                                          <TextField fx:id="fileNameTF" alignment="CENTER_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="2">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font></TextField>
+                                          <RadioButton fx:id="singleFileRB" mnemonicParsing="false" selected="true" text="One file only" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                             <toggleGroup>
+                                                <ToggleGroup fx:id="outputFileGroup" />
+                                             </toggleGroup>
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </RadioButton>
+                                          <RadioButton fx:id="multipleFileRB" mnemonicParsing="false" text="Several files" toggleGroup="$outputFileGroup" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font></RadioButton>
+                                       </children>
+                                    </GridPane>
+                                 </children>
+                              </VBox>
+                              <Pane layoutX="-4.0" layoutY="373.0" prefHeight="396.0" prefWidth="1308.0">
+                                 <children>
+                                    <Button layoutX="371.0" layoutY="43.0" mnemonicParsing="false" onAction="#generateDatasetAction" prefHeight="45.0" prefWidth="566.0" text="Generate Dataset">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></Button>
+                                    <ProgressBar fx:id="statusBar" layoutX="373.0" layoutY="118.0" prefHeight="28.0" prefWidth="562.0" progress="0.0" />
+                                    <Text fx:id="statusT" layoutX="376.0" layoutY="177.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Status:">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font></Text>
+                                    <Label fx:id="statusLB" layoutX="425.0" layoutY="163.0" prefHeight="17.0" prefWidth="383.0" text="Label">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font></Label>
+                                 </children>
+                              </Pane>
+                           </children></AnchorPane>
+                     </content>
+                  </Tab>
+                  <Tab fx:id="visualizationTab" disable="true" style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Visualization">
+                    <content>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <TextFlow fx:id="tricSummaryTF" layoutX="48.0" layoutY="139.0" prefHeight="590.0" prefWidth="563.0" />
+                              <TableView fx:id="heatMapTV" layoutX="625.0" layoutY="137.0" prefHeight="593.0" prefWidth="635.0" style="-fx-font-size: 18px;">
+                                <columns>
+                                  <TableColumn fx:id="contextIDTC" prefWidth="322.0" style="-fx-alignment: CENTER;" text="Context ID" />
+                                  <TableColumn fx:id="showButtonTC" prefWidth="312.0" style="-fx-alignment: CENTER;" text="Visualization" />
+                                </columns>
+                              </TableView>
+                              <ComboBox fx:id="tricIDCB" editable="true" layoutX="142.0" layoutY="70.0" onAction="#changeTriclusterVisualization" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
+                              <Text layoutX="46.0" layoutY="88.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Tricluster:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font></Text>
+                           </children>
+                        </AnchorPane>
+                    </content>
+                  </Tab>
+              </tabs>
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+            </TabPane>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
