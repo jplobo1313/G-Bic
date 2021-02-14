@@ -17,7 +17,7 @@ import java.util.Set;
 import com.gbic.domain.bicluster.SymbolicBicluster;
 import com.gbic.domain.dataset.Dataset;
 import com.gbic.domain.dataset.SymbolicDataset;
-import com.gbic.domain.tricluster.SymbolicTricluster;
+import com.gbic.domain.bicluster.SymbolicBicluster;
 import com.gbic.types.Background;
 import com.gbic.types.Contiguity;
 import com.gbic.types.PatternType;
@@ -25,30 +25,30 @@ import com.gbic.types.PlaidCoherency;
 import com.gbic.types.TimeProfile;
 import com.gbic.utils.BicMath;
 import com.gbic.utils.OverlappingSettings;
-import com.gbic.utils.TriclusterPattern;
-import com.gbic.utils.TriclusterStructure;
+import com.gbic.utils.BiclusterPattern;
+import com.gbic.utils.BiclusterStructure;
 
-public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
+public class SymbolicDatasetGenerator extends BiclusterDatasetGenerator {
 
 
 	private SymbolicDataset data;
 	private Random random = new Random();
 	private boolean allowsOverlap = false;
-	private int numTrics;
+	private int numBics;
 
 	/**
 	 * Constructor
 	 * @param nRows the dataset's number of rows
 	 * @param nCols the dataset's number of columns
 	 * @param nCont the dataset's number of contexts
-	 * @param numTrics the number of trics to plant
+	 * @param numBics the number of bics to plant
 	 * @param background the dataset's background
 	 * @param alphabetL the alphabet length
 	 * @param symmetric NOT IMPLEMENTED
 	 */
-	public SymbolicDatasetGenerator(int nRows, int nCols, int nCont, int numTrics, Background background, int alphabetL, boolean symmetric) {
-		this.numTrics = numTrics;
-		this.data = new SymbolicDataset(nRows, nCols, nCont, numTrics, background, symmetric, alphabetL);
+	public SymbolicDatasetGenerator(int nRows, int nCols, int numBics, Background background, int alphabetL, boolean symmetric) {
+		this.numBics = numBics;
+		this.data = new SymbolicDataset(nRows, nCols, numBics, background, symmetric, alphabetL);
 	}
 	
 	/**
@@ -56,18 +56,18 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 	 * @param nRows the dataset's number of rows
 	 * @param nCols the dataset's number of columns
 	 * @param nCont the dataset's number of contexts
-	 * @param numTrics the number of trics to plant
+	 * @param numBics the number of bics to plant
 	 * @param background the dataset's background
 	 * @param alphabet array with alphabet symbols
 	 * @param symmetric NOT IMPLEMENTED
 	 */
-	public SymbolicDatasetGenerator(int nRows, int nCols, int nCont, int numTrics, Background background, String[] alphabet, boolean symmetric) {
-		this.numTrics = numTrics;
-		this.data = new SymbolicDataset(nRows, nCols, nCont, numTrics, background, symmetric, alphabet);
+	public SymbolicDatasetGenerator(int nRows, int nCols, int numBics, Background background, String[] alphabet, boolean symmetric) {
+		this.numBics = numBics;
+		this.data = new SymbolicDataset(nRows, nCols, numBics, background, symmetric, alphabet);
 	}
 
 	@Override
-	public Dataset generate(List<TriclusterPattern> patterns, TriclusterStructure tricStructure,
+	public Dataset generate(List<BiclusterPattern> patterns, BiclusterStructure tricStructure,
 			OverlappingSettings overlapping) throws Exception {
 		
 		//num rows expression matrix
@@ -76,71 +76,53 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 		//num cols expression matrix
 		int numCols = data.getNumCols();
 		
-		//num contexts expression matrix
-		int numConts = data.getNumContexts();
-		
 		this.allowsOverlap = !overlapping.getPlaidCoherency().equals(PlaidCoherency.NO_OVERLAPPING);
-		int maxTricsPerOverlappedArea = overlapping.getMaxTricsPerOverlappedArea();
-		int overlappingThreshold = (int)(numTrics * overlapping.getPercOfOverlappingTrics());
+		int maxBicsPerOverlappedArea = overlapping.getMaxBicsPerOverlappedArea();
+		int overlappingThreshold = (int)(numBics * overlapping.getPercOfOverlappingBics());
 		
 		//expression and biclusters symbols
 		String[] alphabet = data.getAlphabet();
 
-		//does the bics contain simmetric values
-		//TODO: ?? simetria em q dimensao???
-		boolean symmetries = data.hasSymmetries();
-
 		//num of rows of a bic
-		int numRowsTrics = 0;
+		int numRowsBics = 0;
 		//num of cols of a bic
-		int numColsTrics = 0;
-		//num of contexts of a bic
-		int numContsTrics = 0;
+		int numColsBics = 0;
 
 		//Isto pode ser otimizado -> passar p/ dentro do for (1D em vez de 2D).
-		int[][] bicsRows = new int[numTrics][];
-		int[][] bicsCols = new int[numTrics][];
-		int[][] bicsConts = new int[numTrics][];
+		int[][] bicsRows = new int[numBics][];
+		int[][] bicsCols = new int[numBics][];
 
 		Set<Integer> chosenCols = new HashSet<Integer>();
-		Set<Integer> chosenConts = new HashSet<Integer>();
-
-		/* Nao estou a contemplar simetricos
-		if (type.equals(PatternType.SYMMETRIC) && alphabet[0] >= 0)
-			throw new BicException("SYMMETRIC coherency cannot be used with positive range!");
-		 */
 
 		int numAttempts = 0;
 		
 		/** PART I: generate pattern ranges **/
-		for (int k = 0; k < numTrics; k++) {
+		for (int k = 0; k < numBics; k++) {
 			
 			boolean hasSpace = true;
 			
-			changeState("Stage:1, Msg:Tricluster " + k);
+			changeState("Stage:1, Msg:Bicluster " + k);
 			
-			System.out.println("Generating tricluster " + (k+1) + " of " + numTrics + "...");
+			System.out.println("Generating bicluster " + (k+1) + " of " + numBics + "...");
 			
 			if(k >= overlappingThreshold)
 				allowsOverlap = false;
 			
-			TriclusterPattern currentPattern;
+			BiclusterPattern currentPattern;
 			
-			if(numTrics < patterns.size())
+			if(numBics < patterns.size())
 				currentPattern = patterns.get(random.nextInt(patterns.size()));
 			else
 				currentPattern = patterns.get(k % patterns.size());
 			
 			PatternType rowType = currentPattern.getRowsPattern();
 			PatternType columnType = currentPattern.getColumnsPattern();
-			PatternType contextType = currentPattern.getContextsPattern();
 			TimeProfile timeProfile = currentPattern.getTimeProfile();
 			
-			Map<String, Integer> structure = generateTricStructure(tricStructure, numRows, numCols, numConts);
+			Map<String, Integer> structure = generateBicStructure(tricStructure, numRows, numCols);
 			
-			numRowsTrics = structure.get("rows");
-			numColsTrics = structure.get("columns");
-			numContsTrics = structure.get("contexts");
+			numRowsBics = structure.get("rows");
+			numColsBics = structure.get("columns");
 
 
 			/** PART IV: select biclusters with (non-)overlapping elements **/
@@ -152,44 +134,36 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 				
 				boolean dispersed = false;
 				if (dispersed) {
-					if ((k + 1) % maxTricsPerOverlappedArea == 0) {
-						bicsWithOverlap = new int[Math.min(k, maxTricsPerOverlappedArea - 1)];
-						for (int i = k - 1, j = 0; i >= 0 && j < maxTricsPerOverlappedArea - 1; i--, j++)
+					if ((k + 1) % maxBicsPerOverlappedArea == 0) {
+						bicsWithOverlap = new int[Math.min(k, maxBicsPerOverlappedArea - 1)];
+						for (int i = k - 1, j = 0; i >= 0 && j < maxBicsPerOverlappedArea - 1; i--, j++)
 							bicsWithOverlap[j] = i;
 					}
 				} 
-				else if (k % maxTricsPerOverlappedArea != 0)
+				else if (k % maxBicsPerOverlappedArea != 0)
 					bicsWithOverlap = new int[] { k - 1 };
 
-				int l = Math.max((k / maxTricsPerOverlappedArea) * maxTricsPerOverlappedArea, k-1);
+				int l = Math.max((k / maxBicsPerOverlappedArea) * maxBicsPerOverlappedArea, k-1);
 				bicsExcluded = new int[l];
 				for (int i = 0; i < l; i++)
 					bicsExcluded[i] = i;
 			}
 
 			/** PART V: generate rows and columns using overlapping constraints **/
-			int tricSize = numContsTrics * numRowsTrics * numColsTrics;
+			int tricSize = numRowsBics * numColsBics;
 			if (allowsOverlap) {
 				
-				Map<String, Double> overlappingPercs = generateOverlappingDistribution(tricSize, overlapping, numContsTrics, numRowsTrics, numColsTrics);
+				Map<String, Double> overlappingPercs = generateOverlappingDistribution(tricSize, overlapping, numRowsBics, numColsBics);
 				
-				double overlappingContsPerc = overlappingPercs.get("contextPerc");
 				double overlappingColsPerc = overlappingPercs.get("columnPerc");
 				double overlappingRowsPerc = overlappingPercs.get("rowPerc");
 				
 				System.out.println("Tric " + (k+1) + " - Generating columns...");
-				bicsCols[k] = generate(numColsTrics, numCols, overlappingContsPerc, bicsCols, bicsWithOverlap,
+				bicsCols[k] = generate(numColsBics, numCols, overlappingColsPerc, bicsCols, bicsWithOverlap,
 						bicsExcluded, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
 				
-				
-				
-				System.out.println("Tric " + (k+1) + " - Generating contexts...");
-				bicsConts[k] = generate(numContsTrics, numConts, overlappingColsPerc, bicsConts, bicsWithOverlap,
-						bicsExcluded, tricStructure.getContiguity().equals(Contiguity.CONTEXTS));
-				System.out.println("Contexts: " + bicsConts[k].length);
-				
 				System.out.println("Tric " + (k+1) + " - Generating rows...");
-				bicsRows[k] = generate(numRowsTrics, numRows, overlappingRowsPerc, bicsRows, bicsWithOverlap,
+				bicsRows[k] = generate(numRowsBics, numRows, overlappingRowsPerc, bicsRows, bicsWithOverlap,
 						bicsExcluded, false);
 				System.out.println("Rows: " + bicsRows[k].length);
 				
@@ -198,7 +172,7 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 					hasSpace = false;
 					k--;
 					if(numAttempts == 15) {
-						numTrics--;
+						numBics--;
 						numAttempts = 0;
 					}
 					else
@@ -210,22 +184,18 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 			else {
 				
 				System.out.println("Tric " + (k+1) + " - Generating columns...");
-				bicsCols[k] = generateNonOverlappingOthers(numColsTrics, numCols, chosenCols, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
+				bicsCols[k] = generateNonOverlappingOthers(numColsBics, numCols, chosenCols, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
 				System.out.println("Columns: " + bicsCols[k].length);
 				
-				System.out.println("Tric " + (k+1) + " - Generating contexts...");
-				bicsConts[k] = generateNonOverlappingOthers(numContsTrics, numConts, chosenConts, tricStructure.getContiguity().equals(Contiguity.CONTEXTS));
-				System.out.println("Contexts: " + bicsConts[k].length);
-				
 				System.out.println("Tric " + (k+1) + " - Generating rows...");
-				bicsRows[k] = generateNonOverlappingRows(numRowsTrics, numRows, bicsCols[k], bicsConts[k], data.getElements());
+				bicsRows[k] = generateNonOverlappingRows(numRowsBics, numRows, bicsCols[k], data.getElements());
 				System.out.println("Rows: " + bicsRows[k].length);
 				
 				if(bicsRows[k] == null) {
 					hasSpace = false;
 					k--;
 					if(numAttempts == 15) {
-						numTrics--;
+						numBics--;
 						numAttempts = 0;
 					}
 					else
@@ -240,163 +210,79 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 				System.out.println("Tric " + (k+1) + " - Has space, lets plant the patterns");
 				
 				for (Integer c : bicsCols[k])
-					chosenCols.add(c);
-				
-				for (Integer c : bicsConts[k])
-					chosenConts.add(c);
+					chosenCols.add(c);				
 				
 				Arrays.parallelSort(bicsRows[k]);
 				Arrays.parallelSort(bicsCols[k]);
-				Arrays.parallelSort(bicsConts[k]);
 				
-				SymbolicBicluster bicK = new SymbolicBicluster(BicMath.getSet(bicsRows[k]), BicMath.getSet(bicsCols[k]), rowType, columnType);
+				SymbolicBicluster bicK;
 				
-				SymbolicTricluster tricK;
-				
-				if(contextType.equals(PatternType.ORDER_PRESERVING))
-					tricK = new SymbolicTricluster(k, bicK, contextType, timeProfile);
+				if(columnType.equals(PatternType.ORDER_PRESERVING))
+					bicK = new SymbolicBicluster(k, BicMath.getSet(bicsRows[k]), BicMath.getSet(bicsCols[k]), rowType, columnType, 
+							overlapping.getPlaidCoherency(), timeProfile);
 				else
-					tricK = new SymbolicTricluster(k, bicK, contextType);
+					bicK = new SymbolicBicluster(k, BicMath.getSet(bicsRows[k]), BicMath.getSet(bicsCols[k]), rowType, columnType, 
+							overlapping.getPlaidCoherency());
 	
 				/** PART VI: generate biclusters coherencies **/
-				String[][][] bicsymbols = new String[bicsConts[k].length][bicsRows[k].length][bicsCols[k].length];
+				String[][] bicsymbols = new String[bicsRows[k].length][bicsCols[k].length];
 				
 				if(rowType.equals(PatternType.ORDER_PRESERVING)) {
-					bicsymbols = new String[bicsConts[k].length][bicsCols[k].length][bicsRows[k].length];
+					bicsymbols = new String[bicsCols[k].length][bicsRows[k].length];
 					Integer[] order = generateOrder(bicsRows[k].length);
 					
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						for(int row = 0; row < numColsTrics; row++) {
-							for (int col = 0; col < numRowsTrics; col++)
-								bicsymbols[ctx][row][col] = alphabet[random.nextInt(alphabet.length)];
-							Arrays.parallelSort(bicsymbols[ctx][row]);
-							bicsymbols[ctx][row] = shuffle(order, bicsymbols[ctx][row]);
-						}
-						tricK.addContext(bicsConts[k][ctx]);
-					}
+					
+					for(int col = 0; col < numColsBics; col++) {
+						for (int row = 0; row < numRowsBics; row++)
+							bicsymbols[col][row] = alphabet[random.nextInt(alphabet.length)];
+						Arrays.parallelSort(bicsymbols[col]);
+						bicsymbols[col] = shuffle(order, bicsymbols[col]);
+					}					
 					bicsymbols = transposeMatrix(bicsymbols, "x", "y");
 				}
 				else if(columnType.equals(PatternType.ORDER_PRESERVING)) {
 					Integer[] order = generateOrder(bicsCols[k].length);
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						for(int row = 0; row < numRowsTrics; row++) {
-							for (int col = 0; col < numColsTrics; col++)
-								bicsymbols[ctx][row][col] = alphabet[random.nextInt(alphabet.length)];
-							Arrays.parallelSort(bicsymbols[ctx][row]);
-							bicsymbols[ctx][row] = shuffle(order, bicsymbols[ctx][row]);
+					for(int row = 0; row < numRowsBics; row++) {
+						for (int col = 0; col < numColsBics; col++)
+							bicsymbols[row][col] = alphabet[random.nextInt(alphabet.length)];
+						
+						Arrays.parallelSort(bicsymbols[row]);
+						bicsymbols[row] = shuffle(order, bicsymbols[row]);
+						
+						if(timeProfile.equals(TimeProfile.RANDOM)) {
+							Arrays.parallelSort(bicsymbols[row]);
+							bicsymbols[row] = shuffle(order, bicsymbols[row]);
 						}
-						tricK.addContext(bicsConts[k][ctx]);
+						else if(timeProfile.equals(TimeProfile.MONONICALLY_INCREASING))
+							Arrays.sort(bicsymbols[row]);
+						
+						else
+							Arrays.sort(bicsymbols[row], Collections.reverseOrder());
 					}
-				}
-				else if(contextType.equals(PatternType.ORDER_PRESERVING)) {
-					bicsymbols = new String[bicsCols[k].length][bicsRows[k].length][bicsConts[k].length];
-					
-					Integer[] order = generateOrder(bicsConts[k].length);
-					
-					for(int ctx = 0; ctx < numColsTrics; ctx++) {
-						for(int row = 0; row < numRowsTrics; row++) {
-							for (int col = 0; col < numContsTrics; col++) {
-								bicsymbols[ctx][row][col] = alphabet[random.nextInt(alphabet.length)];
-								
-								if(ctx == 0 && row == 0)
-									tricK.addContext(bicsConts[k][col]);
-							}
-							
-							if(timeProfile.equals(TimeProfile.RANDOM)) {
-								Arrays.parallelSort(bicsymbols[ctx][row]);
-								bicsymbols[ctx][row] = shuffle(order, bicsymbols[ctx][row]);
-							}
-							else if(timeProfile.equals(TimeProfile.MONONICALLY_INCREASING))
-								Arrays.parallelSort(bicsymbols[ctx][row]);
-							
-							else
-								Arrays.parallelSort(bicsymbols[ctx][row], Collections.reverseOrder());
-						}
-					}
-					
-					bicsymbols = transposeMatrix(bicsymbols, "z", "y");
-				}
-				else if(rowType.equals(PatternType.CONSTANT) && columnType.equals(PatternType.CONSTANT) && 
-						(contextType.equals(PatternType.CONSTANT))) {
-					String seed = alphabet[random.nextInt(alphabet.length)];
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						for(int row = 0; row < numRowsTrics; row++) 
-							for (int col = 0; col < numColsTrics; col++)
-								bicsymbols[ctx][row][col] = seed;	
-						tricK.addContext(bicsConts[k][ctx]);
-					}
-					tricK.setSeed(bicsymbols[0]);
 				}
 				else if(rowType.equals(PatternType.CONSTANT) && columnType.equals(PatternType.CONSTANT)) {
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						String seed = alphabet[random.nextInt(alphabet.length)];
-						for(int row = 0; row < numRowsTrics; row++) {
-							for (int col = 0; col < numColsTrics; col++)
-								bicsymbols[ctx][row][col] = seed;
-						}
-						tricK.addContext(bicsymbols[ctx], bicsConts[k][ctx]);
-					}
+					String seed = alphabet[random.nextInt(alphabet.length)];
 					
-				}
-				else if(columnType.equals(PatternType.CONSTANT) && contextType.equals(PatternType.CONSTANT)) {
-					for(int row = 0; row < numRowsTrics; row++) {
-						String seed = alphabet[random.nextInt(alphabet.length)];
-						for(int ctx = 0; ctx < numContsTrics; ctx++)
-							for (int col = 0; col < numColsTrics; col++)
-								bicsymbols[ctx][row][col] = seed;
-					}
-					tricK.setSeed(bicsymbols[0]);
+					for(int row = 0; row < numRowsBics; row++) 
+						for (int col = 0; col < numColsBics; col++)
+							bicsymbols[row][col] = seed;	
 					
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						tricK.addContext(bicsConts[k][ctx]);
-					}
-				}
-				else if(rowType.equals(PatternType.CONSTANT) && contextType.equals(PatternType.CONSTANT)) {
-					for(int col = 0; col < numColsTrics; col++) {
-						String seed = alphabet[random.nextInt(alphabet.length)];
-						for(int ctx = 0; ctx < numContsTrics; ctx++)
-							for (int row = 0; row < numRowsTrics; row++)
-								bicsymbols[ctx][row][col] = seed;
-					}
-					tricK.setSeed(bicsymbols[0]);
-					
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						tricK.addContext(bicsConts[k][ctx]);
-					}
+				
+					bicK.setSeed(bicsymbols);
 				}
 				else if(columnType.equals(PatternType.CONSTANT)) {
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						for (int row = 0; row < numRowsTrics; row++) {
+						for (int row = 0; row < numRowsBics; row++) {
 							String seed = alphabet[random.nextInt(alphabet.length)];
-							for(int col = 0; col < numColsTrics; col++)
-								bicsymbols[ctx][row][col] = seed;
+							for(int col = 0; col < numColsBics; col++)
+								bicsymbols[row][col] = seed;
 						}
-						tricK.addContext(bicsymbols[ctx], bicsConts[k][ctx]);
-					}
 				}
 				else if(rowType.equals(PatternType.CONSTANT)) {
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						for (int col = 0; col < numColsTrics; col++) {
+						for (int col = 0; col < numColsBics; col++) {
 							String seed = alphabet[random.nextInt(alphabet.length)];
-							for(int row = 0; row < numRowsTrics; row++)
-								bicsymbols[ctx][row][col] = seed;
+							for(int row = 0; row < numRowsBics; row++)
+								bicsymbols[row][col] = seed;
 						}
-						tricK.addContext(bicsymbols[ctx], bicsConts[k][ctx]);
-					}
-				}
-				else{
-					for(int row = 0; row < numRowsTrics; row++) {
-						for (int col = 0; col < numColsTrics; col++) {
-							String seed = alphabet[random.nextInt(alphabet.length)];
-							for(int ctx = 0; ctx < numContsTrics; ctx++)
-								bicsymbols[ctx][row][col] = seed;
-						}
-					}
-					tricK.setSeed(bicsymbols[0]);
-					
-					for(int ctx = 0; ctx < numContsTrics; ctx++) {
-						tricK.addContext(bicsConts[k][ctx]);
-					}
 				}
 	
 				/**
@@ -404,18 +290,14 @@ public class SymbolicDatasetGenerator extends TriclusterDatasetGenerator {
 				 * background
 				 **/
 				System.out.println("Tric " + (k+1) + " - planting the tric");
-				for(int ctx = 0; ctx < bicsConts[k].length; ctx++)
-					for (int row = 0; row < bicsRows[k].length; row++) {
-						
-						if(row % 10000 == 0)
-							System.out.println("Planting on ctx " + ctx + " row " + row);
-						
-						for (int col = 0; col < bicsCols[k].length; col++) {
-							this.data.setMatrixItem(bicsConts[k][ctx], bicsRows[k][row], bicsCols[k][col], bicsymbols[ctx][row][col]);
-							data.addElement(bicsConts[k][ctx] + ":" + bicsRows[k][row] + ":" + bicsCols[k][col], k);
-						}
+				
+				for (int row = 0; row < bicsRows[k].length; row++) {
+					for (int col = 0; col < bicsCols[k].length; col++) {
+						this.data.setMatrixItem(bicsRows[k][row], bicsCols[k][col], bicsymbols[row][col]);
+						data.addElement(bicsRows[k][row] + ":" + bicsCols[k][col], k);
+					}
 				}
-				data.addTricluster(tricK);
+				data.addBicluster(bicK);
 				int mb = 1024*1024;
 
 				//Getting the runtime reference from system

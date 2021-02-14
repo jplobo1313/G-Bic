@@ -12,34 +12,32 @@ import com.gbic.types.PlaidCoherency;
 public class OverlappingSettings {
 
 	private PlaidCoherency plaid;
-	private double percOfOverlappingTrics;
-	private int maxTricsPerOverlappedArea;
+	private double percOfOverlappingBics;
+	private int maxBicsPerOverlappedArea;
 	private double percOfOverlappingRows;
 	private double percOfOverlappingColumns;
-	private double percOfOverlappingContexts;
 	private double maxPercOfOverlappingElements;
 	
 	/**
 	 * Constructor
 	 * @param plaid The plaid coherency
-	 * @param percOfOverlappingTrics The percentage of dataset's triclusters that can overlap
-	 * @param maxTricsPerOverlappedArea The maximum amount of trics that can overlap together
+	 * @param percOfOverlappingBics The percentage of dataset's biclusters that can overlap
+	 * @param maxBicsPerOverlappedArea The maximum amount of bics that can overlap together
 	 * @param percOfOverlappingRows The maximum percentage of overlapping in the row dimension
 	 * @param percOfOverlappingColumns The maximum percentage of overlapping in the column dimension
 	 * @param percOfOverlappingContexts The maximum percentage of overlapping in the context dimension
 	 * @param maxPercOfOverlappingElements The maximum percentage of elements tha can be share between 
-	 * triclusters (relative to the smallest tric)
+	 * biclusters (relative to the smallest bic)
 	 */
-	public OverlappingSettings(PlaidCoherency plaid, double percOfOverlappingTrics, int maxTricsPerOverlappedArea,
-			double percOfOverlappingRows, double percOfOverlappingColumns, double percOfOverlappingContexts,
+	public OverlappingSettings(PlaidCoherency plaid, double percOfOverlappingBics, int maxBicsPerOverlappedArea,
+			double percOfOverlappingRows, double percOfOverlappingColumns,
 			double maxPercOfOverlappingElements) {
 		
 		this.plaid = plaid;
-		this.percOfOverlappingTrics = percOfOverlappingTrics;
-		this.maxTricsPerOverlappedArea = maxTricsPerOverlappedArea;
+		this.percOfOverlappingBics = percOfOverlappingBics;
+		this.maxBicsPerOverlappedArea = maxBicsPerOverlappedArea;
 		this.percOfOverlappingRows = percOfOverlappingRows;
 		this.percOfOverlappingColumns = percOfOverlappingColumns;
-		this.percOfOverlappingContexts = percOfOverlappingContexts;
 		this.maxPercOfOverlappingElements = maxPercOfOverlappingElements;
 	}
 
@@ -65,35 +63,35 @@ public class OverlappingSettings {
 	}
 
 	/**
-	 * Get the percentage of overlapping trics
-	 * @return the percentage of overlapping trics
+	 * Get the percentage of overlapping bics
+	 * @return the percentage of overlapping bics
 	 */
-	public double getPercOfOverlappingTrics() {
-		return percOfOverlappingTrics;
+	public double getPercOfOverlappingBics() {
+		return percOfOverlappingBics;
 	}
 
 	/**
-	 * Set the percentage of overlapping trics
-	 * @param percOfOverlappingTrics the percentage of overlapping trics
+	 * Set the percentage of overlapping bics
+	 * @param percOfOverlappingBics the percentage of overlapping bics
 	 */
-	public void setPercOfOverlappingTrics(double percOfOverlappingTrics) {
-		this.percOfOverlappingTrics = percOfOverlappingTrics;
+	public void setPercOfOverlappingBics(double percOfOverlappingBics) {
+		this.percOfOverlappingBics = percOfOverlappingBics;
 	}
 
 	/**
-	 * Get maximum number of triclusters that can overlap together
-	 * @return the number of triclusters
+	 * Get maximum number of biclusters that can overlap together
+	 * @return the number of biclusters
 	 */
-	public int getMaxTricsPerOverlappedArea() {
-		return maxTricsPerOverlappedArea;
+	public int getMaxBicsPerOverlappedArea() {
+		return maxBicsPerOverlappedArea;
 	}
 
 	/**
-	 * Set maximum number of triclusters that can overlap together
-	 * @param maxTricsPerOverlappedArea the number of triclusters
+	 * Set maximum number of biclusters that can overlap together
+	 * @param maxBicsPerOverlappedArea the number of biclusters
 	 */
-	public void setMaxTricsPerOverlappedArea(int maxTricsPerOverlappedArea) {
-		this.maxTricsPerOverlappedArea = maxTricsPerOverlappedArea;
+	public void setMaxBicsPerOverlappedArea(int maxBicsPerOverlappedArea) {
+		this.maxBicsPerOverlappedArea = maxBicsPerOverlappedArea;
 	}
 
 	/**
@@ -129,23 +127,7 @@ public class OverlappingSettings {
 	}
 
 	/**
-	 * Get the maximum percentage of overlapping on the context dimension
-	 * @return the allowed percentage of overlapping across contexts
-	 */
-	public double getPercOfOverlappingContexts() {
-		return percOfOverlappingContexts;
-	}
-
-	/**
-	 * Set the maximum percentage of overlapping on the context dimension
-	 * @param percOfOverlappingContexts the allowed percentage of overlapping across contexts
-	 */
-	public void setPercOfOverlappingContexts(double percOfOverlappingContexts) {
-		this.percOfOverlappingContexts = percOfOverlappingContexts;
-	}
-	
-	/**
-	 * Set the maximum percentage of elements that can be share between triclusters, relative to the smallest one
+	 * Set the maximum percentage of elements that can be share between biclusters, relative to the smallest one
 	 * @param maxPercOfOverlappingElements the percentage
 	 */
 	public void setMaxPercOfOverlappingElements(double maxPercOfOverlappingElements) {
@@ -153,7 +135,7 @@ public class OverlappingSettings {
 	}
 	
 	/**
-	 * Set the maximum percentage of elements that can be share between triclusters, relative to the smallest one
+	 * Set the maximum percentage of elements that can be share between biclusters, relative to the smallest one
 	 * @return the percentage
 	 */
 	public double getMaxPercOfOverlappingElements() {

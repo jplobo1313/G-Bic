@@ -17,8 +17,10 @@ import java.util.Random;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.json.JSONObject;
 
-import com.gbic.domain.tricluster.NumericTricluster;
-import com.gbic.domain.tricluster.Tricluster;
+import com.gbic.domain.bicluster.Bicluster;
+import com.gbic.domain.bicluster.NumericBicluster;
+import com.gbic.domain.bicluster.NumericBicluster;
+import com.gbic.domain.bicluster.Bicluster;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
 import com.gbic.utils.IOUtils;
@@ -31,7 +33,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 	private T maxM;
 	private T minM;
 
-	private List<NumericTricluster<Double>> plantedTrics;
+	private List<NumericBicluster<Double>> plantedBics;
 
 	/**
 	 * Constructs a numeric dataset
@@ -42,40 +44,40 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @param minM The dataset's minimum alphabet value
 	 * @param maxM The dataset's maximum alphabet value
 	 */
-	public NumericDataset(int numRows, int numCols, int numContexts, int numTrics, Background background, T minM, T maxM) {
+	public NumericDataset(int numRows, int numCols, int numBics, Background background, T minM, T maxM) {
 
-		super(numRows, numCols, numContexts, numTrics, background);
+		super(numRows, numCols, numBics, background);
 
-		plantedTrics = new ArrayList<>();
+		plantedBics = new ArrayList<>();
 		this.minM = minM;
 		this.maxM = maxM;
 		this.realMatrixMap = new HashMap<>();
 	}
 
 	/**
-	 * Add a tricluster to this dataset
-	 * @param tric The tricluster object
+	 * Add a Bicluster to this dataset
+	 * @param bic The Bicluster object
 	 */
-	public void addTricluster(NumericTricluster<Double> tric) {
-		this.plantedTrics.add(tric);
+	public void addBicluster(NumericBicluster<Double> bic) {
+		this.plantedBics.add(bic);
 	}
 
 	/**
-	 * Get the planted triclusters
-	 * @return The list of planted triclusters
+	 * Get the planted biclusters
+	 * @return The list of planted biclusters
 	 */
-	public List<NumericTricluster<Double>> getPlantedTrics() {
-		return plantedTrics;
+	public List<NumericBicluster<Double>> getPlantedBics() {
+		return plantedBics;
 	}
 	
 	@Override
-	public Tricluster getTriclusterById(int id) {
+	public Bicluster getBiclusterById(int id) {
 		
-		Tricluster t = null;
+		NumericBicluster<Double> t = null;
 		
-		for(int i = 0; i < this.plantedTrics.size() && t == null; i++) {
-			if(this.plantedTrics.get(i).getId() == id)
-				t = this.plantedTrics.get(i);
+		for(int i = 0; i < this.plantedBics.size() && t == null; i++) {
+			if(this.plantedBics.get(i).getId() == id)
+				t = this.plantedBics.get(i);
 		}
 		
 		return t;
@@ -88,8 +90,8 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @param column The column ID
 	 * @param newItem The element's value
 	 */
-	public void setMatrixItem(int context, int row, int column, T newItem) {
-		this.realMatrixMap.put(context + ":" + row + ":" + column, newItem);
+	public void setMatrixItem(int row, int column, T newItem) {
+		this.realMatrixMap.put(row + ":" + column, newItem);
 	}
 	
 	/**
@@ -99,8 +101,8 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @param column The columns ID
 	 * @return The element's value
 	 */
-	public T getMatrixItem(int context, int row, int column) {
-		return this.realMatrixMap.get(context + ":" + row + ":" + column);
+	public T getMatrixItem(int row, int column) {
+		return this.realMatrixMap.get(row + ":" + column);
 	}
 
 	/**
@@ -110,8 +112,8 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @param column The columns ID
 	 * @return True if the elements exists, False otherwise
 	 */
-	public boolean existsMatrixItem(int context, int row, int column) {
-		return this.realMatrixMap.containsKey(context + ":" + row + ":" + column);
+	public boolean existsMatrixItem(int row, int column) {
+		return this.realMatrixMap.containsKey(row + ":" + column);
 	}
 	
 	/**
@@ -197,16 +199,16 @@ public class NumericDataset<T extends Number> extends Dataset {
 	}
 	
 	/**
-	 * Get tricluster
-	 * @param id The tricluster ID
-	 * @return the tricluster with the specified ID
+	 * Get Bicluster
+	 * @param id The Bicluster ID
+	 * @return the Bicluster with the specified ID
 	 */
-	public NumericTricluster<? extends Number> getTricluster(int id) {
+	public NumericBicluster<? extends Number> getBicluster(int id) {
 
-		NumericTricluster<?> res = null;
+		NumericBicluster<?> res = null;
 
-		for(int i = 0; i < this.plantedTrics.size() && res == null; i++) {
-			NumericTricluster<?> t = this.plantedTrics.get(i);
+		for(int i = 0; i < this.plantedBics.size() && res == null; i++) {
+			NumericBicluster<?> t = this.plantedBics.get(i);
 			if(t.getId() == id) 
 				res = t;
 		}
@@ -215,82 +217,82 @@ public class NumericDataset<T extends Number> extends Dataset {
 	}
 	
 	@Override
-	public String getTricsInfo() {
-		StringBuilder res = new StringBuilder("Number of planted triclusters: " + plantedTrics.size()+"\r\n");
-		res.append("Tricluster coverage: " + ((double) (this.getSize() - this.getBackgroundSize())) / ((double) this.getSize()) * 100 + "%\n");
+	public String getBicsInfo() {
+		StringBuilder res = new StringBuilder("Number of planted biclusters: " + plantedBics.size()+"\r\n");
+		res.append("Bicluster coverage: " + ((double) (this.getSize() - this.getBackgroundSize())) / ((double) this.getSize()) * 100 + "%\n");
 		res.append("Missing values on dataset: " + ((double) this.getNumberOfMissings()) / ((double) this.getSize()) * 100 + "%\n");
 		res.append("Noise values on dataset: " + ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100 + "%\n");
 		res.append("Errors on dataset: " + ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100 + "%\n\n\n");
 		
-		for(NumericTricluster<? extends Number> tric : plantedTrics) {
-			res.append(tric.toString() + "\r\n\n");
+		for(NumericBicluster<? extends Number> bic : plantedBics) {
+			res.append(bic.toString() + "\r\n\n");
+			res.append(IOUtils.printNumericBicluster(this.realMatrixMap, bic.getRows(), bic.getColumns()) + "\n");
+			/*
 			for(Integer context : tric.getContexts()) {
 				res.append("Context: " + context + "\n");
 				res.append(IOUtils.printNumericTricluster(this.realMatrixMap, context, tric.getRows(), tric.getColumns()) + "\n");
 			}
+			*/
 		}
 		
 		return res.toString().replace(",]","]");
 	}
 	
-	public JSONObject getTricsInfoJSON(Dataset generatedDataset) {
+	public JSONObject getBicsInfoJSON(Dataset generatedDataset) {
 		JSONObject dataset = new JSONObject();
 		
 		dataset.put("#DatasetRows", this.getNumRows());
 		dataset.put("#DatasetColumns", this.getNumCols());
-		dataset.put("#DatasetContexts", this.getNumContexts());
 		dataset.put("#DatasetMaxValue", this.getMaxM());
 		dataset.put("#DatasetMinValue", this.getMinM());
 		
-		JSONObject triclusters = new JSONObject();
+		JSONObject biclusters = new JSONObject();
 		
-		for(Tricluster tric : plantedTrics) 
-			triclusters.putOpt(String.valueOf(tric.getId()), tric.toStringJSON(generatedDataset));
+		for(Bicluster bic : plantedBics) 
+			biclusters.putOpt(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset));
 		
-		dataset.put("Triclusters", triclusters);
+		dataset.put("biclusters", biclusters);
 		//System.out.println("\n\n" + dataset.toString());
 		
 		return dataset;
 	}
 
 	@Override
-	public void plantMissingElements(double percBackground, double percTricluster) {
+	public void plantMissingElements(double percBackground, double percBicluster) {
 
 		int nrMissingsBackground = (int) (this.getBackgroundSize() * percBackground);
 		Random rand = new Random();
 
 		int row = -1;
 		int col = -1;
-		int ctx = -1;
 
 		for (int k = 0; k < nrMissingsBackground; k++) {
 			String e;
 			do {
 				row = rand.nextInt(getNumRows());
 				col = rand.nextInt(getNumCols());
-				ctx = rand.nextInt(getNumContexts());
-				e = ctx + ":" + row + ":" + col;
+				e = row + ":" + col;
 			} while (this.isMissing(e) || this.isPlanted(e));
 
 			this.addMissingElement(e);
 		}
-		if(Double.compare(percTricluster, 0.0) > 0) {
-			for(NumericTricluster<? extends Number> t : this.plantedTrics) {
+		if(Double.compare(percBicluster, 0.0) > 0) {
+			for(NumericBicluster<? extends Number> t : this.plantedBics) {
 	
 				double random = rand.nextDouble();
-				int nrMissingsTric = (int) (t.getSize() * percTricluster * random);
+				int nrMissingsBic = (int) (t.getSize() * percBicluster * random);
 	
-				List<String> elems = this.getTriclusterElements(t.getId());
+				List<String> elems = this.getBiclusterElements(t.getId());
 				String e;
-				for(int k = t.getNumberOfMissings(); k < nrMissingsTric; k++) {
+				for(int k = t.getNumberOfMissings(); k < nrMissingsBic; k++) {
 					do {
 						e = elems.get(rand.nextInt(elems.size()));
-					} while (this.isMissing(e) || !respectsOverlapConstraint(e, "Missings", percTricluster));
+					} while (this.isMissing(e) || !respectsOverlapConstraint(e, "Missings", percBicluster));
 	
 					this.addMissingElement(e);
 					
-					for(Integer i : this.getTricsByElem(e))
-						this.getTricluster(i).addMissing();
+					for(Integer i : this.getBicsByElem(e))
+						this.getBicluster(i).addMissing();
 				}
 			}
 		}
@@ -298,32 +300,30 @@ public class NumericDataset<T extends Number> extends Dataset {
 		for(String e : this.getMissingElements()) {
 			
 			String[] coord = e.split(":");
-			ctx = Integer.parseInt(coord[0]);
-			row = Integer.parseInt(coord[1]);
-			col = Integer.parseInt(coord[2]);
+			row = Integer.parseInt(coord[0]);
+			col = Integer.parseInt(coord[1]);
 	
 			if(this.maxM instanceof Double)
-				setMatrixItem(ctx, row, col, (T) new Double(Integer.MIN_VALUE));
+				setMatrixItem(row, col, (T) new Double(Integer.MIN_VALUE));
 			else
-				setMatrixItem(ctx, row, col, (T) new Integer(Integer.MIN_VALUE));
+				setMatrixItem(row, col, (T) new Integer(Integer.MIN_VALUE));
 		}
 		
 	}
 
 	/**
 	 * Plant noisy elements on the dataset
-	 * @param percBackground The percentage of noisy elements in the background (elements that do not belong to any tricluster)
-	 * @param percTricluster The maximum percentage of noisy elements in the triclusters
+	 * @param percBackground The percentage of noisy elements in the background (elements that do not belong to any Bicluster)
+	 * @param percBicluster The maximum percentage of noisy elements in the biclusters
 	 * @param maxDeviation The noise deviation value
 	 */
-	public void plantNoisyElements(double percBackground, double percTricluster, double maxDeviation) {
+	public void plantNoisyElements(double percBackground, double percBicluster, double maxDeviation) {
 
 		int nrNoiseBackground = (int) (this.getBackgroundSize() * percBackground);
 		Random rand = new Random();
 
 		int row = -1;
 		int col = -1;
-		int ctx = -1;
 
 		for (int k = 0; k < nrNoiseBackground; k++) {
 
@@ -333,8 +333,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 			do {
 				row = rand.nextInt(getNumRows());
 				col = rand.nextInt(getNumCols());
-				ctx = rand.nextInt(getNumContexts());
-				e = ctx + ":" + row + ":" + col;
+				e = row + ":" + col;
 				if(!this.isNoisy(e) && !this.isPlanted(e) && !this.isMissing(e))
 					stop = true;
 
@@ -343,11 +342,11 @@ public class NumericDataset<T extends Number> extends Dataset {
 			this.addNoisyElement(e);
 		}
 
-		if(Double.compare(percTricluster, 0.0) > 0) {
-			for(NumericTricluster<? extends Number> t : this.plantedTrics) {
+		if(Double.compare(percBicluster, 0.0) > 0) {
+			for(NumericBicluster<? extends Number> t : this.plantedBics) {
 	
 				double random = rand.nextDouble();
-				int nrNoisyTric = (int) (t.getSize() * percTricluster * random);
+				int nrNoisyBic = (int) (t.getSize() * percBicluster * random);
 	
 				/*
 				System.out.println("Tric size: " + t.getSize());
@@ -356,17 +355,17 @@ public class NumericDataset<T extends Number> extends Dataset {
 				System.out.println("Tric " + t.getId() + " - Number of noise: " + nrNoisyTric + "(" + ratio + ")\n");
 				*/
 				
-				List<String> elems = this.getTriclusterElements(t.getId());
+				List<String> elems = this.getBiclusterElements(t.getId());
 				String e;
-				for(int k = t.getNumberOfNoisy(); k < nrNoisyTric; k++) {
+				for(int k = t.getNumberOfNoisy(); k < nrNoisyBic; k++) {
 					do {
 						e = elems.get(rand.nextInt(elems.size()));
-					} while (this.isMissing(e) || this.isNoisy(e) || !respectsOverlapConstraint(e, "Noisy", percTricluster));
+					} while (this.isMissing(e) || this.isNoisy(e) || !respectsOverlapConstraint(e, "Noisy", percBicluster));
 	
 					this.addNoisyElement(e);
 					
-					for(Integer i : this.getTricsByElem(e))
-						this.getTricluster(i).addNoisy();
+					for(Integer i : this.getBicsByElem(e))
+						this.getBicluster(i).addNoisy();
 	
 				}
 			}
@@ -376,17 +375,16 @@ public class NumericDataset<T extends Number> extends Dataset {
 			
 			String[] coord = e.split(":");
 
-			ctx = Integer.parseInt(coord[0]);
-			row = Integer.parseInt(coord[1]);
-			col = Integer.parseInt(coord[2]);
+			row = Integer.parseInt(coord[0]);
+			col = Integer.parseInt(coord[1]);
 
 			T symbolIndex = null;
 			
-			if(this.existsMatrixItem(ctx, row, col))
-				symbolIndex = this.getMatrixItem(ctx, row, col);
+			if(this.existsMatrixItem(row, col))
+				symbolIndex = this.getMatrixItem(row, col);
 			else {
 				symbolIndex = this.generateBackgroundValue();
-				this.setMatrixItem(ctx, row, col, symbolIndex);
+				this.setMatrixItem(row, col, symbolIndex);
 			}
 
 			double deviation;
@@ -418,25 +416,24 @@ public class NumericDataset<T extends Number> extends Dataset {
 					newElem = (T) new Integer(newItem);
 			}
 			
-			setMatrixItem(ctx, row, col, newElem);
+			setMatrixItem(row, col, newElem);
 		}
 
 	}
 
 	/**
 	 * Plant error elements on the dataset
-	 * @param percMissing The percentage of error elements in the background (elements that do not belong to any tricluster)
-	 * @param percTricluster The maximum percentage of error elements in the triclusters
+	 * @param percMissing The percentage of error elements in the background (elements that do not belong to any Bicluster)
+	 * @param percBicluster The maximum percentage of error elements in the biclusters
 	 * @param minDeviation The noise deviation value
 	 */
-	public void plantErrors(double percBackground, double percTricluster, double minDeviation) {
+	public void plantErrors(double percBackground, double percBicluster, double minDeviation) {
 
 		int nrErrorsBackground = (int) (this.getBackgroundSize() * percBackground);
 		Random rand = new Random();
 
 		int row = -1;
 		int col = -1;
-		int ctx = -1;
 
 		for (int k = 0; k < nrErrorsBackground; k++) {
 
@@ -446,8 +443,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 			do {
 				row = rand.nextInt(getNumRows());
 				col = rand.nextInt(getNumCols());
-				ctx = rand.nextInt(getNumContexts());
-				e = ctx + ":" + row + ":" + col;
+				e = row + ":" + col;
 
 				if(!this.isError(e) && !this.isPlanted(e) && !this.isMissing(e) && !this.isNoisy(e))
 					stop = true;
@@ -458,40 +454,39 @@ public class NumericDataset<T extends Number> extends Dataset {
 
 			T newElem = (rand.nextBoolean()) ? maxM : minM;
 
-			this.setMatrixItem(ctx, row, col, newElem);
+			this.setMatrixItem(row, col, newElem);
 		}
 		
-		if(Double.compare(percTricluster, 0.0) > 0) {
-			for(NumericTricluster<? extends Number> t : this.plantedTrics) {
+		if(Double.compare(percBicluster, 0.0) > 0) {
+			for(NumericBicluster<? extends Number> t : this.plantedBics) {
 	
-				int nrErrorsTric = (int) (t.getSize() * percTricluster * rand.nextDouble());
+				int nrErrorsBic = (int) (t.getSize() * percBicluster * rand.nextDouble());
 				//System.out.println("Tric " + t.getId() + " - Number of errors: " + nrErrorsTric + "(" + ratio + ")\n");
 	
-				List<String> elems = this.getTriclusterElements(t.getId());
+				List<String> elems = this.getBiclusterElements(t.getId());
 				String e;
-				for(int k = t.getNumberOfErrors(); k < nrErrorsTric; k++) {
+				for(int k = t.getNumberOfErrors(); k < nrErrorsBic; k++) {
 					do {
 						e = elems.get(rand.nextInt(elems.size()));
-					} while (this.isMissing(e) || this.isNoisy(e) || this.isError(e) || !respectsOverlapConstraint(e, "Errors", percTricluster));
+					} while (this.isMissing(e) || this.isNoisy(e) || this.isError(e) || !respectsOverlapConstraint(e, "Errors", percBicluster));
 	
 					this.addErrorElement(e);
 					
-					for(Integer i : this.getTricsByElem(e))
-						this.getTricluster(i).addError();
+					for(Integer i : this.getBicsByElem(e))
+						this.getBicluster(i).addError();
 	
 					String[] coord = e.split(":");
 	
-					ctx = Integer.parseInt(coord[0]);
-					row = Integer.parseInt(coord[1]);
-					col = Integer.parseInt(coord[2]);
+					row = Integer.parseInt(coord[0]);
+					col = Integer.parseInt(coord[1]);
 	
 					double currentElement = 0;
 					
-					if(this.existsMatrixItem(ctx, row, col))
-						currentElement = this.getMatrixItem(ctx, row, col).doubleValue();
+					if(this.existsMatrixItem(row, col))
+						currentElement = this.getMatrixItem(row, col).doubleValue();
 					else {
 						currentElement = this.generateBackgroundValue().doubleValue();
-						this.setMatrixItem(ctx, row, col, (T) new Double(currentElement));
+						this.setMatrixItem(row, col, (T) new Double(currentElement));
 					}
 					
 					double candidate = 0;
@@ -526,7 +521,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 							newElem = (T) new Integer((int)candidate);
 					}
 					
-					setMatrixItem(ctx, row, col, newElem);
+					setMatrixItem(row, col, newElem);
 					
 				}
 			}
@@ -534,15 +529,15 @@ public class NumericDataset<T extends Number> extends Dataset {
 
 	}
 
-	private boolean respectsOverlapConstraint(String elem, String type, double percTricluster) {
+	private boolean respectsOverlapConstraint(String elem, String type, double percBicluster) {
 
 		boolean respects = true;
 
-		List<Integer> trics = this.getTricsByElem(elem);
+		List<Integer> bics = this.getBicsByElem(elem);
 
-		for(int i = 0; i < trics.size() && respects; i++) {
-			NumericTricluster<? extends Number> t = this.getTricluster(trics.get(i));
-			int maxAllowed = (int) (t.getSize() * percTricluster);
+		for(int i = 0; i < bics.size() && respects; i++) {
+			NumericBicluster<? extends Number> t = this.getBicluster(bics.get(i));
+			int maxAllowed = (int) (t.getSize() * percBicluster);
 			
 			if(type.equals("Missings") && t.getNumberOfMissings() + 1 > maxAllowed)
 				respects = false;

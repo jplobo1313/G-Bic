@@ -1,24 +1,11 @@
-Order Preserving,None,None,op_n_n
-None,Order Preserving,None
-None,None,Order Preserving
-Constant,Constant,Constant
-None,Constant,Constant
-Constant,Constant,None
-Constant,None,Constant
-Constant,None,None
-None,Constant,None
-None,None,Constant
-Additive,Additive,Additive
-Additive,Additive,Constant
-Constant,Additive,Additive
-Additive,Constant,Additive
-Additive,Constant,Constant
-Constant,Additive,Constant
-Constant,Constant,Additive
-Multiplicative,Multiplicative,Multiplicative
-Multiplicative,Multiplicative,Constant
-Constant,Multiplicative,Multiplicative
-Multiplicative,Constant,Multiplicative
-Multiplicative,Constant,Constant
-Constant,Multiplicative,Constant
-Constant,Constant,Multiplicative
+Order Preserving,None
+None,Order Preserving
+Constant,Constant
+None,Constant
+Constant,None
+Additive,Additive
+Constant,Additive
+Additive,Constant
+Multiplicative,Multiplicative
+Constant,Multiplicative
+Multiplicative,Constant

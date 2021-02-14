@@ -97,34 +97,28 @@ public class IOUtils {
 			result.append("X\t"); 
 
 			//O Header é sempre igual para cada excerto logo podemos guardar numa variavel local/global
-			for(int z = 0; z < dataset.getNumContexts(); z++) {
 				for(int y=0; y< dataset.getNumCols(); y++) {
-					if((z == dataset.getNumContexts() -1) && (y == dataset.getNumCols() - 1))
-						result.append("y" + y + "z" + z + "\n");
+					if(y == dataset.getNumCols() - 1)
+						result.append("y" + y + "\n");
 					else
-						result.append("y" + y + "z" + z + "\t");  			
+						result.append("y" + y + "\t");  			
 				}
-			}
 		}    	
 
 		int max = ((threshold * (step + 1)) > dataset.getNumRows()) ? dataset.getNumRows() - (threshold * step) : threshold;
 		for(int row = 0; row < max; row++){
 			result.append("x"+ (step * threshold + row) +"\t");
-			for(int ctx = 0; ctx < dataset.getNumContexts(); ctx++) {
-				for(int col = 0; col < dataset.getNumCols(); col ++) {
-					if(dataset.existsMatrixItem(ctx, step * threshold + row, col)) {
-						if(dataset.getMatrixItem(ctx, step * threshold + row, col).intValue() == Integer.MIN_VALUE) {
-							result.append("\t");
-						}
-						else
-							result.append(df.format(dataset.getMatrixItem(ctx, step * threshold + row, col))+"\t");
+			for(int col = 0; col < dataset.getNumCols(); col ++) {
+				if(dataset.existsMatrixItem(step * threshold + row, col)) {
+					if(dataset.getMatrixItem(step * threshold + row, col).intValue() == Integer.MIN_VALUE) {
+						result.append("\t");
 					}
-					else {
-						result.append(df.format(dataset.generateBackgroundValue()) + "\t");
-					}
-					
+					else
+						result.append(df.format(dataset.getMatrixItem(step * threshold + row, col))+"\t");
 				}
-
+				else {
+					result.append(df.format(dataset.generateBackgroundValue()) + "\t");
+				}	
 			}
 			result.replace(result.length()-1, result.length(),"\n"); 
 		}
@@ -147,28 +141,24 @@ public class IOUtils {
 		
 		if(printHeade) {
 			result.append("X\t"); 
-
-			for(int z = 0; z < dataset.getNumContexts(); z++) {
-				for(int y=0; y< dataset.getNumCols(); y++) {
-					if((z == dataset.getNumContexts() -1) && (y == dataset.getNumCols() - 1))
-						result.append("y" + y + "z" + z + "\n");
-					else
-						result.append("y" + y + "z" + z + "\t");  			
-				}
+			for(int y=0; y< dataset.getNumCols(); y++) {
+				if(y == dataset.getNumCols() - 1)
+					result.append("y" + y + "\n");
+				else
+					result.append("y" + y + "\t");  			
 			}
 		}    	
 
 		int max = ((threshold * (step + 1)) > dataset.getNumRows()) ? dataset.getNumRows() - (threshold * step) : threshold;
 		for(int row = 0; row < max; row++){
 			result.append("x"+ (step * threshold + row) +"\t");
-			for(int ctx = 0; ctx < dataset.getNumContexts(); ctx++) {
-				for(int col = 0; col < dataset.getNumCols(); col ++) {
-					if(dataset.existsMatrixItem(ctx, step * threshold + row, col))
-						result.append(dataset.getMatrixItem(ctx, step * threshold + row, col) + "\t");
-					else
-						result.append(dataset.generateBackgroundValue() + "\t");
-				}
+			for(int col = 0; col < dataset.getNumCols(); col ++) {
+				if(dataset.existsMatrixItem(step * threshold + row, col))
+					result.append(dataset.getMatrixItem(step * threshold + row, col) + "\t");
+				else
+					result.append(dataset.generateBackgroundValue() + "\t");
 			}
+			
 			result.replace(result.length()-1, result.length(),"\n"); 
 		}
 
@@ -189,7 +179,7 @@ public class IOUtils {
 		out.close();
 	}
 
-	public static String printSymbolicTricluster(Map<String, String> matrix, int ctx, Set<Integer> rows, Set<Integer> cols) {
+	public static String printSymbolicBicluster(Map<String, String> matrix, Set<Integer> rows, Set<Integer> cols) {
 
 		StringBuilder result = new StringBuilder();
 
@@ -213,7 +203,7 @@ public class IOUtils {
 			result.append("x"+ rowsArray[row] +"\t");
 			
 			for(int col = 0; col < colsArray.length; col ++) 
-				result.append(matrix.get(ctx + ":" + rowsArray[row] + ":" + colsArray[col]) + "\t");
+				result.append(matrix.get(rowsArray[row] + ":" + colsArray[col]) + "\t");
 			
 			result.replace(result.length()-1, result.length(),"\n"); 
 		}
@@ -221,7 +211,7 @@ public class IOUtils {
 		return result.toString();
 	}
 	
-	public static String printNumericTricluster(Map<String, ? extends Number> matrix, int ctx, Set<Integer> rows, Set<Integer> cols) {
+	public static String printNumericBicluster(Map<String, ? extends Number> matrix, Set<Integer> rows, Set<Integer> cols) {
 
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -247,10 +237,10 @@ public class IOUtils {
 			result.append("x"+ rowsArray[row] +"\t");
 			
 			for(int col = 0; col < colsArray.length; col ++)
-				if(matrix.get(ctx + ":" + rowsArray[row] + ":" + colsArray[col]).intValue() == Integer.MIN_VALUE)
+				if(matrix.get(rowsArray[row] + ":" + colsArray[col]).intValue() == Integer.MIN_VALUE)
 					result.append("\t");
 				else
-					result.append(df.format(matrix.get(ctx + ":" + rowsArray[row] + ":" + colsArray[col])) + "\t");
+					result.append(df.format(matrix.get(rowsArray[row] + ":" + colsArray[col])) + "\t");
 			
 			result.replace(result.length()-1, result.length(),"\n"); 
 		}

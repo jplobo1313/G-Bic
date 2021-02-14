@@ -7,10 +7,18 @@
 package com.gbic.domain.bicluster;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.SortedSet;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.gbic.domain.dataset.Dataset;
+import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.types.PatternType;
+import com.gbic.types.PlaidCoherency;
+import com.gbic.types.TimeProfile;
 
 public class NumericBicluster<T extends Number> extends Bicluster{
 
@@ -39,9 +47,18 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	 * @param rowFactors Bicluster's row factors
 	 * @param columnFactors Bicluster's column factors
 	 */
-	public NumericBicluster(SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
-			T seed, T[] rowFactors, T[] columnFactors) {
-		super(rows, cols, rowPattern, columnPattern);
+	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
+			T seed, T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern) {
+		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
+		this.numericSeed = seed;
+		this.patternSeed = null;
+		this.rowFactors = rowFactors;
+		this.columnFactors = columnFactors;
+	}
+	
+	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
+			T seed, T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern, TimeProfile timeProfile) {
+		super(id, rows, cols, rowPattern, columnPattern, plaidPattern, timeProfile);
 		this.numericSeed = seed;
 		this.patternSeed = null;
 		this.rowFactors = rowFactors;
@@ -80,8 +97,8 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	 * @param rowPattern Bicluster's row pattern
 	 * @param columnPattern Bicluster's column pattern
 	 */
-	public NumericBicluster(SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern) {
-		super(rows, cols, rowPattern, columnPattern);
+	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern, PlaidCoherency plaidPattern) {
+		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
 		this.patternSeed = null;
 		this.numericSeed = null;
 	}
@@ -95,9 +112,18 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	 * @param rowFactors Bicluster's row factors
 	 * @param columnFactors Bicluster's column factors
 	 */
-	public NumericBicluster(SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
-			T[] rowFactors, T[] columnFactors) {
-		super(rows, cols, rowPattern, columnPattern);
+	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
+			T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern) {
+		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
+		this.patternSeed = null;
+		this.numericSeed = null;
+		this.rowFactors = rowFactors;
+		this.columnFactors = columnFactors;
+	}
+	
+	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
+			T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern, TimeProfile timeProfile) {
+		super(id, rows, cols, rowPattern, columnPattern, plaidPattern, timeProfile);
 		this.patternSeed = null;
 		this.numericSeed = null;
 		this.rowFactors = rowFactors;
@@ -205,19 +231,19 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	}
 	
 	@Override
-	/**
-	 * String representation of a bicluster
-	 */
 	public String toString() {
-		
+
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		
+
 		Set<Integer> rows = getRows();
 		Set<Integer> columns = getColumns();
-		
+		T numericSeed = getNumericSeed();
+		T[][] patternSeed = getPatternSeed();
+
 		StringBuilder res = new StringBuilder();
-		res.append(" (" + rows.size() + "," + columns.size() + "), X=[");
+		res.append("Bicluster #" + this.getId() + "\n");
+		res.append(" (" + rows.size() + ", " + columns.size() + "), X=[");
 		for (int i : rows)
 			res.append(i + ",");
 		res.append("], Y=[");
@@ -225,22 +251,134 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 			res.append(i + ",");
 		res.append("],");
 		
-		//res.append(" Seed=" + df.format(seed) + ",");
-		
 		res.append(" RowPattern=" + getRowPattern() + ",");
-		res.append(" RowFactors=[");
-		if(getRowFactors() != null)
-			for (T i : getRowFactors())
-				res.append(df.format(i) + ",");
-		res.append("],");
+		res.append(" ColumnPattern=" + getColumnPattern() + ",");
 		
-		res.append(" Column Pattern=" + getColumnPattern() + ",");
-		res.append(" ColumnFactors=[");
-		if(getColumnFactors() != null)
-			for (T i : getColumnFactors())
-				res.append(df.format(i) + ",");
-		res.append("]");
+		if (numericSeed != null) {
+			
+			res.append(" Seed=" + df.format(numericSeed) + ", ");
+
+			//res.append(" RowPattern=" + template.getRowPattern() + ",");
+
+			if(getRowFactors().length > 0) {
+				res.append(" RowFactors=[");
+				for (T i : getRowFactors())
+					res.append(df.format(i) + ",");
+				res.append("],");
+			}
+			if(getColumnFactors().length > 0) {
+				res.append(" ColumnFactors=[");
+				for (T i : getColumnFactors())
+					res.append(df.format(i) + ",");
+				res.append("],");
+			}
+		}
 		
+		double missingsPerc = ((double) this.getNumberOfMissings()) / ((double) this.getSize()) * 100;
+		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
+		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
+		
+		if(super.getColumnPattern().equals(PatternType.ORDER_PRESERVING))
+			res.append(" TimeProfile=" + super.getTimeProfile() + ",");
+		
+		res.append(" %Missings=" + df.format(missingsPerc) + ",");
+		res.append(" %Noise=" + df.format(noisePerc) + ",");
+		res.append(" %Errors=" + df.format(errorsPerc) + ",");
+		
+		res.append(" PlaidCoherency=" + super.getPlaidCoherency().toString());
+
 		return res.toString().replace(",]", "]");
+	}
+	
+	@Override
+	public JSONObject toStringJSON(Dataset generatedDataset) {
+
+		JSONObject bicluster = new JSONObject();
+		
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+
+		Set<Integer> rows = getRows();
+		Set<Integer> columns = getColumns();
+		T numericSeed = getNumericSeed();
+		
+		bicluster.put("#rows", rows.size());
+		bicluster.put("#columns", columns.size());
+		
+		bicluster.put("X", rows);
+		bicluster.put("Y", columns);
+		
+		bicluster.put("RowPattern", new String(getRowPattern().toString()));
+		bicluster.put("ColumnPattern", new String(getColumnPattern().toString()));
+		
+		if (numericSeed != null) {
+	
+			bicluster.put("Seed", df.format(numericSeed));
+
+			if(getRowFactors().length > 0) {
+				
+				T[] rowFactors = getRowFactors();
+				String[] s = new String[numRows()];
+				
+				for(int i = 0; i < numRows(); i++) 
+					s[i] = df.format(rowFactors[i]);
+				
+				bicluster.put("RowFactors", Arrays.toString(s));
+			}
+
+			if(getColumnFactors().length > 0) {
+				
+				T[] colFactors = getColumnFactors();
+				String[] s = new String[numColumns()];
+				
+				for(int i = 0; i < numColumns(); i++) 
+					s[i] = df.format(colFactors[i]);
+				
+				bicluster.put("ColumnFactors", Arrays.toString(s));
+			}
+		}
+		
+		double missingsPerc = ((double) this.getNumberOfMissings()) / ((double) this.getSize()) * 100;
+		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
+		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
+
+		if(super.getColumnPattern().equals(PatternType.ORDER_PRESERVING))
+			bicluster.put("TimeProfile",new String(super.getTimeProfile().toString()));
+		
+		bicluster.put("%Missings", df.format(missingsPerc));
+		bicluster.put("%Noise", df.format(noisePerc));
+		bicluster.put("%Errors", df.format(errorsPerc));
+		
+		bicluster.put("PlaidCoherency", new String(super.getPlaidCoherency().toString()));
+		
+		JSONObject data = new JSONObject();
+		
+		Integer[] rowsArray = new Integer[rows.size()];
+	    rows.toArray(rowsArray);
+		
+		Integer[] colsArray = new Integer[columns.size()];
+	    columns.toArray(colsArray);
+		
+	    
+	    	
+    	JSONArray bicData = new JSONArray();
+    	
+    	for(int row = 0; row < rowsArray.length; row++){
+    		JSONArray rowData = new JSONArray();
+			for(int col = 0; col < colsArray.length; col ++) {
+				double value = ((NumericDataset)generatedDataset).getMatrixItem(rowsArray[row], colsArray[col]).doubleValue();
+				if(Double.compare(value, Integer.MIN_VALUE) == 0)
+					rowData.put("");
+				else
+					rowData.put(df.format(value));
+				
+			}
+			bicData.put(rowData);
+    	}
+	    
+	
+	    bicluster.put("Data", bicData);
+	    
+		return bicluster;
 	}
 }

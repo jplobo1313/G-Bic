@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.gbic.service.GBicService;
-import com.gbic.service.GBicService.TriclusterPatternWrapper;
+import com.gbic.service.GBicService.BiclusterPatternWrapper;
 import com.gbic.utils.DiscreteProbabilitiesTableView;
-import com.gbic.utils.TriclusterPatternTableView;
+import com.gbic.utils.BiclusterPatternTableView;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -26,7 +26,6 @@ public class MenuPrincipalModel {
 	//Dataset Settings
 	private final IntegerProperty numRows;
 	private final IntegerProperty numColumns;
-	private final IntegerProperty numContexts;
 	private final ObservableList<String> dataType;
 	private final SimpleDoubleProperty minValue;
 	private final SimpleDoubleProperty maxValue;
@@ -43,8 +42,8 @@ public class MenuPrincipalModel {
 	
 	private ObservableList<DiscreteProbabilitiesTableView> discreteProbs;
 	
-	//Triclusters Properties
-	private final IntegerProperty numTrics;
+	//Biclusters Properties
+	private final IntegerProperty numBics;
 	private final ObservableList<String> rowDistribution;
 	private final StringProperty rowDistEscolhida;
 	private final SimpleDoubleProperty rowDistParam1;
@@ -53,36 +52,31 @@ public class MenuPrincipalModel {
 	private final StringProperty columnDistEscolhida;
 	private final SimpleDoubleProperty columnDistParam1;
 	private final SimpleDoubleProperty columnDistParam2;
-	private final ObservableList<String> contextDistribution;
-	private final StringProperty contextDistEscolhida;
-	private final SimpleDoubleProperty contextDistParam1;
-	private final SimpleDoubleProperty contextDistParam2;
 	private final ObservableList<String> contiguity;
 	private final SimpleStringProperty contiguityEscolhida;
 	
-	//Triclusters Patterns
+	//Biclusters Patterns
 	private boolean symbolicType;
-	private final ObservableList<TriclusterPatternTableView> numericPatternsList;
-	private final ObservableList<TriclusterPatternTableView> symbolicPatternsList;
+	private final ObservableList<BiclusterPatternTableView> numericPatternsList;
+	private final ObservableList<BiclusterPatternTableView> symbolicPatternsList;
 	
 	//Overlapping
 	private final ObservableList<String> plaidCoherency;
 	private final StringProperty plaidCoherencyEscolhida;
-	private final SimpleDoubleProperty percOverlappingTrics;
-	private final IntegerProperty maxOverlappingTrics;
+	private final SimpleDoubleProperty percOverlappingBics;
+	private final IntegerProperty maxOverlappingBics;
 	private final SimpleDoubleProperty percOverlappingElements;
 	private final SimpleDoubleProperty percOverlappingRows;
-	private final SimpleDoubleProperty percOverlappingColumns;
-	private final SimpleDoubleProperty percOverlappingContexts;
+	private final SimpleDoubleProperty percOverlappingColumns;	
 	
 	//Extras
 	private final SimpleDoubleProperty percMissingsBackground;
-	private final SimpleDoubleProperty percMissingsTrics;
+	private final SimpleDoubleProperty percMissingsBics;
 	private final SimpleDoubleProperty percNoiseBackground;
-	private final SimpleDoubleProperty percNoiseTrics;
+	private final SimpleDoubleProperty percNoiseBics;
 	private final SimpleDoubleProperty noiseDeviation;
 	private final SimpleDoubleProperty percErrorsBackground;
-	private final SimpleDoubleProperty percErrorsTrics;
+	private final SimpleDoubleProperty percErrorsBics;
 	
 	private final SimpleDoubleProperty progress;
 	private final StringProperty statusT;
@@ -91,15 +85,14 @@ public class MenuPrincipalModel {
 	private final StringProperty directoryChooserTF;
 	private final StringProperty fileNameTF;
 	
-	private final ObservableList<String> triclusterID;
-	private SimpleStringProperty triclusterIDSelected;
+	private final ObservableList<String> biclusterID;
+	private SimpleStringProperty bicIDSelected;
 	
 	public MenuPrincipalModel(GBicService gBicService){
 		
 		//Dataset settings
 		this.numRows = new SimpleIntegerProperty();
 		this.numColumns = new SimpleIntegerProperty();
-		this.numContexts = new SimpleIntegerProperty();
 		this.dataType = FXCollections.observableArrayList();
 		this.dataTypeEscolhido = new SimpleStringProperty();
 		this.minValue = new SimpleDoubleProperty();
@@ -129,14 +122,14 @@ public class MenuPrincipalModel {
 		
 		this.discreteProbs = FXCollections.observableArrayList();
 		
-		//Triclusters Properties
-		this.numTrics = new SimpleIntegerProperty();
+		//Biclusters Properties
+		this.numBics = new SimpleIntegerProperty();
 		this.rowDistribution = FXCollections.observableArrayList();
 		this.rowDistEscolhida = new SimpleStringProperty();
 		this.rowDistParam1 = new SimpleDoubleProperty();
 		this.rowDistParam2 = new SimpleDoubleProperty();
 		
-		this.numTrics.setValue(8);
+		this.numBics.setValue(8);
 		this.rowDistParam1.setValue(6);
 		this.rowDistParam2.setValue(8);
 		
@@ -148,14 +141,6 @@ public class MenuPrincipalModel {
 		this.columnDistParam1.setValue(5);
 		this.columnDistParam2.setValue(7);
 		
-		this.contextDistribution = FXCollections.observableArrayList();
-		this.contextDistEscolhida = new SimpleStringProperty();
-		this.contextDistParam1 = new SimpleDoubleProperty();
-		this.contextDistParam2 = new SimpleDoubleProperty();
-		
-		this.contextDistParam1.setValue(5);
-		this.contextDistParam2.setValue(9);
-		
 		this.contiguity = FXCollections.observableArrayList();
 		this.contiguityEscolhida = new SimpleStringProperty();
 		
@@ -165,18 +150,15 @@ public class MenuPrincipalModel {
 		gBicService.getDistributions().forEach(d->this.columnDistribution.add(d));
 		this.columnDistEscolhida.setValue(this.columnDistribution.get(0));
 		
-		gBicService.getDistributions().forEach(d->this.contextDistribution.add(d));
-		this.contextDistEscolhida.setValue(this.contextDistribution.get(0));
-		
 		gBicService.getContiguity().forEach(c->this.contiguity.add(c));
 		this.contiguityEscolhida.setValue((this.contiguity.get(0)));
 		
-		//Triclusters Patterns
+		//Biclusters Patterns
 		this.numericPatternsList = FXCollections.observableArrayList();
 		int i = 1;
-		for(TriclusterPatternWrapper p : gBicService.getNumericPatterns()) {
-			TriclusterPatternTableView t = new TriclusterPatternTableView(i, p.getRowPattern(), p.getColumnPattern(), 
-					p.getContextPattern(), p.getImagePath(), new ComboBox<String>(), new Button("See"), new CheckBox());
+		for(BiclusterPatternWrapper p : gBicService.getNumericPatterns()) {
+			BiclusterPatternTableView t = new BiclusterPatternTableView(i, p.getRowPattern(), p.getColumnPattern(), 
+					p.getImagePath(), new ComboBox<String>(), new Button("See"), new CheckBox());
 			
 			if(i == 1)
 				t.getSelect().setSelected(true);
@@ -187,9 +169,9 @@ public class MenuPrincipalModel {
 		
 		this.symbolicPatternsList = FXCollections.observableArrayList();
 		i = 1;
-		for(TriclusterPatternWrapper p : gBicService.getSymbolicPatterns()) {
-			TriclusterPatternTableView t = new TriclusterPatternTableView(i, p.getRowPattern(), p.getColumnPattern(), 
-					p.getContextPattern(), p.getImagePath(), new ComboBox<String>(), new Button("See"), new CheckBox());
+		for(BiclusterPatternWrapper p : gBicService.getSymbolicPatterns()) {
+			BiclusterPatternTableView t = new BiclusterPatternTableView(i, p.getRowPattern(), p.getColumnPattern(), 
+					p.getImagePath(), new ComboBox<String>(), new Button("See"), new CheckBox());
 			
 			if(i == 1)
 				t.getSelect().setSelected(true);
@@ -203,35 +185,38 @@ public class MenuPrincipalModel {
 		//Overlapping
 		this.plaidCoherency = FXCollections.observableArrayList();
 		this.plaidCoherencyEscolhida = new SimpleStringProperty();
-		gBicService.getPlaidCoherency().forEach(s->this.plaidCoherency.add(s));
-		this.plaidCoherencyEscolhida.setValue((this.plaidCoherency.get(this.plaidCoherency.size() - 1)));
-		this.percOverlappingTrics = new SimpleDoubleProperty();
-		this.maxOverlappingTrics = new SimpleIntegerProperty();
+		//gBicService.getPlaidCoherency().forEach(s->this.plaidCoherency.add(s));
+		//this.plaidCoherencyEscolhida.setValue((this.plaidCoherency.get(this.plaidCoherency.size() - 1)));
+		
+		this.plaidCoherency.add("No Overlapping");
+		this.plaidCoherency.add("None");
+		this.plaidCoherencyEscolhida.setValue((this.plaidCoherency.get(0)));
+		
+		this.percOverlappingBics = new SimpleDoubleProperty();
+		this.maxOverlappingBics = new SimpleIntegerProperty();
 		this.percOverlappingElements = new SimpleDoubleProperty();
 		this.percOverlappingRows = new SimpleDoubleProperty();
 		this.percOverlappingColumns = new SimpleDoubleProperty();
-		this.percOverlappingContexts = new SimpleDoubleProperty();
 		this.percOverlappingRows.setValue(100);
 		this.percOverlappingColumns.setValue(100);
-		this.percOverlappingContexts.setValue(100);
 		
 		//Extras
 		this.percMissingsBackground = new SimpleDoubleProperty();
 		this.percMissingsBackground.setValue(0.0);
-		this.percMissingsTrics = new SimpleDoubleProperty();
-		this.percMissingsTrics.setValue(0.0);
+		this.percMissingsBics = new SimpleDoubleProperty();
+		this.percMissingsBics.setValue(0.0);
 		
 		this.percNoiseBackground = new SimpleDoubleProperty();
 		this.percNoiseBackground.setValue(0.0);
-		this.percNoiseTrics = new SimpleDoubleProperty();
-		this.percNoiseTrics.setValue(0.0);
+		this.percNoiseBics = new SimpleDoubleProperty();
+		this.percNoiseBics.setValue(0.0);
 		this.noiseDeviation = new SimpleDoubleProperty();
 		this.noiseDeviation.setValue(0.0);
 		
 		this.percErrorsBackground = new SimpleDoubleProperty();
 		this.percErrorsBackground.setValue(0.0);
-		this.percErrorsTrics = new SimpleDoubleProperty();
-		this.percErrorsTrics.setValue(0.0);
+		this.percErrorsBics = new SimpleDoubleProperty();
+		this.percErrorsBics.setValue(0.0);
 		
 		this.progress = new SimpleDoubleProperty();
 		this.statusLB = new SimpleStringProperty();
@@ -240,18 +225,18 @@ public class MenuPrincipalModel {
 		this.directoryChooserTF = new SimpleStringProperty();
 		this.fileNameTF = new SimpleStringProperty();
 		
-		this.triclusterID = FXCollections.observableArrayList();
-		this.triclusterIDSelected = new SimpleStringProperty();
+		this.biclusterID = FXCollections.observableArrayList();
+		this.bicIDSelected = new SimpleStringProperty();
 	}
 
-	public void setTriclusterIDList() {
-		for(int i = 0; i < this.getNumTrics(); i++)
-			this.triclusterID.add("Tricluster " + i);
+	public void setBiclusterIDList() {
+		for(int i = 0; i < this.getNumBics(); i++)
+			this.biclusterID.add("Bicluster " + i);
 	}
 	
-	public ObservableList<String> getTriclusterIDs() {
+	public ObservableList<String> getBiclusterIDs() {
 
-		return this.triclusterID;
+		return this.biclusterID;
 	}
 
 	
@@ -259,12 +244,12 @@ public class MenuPrincipalModel {
 		this.symbolicType = b;
 	}
 	
-	public void setTriclusterIDSelected(String t) {
-		this.triclusterIDSelected.set(t);
+	public void setBiclusterIDSelected(String t) {
+		this.bicIDSelected.set(t);
 	}
 	
-	public int getTriclusterIDSelected() {
-		return Integer.parseInt(this.triclusterIDSelected.get().split(" ")[2].strip());
+	public int getBiclusterIDSelected() {
+		return Integer.parseInt(this.bicIDSelected.get().split(" ")[2].strip());
 	}
 	
 	public boolean isSymbolic() {
@@ -291,16 +276,6 @@ public class MenuPrincipalModel {
 	public int getNumColumns() {
 
 		return this.numColumns.get();
-	}
-	
-	public IntegerProperty getNumContextsProperty() {
-
-		return this.numContexts;
-	}
-
-	public int getNumContexts() {
-
-		return this.numContexts.get();
 	}
 
 	public ObservableList<String> getDataTypes() {
@@ -419,16 +394,16 @@ public class MenuPrincipalModel {
 		this.symbolList.set(symbolList);
 	}
 	
-	//Triclusters Properties
+	//Biclusters Properties
 	
-	public IntegerProperty getNumTricsProperty() {
+	public IntegerProperty getNumBicsProperty() {
 
-		return this.numTrics;
+		return this.numBics;
 	}
 
-	public int getNumTrics() {
+	public int getNumBics() {
 
-		return this.numTrics.get();
+		return this.numBics.get();
 	}
 	
 	public ObservableList<String> getRowDistributions() {
@@ -459,21 +434,6 @@ public class MenuPrincipalModel {
 	public void setColumnDistributionEscolhida(String value) {
 
 		this.columnDistEscolhida.set(value);
-	}
-	
-	public ObservableList<String> getContextDistributions() {
-
-		return this.contextDistribution;
-	}
-
-	public String getContextDistributionEscolhida() {
-		
-		return this.contextDistEscolhida.get();
-	}
-	
-	public void setContextDistributionEscolhida(String value) {
-
-		this.contextDistEscolhida.set(value);
 	}
 	
 	public SimpleDoubleProperty getRowDistParam1Property() {
@@ -516,26 +476,6 @@ public class MenuPrincipalModel {
 		return this.columnDistParam2.get();
 	}
 	
-	public SimpleDoubleProperty getContextDistParam1Property() {
-
-		return this.contextDistParam1;
-	}
-
-	public double getContextDistParam1() {
-
-		return this.contextDistParam1.get();
-	}
-
-	public SimpleDoubleProperty getContextDistParam2Property() {
-
-		return this.contextDistParam2;
-	}
-
-	public double getContextDistParam2() {
-
-		return this.contextDistParam2.get();
-	}
-	
 	public ObservableList<String> getContiguity() {
 
 		return this.contiguity;
@@ -552,20 +492,20 @@ public class MenuPrincipalModel {
 	}
 	
 	
-	//Tricluster Patterns
-	public ObservableList<TriclusterPatternTableView> getNumericPatterns() {
+	//Bicluster Patterns
+	public ObservableList<BiclusterPatternTableView> getNumericPatterns() {
 
 		return this.numericPatternsList;
 	}
 	
-	public ObservableList<TriclusterPatternTableView> getSymbolicPatterns() {
+	public ObservableList<BiclusterPatternTableView> getSymbolicPatterns() {
 
 		return this.symbolicPatternsList;
 	}
 
 	//Overlapping
 	public ObservableList<String> getPlaidCoherency() {
-
+		
 		return this.plaidCoherency;
 	}
 
@@ -579,24 +519,43 @@ public class MenuPrincipalModel {
 		this.plaidCoherencyEscolhida.set(value);
 	}
 	
-	public SimpleDoubleProperty getPercOverlappingTricsProperty() {
-
-		return this.percOverlappingTrics;
-	}
-
-	public double getPercOverlappingTrics() {
-
-		return this.percOverlappingTrics.get();
+	public void updatePlaidCoherency(boolean numeric) {
+		if(numeric) {
+			this.plaidCoherency.clear();
+			this.plaidCoherency.add("No Overlapping");
+			this.plaidCoherency.add("None");
+			this.plaidCoherency.add("Additive");
+			this.plaidCoherency.add("Multiplicative");
+			this.plaidCoherency.add("Interpoled");
+			this.plaidCoherencyEscolhida.setValue((this.plaidCoherency.get(0)));
+		}
+		else
+		{
+			this.plaidCoherency.clear();
+			this.plaidCoherency.add("No Overlapping");
+			this.plaidCoherency.add("None");
+			this.plaidCoherencyEscolhida.setValue((this.plaidCoherency.get(0)));
+		}
 	}
 	
-	public IntegerProperty getMaxOverlappingTricsProperty() {
+	public SimpleDoubleProperty getPercOverlappingBicsProperty() {
 
-		return this.maxOverlappingTrics;
+		return this.percOverlappingBics;
 	}
 
-	public int getMaxOverlappingTrics() {
+	public double getPercOverlappingBics() {
 
-		return this.maxOverlappingTrics.get();
+		return this.percOverlappingBics.get();
+	}
+	
+	public IntegerProperty getMaxOverlappingBicsProperty() {
+
+		return this.maxOverlappingBics;
+	}
+
+	public int getMaxOverlappingBics() {
+
+		return this.maxOverlappingBics.get();
 	}
 	
 	public SimpleDoubleProperty getPercOverlappingElementsProperty() {
@@ -629,16 +588,6 @@ public class MenuPrincipalModel {
 		return this.percOverlappingColumns.get();
 	}
 	
-	public SimpleDoubleProperty getPercOverlappingContextsProperty() {
-
-		return this.percOverlappingContexts;
-	}
-
-	public double getPercOverlappingContexts() {
-
-		return this.percOverlappingContexts.get();
-	}
-	
 	//Extras
 	public SimpleDoubleProperty getPercMissingsBackgroundProperty() {
 		return percMissingsBackground;
@@ -648,12 +597,12 @@ public class MenuPrincipalModel {
 		return percMissingsBackground.get();
 	}
 
-	public SimpleDoubleProperty getPercMissingsTricsProperty() {
-		return percMissingsTrics;
+	public SimpleDoubleProperty getPercMissingsBicsProperty() {
+		return percMissingsBics;
 	}
 	
-	public double getPercMissingsTrics() {
-		return percMissingsTrics.get();
+	public double getPercMissingsBics() {
+		return percMissingsBics.get();
 	}
 
 	public SimpleDoubleProperty getPercNoiseBackgroundProperty() {
@@ -664,12 +613,12 @@ public class MenuPrincipalModel {
 		return percNoiseBackground.get();
 	}
 
-	public SimpleDoubleProperty getPercNoiseTricsProperty() {
-		return percNoiseTrics;
+	public SimpleDoubleProperty getPercNoiseBicsProperty() {
+		return percNoiseBics;
 	}
 	
-	public double getPercNoiseTrics() {
-		return percNoiseTrics.get();
+	public double getPercNoiseBics() {
+		return percNoiseBics.get();
 	}
 
 	public SimpleDoubleProperty getNoiseDeviationProperty() {
@@ -688,12 +637,12 @@ public class MenuPrincipalModel {
 		return percErrorsBackground.get();
 	}
 	
-	public SimpleDoubleProperty getPercErrorsTricsProperty() {
-		return percErrorsTrics;
+	public SimpleDoubleProperty getPercErrorsBicsProperty() {
+		return percErrorsBics;
 	}
 	
-	public double getPercErrorsTrics() {
-		return percErrorsTrics.get();
+	public double getPercErrorsBics() {
+		return percErrorsBics.get();
 	}
 	
 	public SimpleDoubleProperty getProgressProperty() {
@@ -749,8 +698,8 @@ public class MenuPrincipalModel {
 	}
 	*/
 
-	public void setNumTrics(int numTrics2) {
-		this.numTrics.set(numTrics2);
+	public void setNumBics(int numBics2) {
+		this.numBics.set(numBics2);
 		
 	}
 

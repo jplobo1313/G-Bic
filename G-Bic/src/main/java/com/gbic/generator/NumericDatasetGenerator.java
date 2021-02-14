@@ -1,5 +1,5 @@
 /**
- * NumericTriclusterDatasetGenerator Class
+ * NumericBiclusterDatasetGenerator Class
  * 
  * @author Joao Lobo - jlobo@lasige.di.fc.ul.pt
  * @version 1.0
@@ -14,17 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.commons.math3.util.Pair;
 
 import com.gbic.domain.bicluster.NumericBicluster;
 import com.gbic.domain.dataset.Dataset;
 import com.gbic.domain.dataset.NumericDataset;
-import com.gbic.domain.tricluster.NumericTricluster;
 import com.gbic.exceptions.ExceedDatasetBoundsException;
-import com.gbic.exceptions.ExceedTriclusterBoundsException;
+import com.gbic.exceptions.ExceedBiclusterBoundsException;
 import com.gbic.types.Background;
 import com.gbic.types.Contiguity;
 import com.gbic.types.PatternType;
@@ -32,16 +29,16 @@ import com.gbic.types.PlaidCoherency;
 import com.gbic.types.TimeProfile;
 import com.gbic.utils.BicMath;
 import com.gbic.utils.OverlappingSettings;
-import com.gbic.utils.TriclusterPattern;
-import com.gbic.utils.TriclusterStructure;
+import com.gbic.utils.BiclusterPattern;
+import com.gbic.utils.BiclusterStructure;
 
-public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
+public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 
 	private NumericDataset data;
 	private Random random = new Random();
 	private boolean allowsOverlap = false;
 	private boolean realValued;
-	private int numTrics;
+	private int numBics;
 
 	/**
 	 * Constructor
@@ -49,50 +46,46 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 	 * @param numRows the dataset's number of rows
 	 * @param numCols the dataset's number of columns
 	 * @param numContexts the dataset's number of contexts
-	 * @param numTrics the number of trics to plant
+	 * @param numBics the number of bics to plant
 	 * @param background the dataset's background
 	 * @param minM the dataset's minimum alphabet value
 	 * @param maxM the dataset's maximum alphabet value
 	 */
-	public NumericDatasetGenerator(boolean realValued, int numRows, int numCols, int numContexts, int numTrics, Background background, double minM, double maxM) {
+	public NumericDatasetGenerator(boolean realValued, int numRows, int numCols, int numBics, Background background, double minM, double maxM) {
 
 		this.realValued = realValued;
-		this.numTrics = numTrics;
+		this.numBics = numBics;
 		
 		if(realValued)
-			this.data = new NumericDataset<Double>(numRows, numCols, numContexts, numTrics, background,
+			this.data = new NumericDataset<Double>(numRows, numCols, numBics, background,
 					minM, maxM);
 		else
-			this.data = new NumericDataset<Integer>(numRows, numCols, numContexts, numTrics, background,
+			this.data = new NumericDataset<Integer>(numRows, numCols, numBics, background,
 					(int) minM, (int) maxM);
 	}
 
 	@Override
-	public Dataset generate(List<TriclusterPattern> patterns, TriclusterStructure tricStructure,
+	public Dataset generate(List<BiclusterPattern> patterns, BiclusterStructure bicStructure,
 			OverlappingSettings overlapping) throws Exception {
 
 		this.allowsOverlap = !overlapping.getPlaidCoherency().equals(PlaidCoherency.NO_OVERLAPPING);
-		int maxTricsPerOverlappedArea = overlapping.getMaxTricsPerOverlappedArea();
-		int overlappingThreshold = (int)(data.getNumTrics() * overlapping.getPercOfOverlappingTrics());
+		int maxBicsPerOverlappedArea = overlapping.getMaxBicsPerOverlappedArea();
+		int overlappingThreshold = (int)(data.getNumBics() * overlapping.getPercOfOverlappingBics());
 		PlaidCoherency plaidPattern = overlapping.getPlaidCoherency();
 
 		//num rows/cols/ctx of the expression matrix
 		int numRows = data.getNumRows();
 		int numCols = data.getNumCols();
-		int numConts = data.getNumContexts();
 
 		//num of rows/cols/ctxs of a bic
-		int numRowsTrics = 0;
-		int numColsTrics = 0;
-		int numContsTrics = 0;
+		int numRowsBics = 0;
+		int numColsBics = 0;
 
 		//Isto pode ser otimizado -> passar p/ dentro do for (1D em vez de 2D).
-		int[][] bicsRows = new int[numTrics][];
-		int[][] bicsCols = new int[numTrics][];
-		int[][] bicsConts = new int[numTrics][];
+		int[][] bicsRows = new int[numBics][];
+		int[][] bicsCols = new int[numBics][];
 
 		Set<Integer> chosenCols = new HashSet<>();
-		Set<Integer> chosenConts = new HashSet<>();
 
 		/** PART I: generate pattern ranges **/
 
@@ -113,34 +106,32 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 
 		int numAttempts = 0;
 		
-		for (int k = 0; k < numTrics; k++) {
+		for (int k = 0; k < numBics; k++) {
 
 			boolean hasSpace = true;
 
-			changeState("Stage:1, Msg:Tricluster " + k);
+			changeState("Stage:1, Msg:Bicluster " + k);
 			
 			if(k >= overlappingThreshold)
 				allowsOverlap = false;
 
-			System.out.println("Generating tricluster " + (k+1) + " of " + numTrics + "...");
+			System.out.println("Generating bicluster " + (k+1) + " of " + numBics + "...");
 			
-			TriclusterPattern currentPattern;
+			BiclusterPattern currentPattern;
 
-			if(numTrics < patterns.size())
+			if(numBics < patterns.size())
 				currentPattern = patterns.get(random.nextInt(patterns.size()));
 			else
 				currentPattern = patterns.get(k % patterns.size());
 
 			PatternType rowType = currentPattern.getRowsPattern();
 			PatternType columnType = currentPattern.getColumnsPattern();
-			PatternType contextType = currentPattern.getContextsPattern();
 			TimeProfile timeProfile = currentPattern.getTimeProfile();
 
-			Map<String, Integer> structure = generateTricStructure(tricStructure, numRows, numCols, numConts);
+			Map<String, Integer> structure = generateBicStructure(bicStructure, numRows, numCols);
 
-			numRowsTrics = structure.get("rows");
-			numColsTrics = structure.get("columns");
-			numContsTrics = structure.get("contexts");
+			numRowsBics = structure.get("rows");
+			numColsBics = structure.get("columns");
 
 			/** PART IV: select biclusters with (non-)overlapping elements **/
 			int[] bicsWithOverlap = null;
@@ -150,17 +141,17 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 
 				boolean dispersed = false;
 				if (dispersed) {
-					if ((k + 1) % maxTricsPerOverlappedArea == 0) {
-						bicsWithOverlap = new int[Math.min(k, maxTricsPerOverlappedArea - 1)];
-						for (int i = k - 1, j = 0; i >= 0 && j < maxTricsPerOverlappedArea - 1; i--, j++)
+					if ((k + 1) % maxBicsPerOverlappedArea == 0) {
+						bicsWithOverlap = new int[Math.min(k, maxBicsPerOverlappedArea - 1)];
+						for (int i = k - 1, j = 0; i >= 0 && j < maxBicsPerOverlappedArea - 1; i--, j++)
 							bicsWithOverlap[j] = i;
 					}
 				} 
-				else if (k % maxTricsPerOverlappedArea != 0)
+				else if (k % maxBicsPerOverlappedArea != 0)
 					bicsWithOverlap = new int[] { k - 1 };
 
-				int l = Math.max((k / maxTricsPerOverlappedArea) * maxTricsPerOverlappedArea, k-1);
-				//int l = (k / maxTricsPerOverlappedArea) * maxTricsPerOverlappedArea;
+				int l = Math.max((k / maxBicsPerOverlappedArea) * maxBicsPerOverlappedArea, k-1);
+				//int l = (k / maxBicsPerOverlappedArea) * maxBicsPerOverlappedArea;
 				bicsExcluded = new int[l];
 				for (int i = 0; i < l; i++)
 					bicsExcluded[i] = i;
@@ -168,35 +159,29 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 
 			/** PART V: generate rows and columns using overlapping constraints **/
 			//Se forem colunas contiguas nunca gera overlapping nas colunas?
-			int tricSize = numContsTrics * numRowsTrics * numColsTrics;
+			int bicSize = numRowsBics * numColsBics;
 			if (allowsOverlap) {
 				
-				Map<String, Double> overlappingPercs = generateOverlappingDistribution(tricSize, overlapping, numContsTrics, numRowsTrics, numColsTrics);
+				Map<String, Double> overlappingPercs = generateOverlappingDistribution(bicSize, overlapping, numRowsBics, numColsBics);
 
-				double overlappingContsPerc = overlappingPercs.get("contextPerc");
 				double overlappingColsPerc = overlappingPercs.get("columnPerc");
 				double overlappingRowsPerc = overlappingPercs.get("rowPerc");
 				
-				System.out.println("Tric " + (k+1) + " - Generating contexts...");
-				bicsConts[k] = generate(numContsTrics, numConts, overlappingContsPerc, bicsConts, bicsWithOverlap,
-						bicsExcluded, tricStructure.getContiguity().equals(Contiguity.CONTEXTS));
-				System.out.println("Contexts: " + bicsConts[k].length);
-				
-				System.out.println("Tric " + (k+1) + " - Generating columns...");
-				bicsCols[k] = generate(numColsTrics, numCols, overlappingColsPerc, bicsCols, bicsWithOverlap,
-						bicsExcluded, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
+				System.out.println("Bic " + (k+1) + " - Generating columns...");
+				bicsCols[k] = generate(numColsBics, numCols, overlappingColsPerc, bicsCols, bicsWithOverlap,
+						bicsExcluded, bicStructure.getContiguity().equals(Contiguity.COLUMNS));
 				System.out.println("Columns: " + bicsCols[k].length);
 			
-				System.out.println("Tric " + (k+1) + " - Generating rows...");
-				bicsRows[k] = generateRows(numRows, numRowsTrics, overlappingRowsPerc, bicsRows, bicsWithOverlap,
-						bicsExcluded, bicsCols[k], bicsConts[k], data.getElements());
+				System.out.println("Bic " + (k+1) + " - Generating rows...");
+				bicsRows[k] = generateRows(numRows, numRowsBics, overlappingRowsPerc, bicsRows, bicsWithOverlap,
+						bicsExcluded, bicsCols[k], data.getElements());
 				System.out.println("Rows: " + bicsRows[k].length);
 				
 				if(bicsRows[k] == null) {
 					hasSpace = false;
 					k--;
 					if(numAttempts == 15) {
-						numTrics--;
+						numBics--;
 						numAttempts = 0;
 					}
 					else
@@ -206,25 +191,20 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 					numAttempts = 0;
 			}
 			else {
-				
-				System.out.println("Tric " + (k+1) + " - Generating contexts...");
-				bicsConts[k] = generateNonOverlappingOthers(numContsTrics, numConts, chosenConts, tricStructure.getContiguity().equals(Contiguity.CONTEXTS));
-				System.out.println("Contexts: " + bicsConts[k].length);
-				
-				System.out.println("Tric " + (k+1) + " - Generating columns...");
-				bicsCols[k] = generateNonOverlappingOthers(numColsTrics, numCols, chosenCols, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
+				System.out.println("Bic " + (k+1) + " - Generating columns...");
+				bicsCols[k] = generateNonOverlappingOthers(numColsBics, numCols, chosenCols, bicStructure.getContiguity().equals(Contiguity.COLUMNS));
 				System.out.println("Columns: " + bicsCols[k].length);
 				
-				System.out.println("Tric " + (k+1) + " - Generating rows...");
-				bicsRows[k] = generateNonOverlappingRows(numRowsTrics, numRows, bicsCols[k], bicsConts[k], data.getElements());
+				System.out.println("Bic " + (k+1) + " - Generating rows...");
+				bicsRows[k] = generateNonOverlappingRows(numRowsBics, numRows, bicsCols[k], data.getElements());
 				System.out.println("Rows: " + bicsRows[k].length);
 
 				if(bicsRows[k] == null) {
 					hasSpace = false;
-					System.out.println("Tric " + (k+1) + " no space :(");
+					System.out.println("Bic " + (k+1) + " no space :(");
 					k--;
 					if(numAttempts == 15) {
-						numTrics--;
+						numBics--;
 						numAttempts = 0;
 					}
 					else
@@ -236,29 +216,25 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 
 			if(hasSpace) {
 				
-				System.out.println("Tric " + (k+1) + " - Has space, lets plant the patterns");
+				System.out.println("Bic " + (k+1) + " - Has space, lets plant the patterns");
 				
 				for (Integer c : bicsCols[k])
 					chosenCols.add(c);
-				for (Integer c : bicsConts[k])
-					chosenConts.add(c);
 
 				Arrays.parallelSort(bicsRows[k]);
 				Arrays.parallelSort(bicsCols[k]);
-				Arrays.parallelSort(bicsConts[k]);
-
-				NumericBicluster<Double> bicK = new NumericBicluster<>(BicMath.getSet(bicsRows[k]), 
-						BicMath.getSet(bicsCols[k]), rowType, columnType, new Double[numRowsTrics], new Double[numColsTrics]);
-
-				NumericTricluster<Double> tricK;
 				
-				if(contextType.equals(PatternType.ORDER_PRESERVING))
-					tricK = new NumericTricluster<>(k, bicK, contextType, timeProfile, plaidPattern, bicsConts[k]);
+				NumericBicluster<Double> bicK;
+				if(columnType.equals(PatternType.ORDER_PRESERVING))
+					bicK = new NumericBicluster<>(k, BicMath.getSet(bicsRows[k]), 
+						BicMath.getSet(bicsCols[k]), rowType, columnType, new Double[numRowsBics], new Double[numColsBics], plaidPattern, timeProfile);
 				else
-					tricK = new NumericTricluster<>(k, bicK, contextType, plaidPattern, bicsConts[k]);
+					bicK = new NumericBicluster<>(k, BicMath.getSet(bicsRows[k]), 
+							BicMath.getSet(bicsCols[k]), rowType, columnType, new Double[numRowsBics], new Double[numColsBics], plaidPattern);
 
+				
 				/** PART VI: generate biclusters coherencies **/
-				Double[][][] bicsymbols = new Double[bicsConts[k].length][bicsRows[k].length][bicsCols[k].length];
+				Double[][] bicsymbols = new Double[bicsRows[k].length][bicsCols[k].length];
 
 				double maxAlphabet = realValued ? data.getMaxM().doubleValue() : data.getMaxM().intValue();
 				double minAlphabet = realValued ? data.getMinM().doubleValue() : data.getMinM().intValue();
@@ -271,9 +247,9 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 				//expression and biclusters symbols
 
 				if(this.allowsOverlap) {
-					//When (k % nrOverlappingBics == 0), we are on the first tricluster that will be overlapped, so, we
+					//When (k % nrOverlappingBics == 0), we are on the first bicluster that will be overlapped, so, we
 					//must reset maxOverlapp and minOverlapp.
-					if (k % maxTricsPerOverlappedArea == 0) {
+					if (k % maxBicsPerOverlappedArea == 0) {
 						if(plaidPattern.equals(PlaidCoherency.ADDITIVE)) {
 							maxOverlapp = 0;
 							minOverlapp = 0;
@@ -286,16 +262,15 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 					}
 					//On the other hand, if we are on one of the other (nrOverlappingBics - 1) triclusters that will overlapp
 					//the previous one, we should check which are the maximum and minimum values on the area that will be overlapped by
-					//this new tricluster.
+					//this new bicluster.
 					else {
-						overlappLimits = getLimitsOnOverlappedArea(this.data.getElements(), bicsRows[k], bicsCols[k],
-								bicsConts[k]);
+						overlappLimits = getLimitsOnOverlappedArea(this.data.getElements(), bicsRows[k], bicsCols[k]);
 					}
 
 
 					if(plaidPattern.equals(PlaidCoherency.ADDITIVE)) {
 
-						if(k % maxTricsPerOverlappedArea != 0) {
+						if(k % maxBicsPerOverlappedArea != 0) {
 
 							double first = overlappLimits.getFirst();
 							double second = overlappLimits.getSecond();
@@ -307,14 +282,14 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 						}
 
 						if(Double.compare(maxAlphabet, 0) > 0)
-							maxAllowed = (maxAlphabet - maxOverlapp) / (maxTricsPerOverlappedArea - (k % maxTricsPerOverlappedArea));
+							maxAllowed = (maxAlphabet - maxOverlapp) / (maxBicsPerOverlappedArea - (k % maxBicsPerOverlappedArea));
 
 						if(Double.compare(minAlphabet, 0) < 0)
-							minAllowed = (minAlphabet - minOverlapp) / (maxTricsPerOverlappedArea - (k % maxTricsPerOverlappedArea));
+							minAllowed = (minAlphabet - minOverlapp) / (maxBicsPerOverlappedArea - (k % maxBicsPerOverlappedArea));
 					}
 					else if(plaidPattern.equals(PlaidCoherency.MULTIPLICATIVE)) {
 
-						if (k % maxTricsPerOverlappedArea != 0) {
+						if (k % maxBicsPerOverlappedArea != 0) {
 							double first = overlappLimits.getFirst();
 							double second = overlappLimits.getSecond();
 
@@ -326,10 +301,10 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 
 						//when the alphabet is strictly positive
 						if(Double.compare(minAlphabet, 0) >= 0)
-							maxAllowed = BicMath.nthRoot(maxAlphabet / maxOverlapp, (maxTricsPerOverlappedArea - (k % maxTricsPerOverlappedArea)));
+							maxAllowed = BicMath.nthRoot(maxAlphabet / maxOverlapp, (maxBicsPerOverlappedArea - (k % maxBicsPerOverlappedArea)));
 						else { 
 							lowerBound = Math.min(Math.abs(minAlphabet), Math.abs(maxAlphabet));
-							maxAllowed = BicMath.nthRoot(lowerBound / maxOverlapp, (maxTricsPerOverlappedArea - (k % maxTricsPerOverlappedArea)));
+							maxAllowed = BicMath.nthRoot(lowerBound / maxOverlapp, (maxBicsPerOverlappedArea - (k % maxBicsPerOverlappedArea)));
 
 							if(Double.compare(maxAllowed, lowerBound) > 0)
 								maxAllowed = lowerBound;
@@ -340,21 +315,21 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 				}
 
 				if(currentPattern.contains(PatternType.ADDITIVE)) {				
-					bicsymbols = generateAdditiveFactors(currentPattern, tricK, minAllowed, maxAllowed);
+					bicsymbols = generateAdditiveFactors(currentPattern, bicK, minAllowed, maxAllowed);
 				}
 
 				else if(currentPattern.contains(PatternType.MULTIPLICATIVE)) {
 
-					bicsymbols = generateMultiplicativeFactors(currentPattern, tricK, minAllowed, maxAllowed);
+					bicsymbols = generateMultiplicativeFactors(currentPattern, bicK, minAllowed, maxAllowed);
 				} 
 
 				else if(currentPattern.contains(PatternType.ORDER_PRESERVING)) {
-					bicsymbols = generateOrderPreserving(currentPattern, timeProfile, tricK, minAllowed, maxAllowed);
+					bicsymbols = generateOrderPreserving(currentPattern, timeProfile, bicK, minAllowed, maxAllowed);
 
 
 				}
 				else if (currentPattern.contains(PatternType.CONSTANT)){
-					bicsymbols = generateConstant(currentPattern, tricK, minAllowed, maxAllowed);
+					bicsymbols = generateConstant(currentPattern, bicK, minAllowed, maxAllowed);
 				}
 
 				
@@ -362,55 +337,51 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 				 * Part VII: generate the layers according to plaid type and put them in the
 				 * background
 				 **/
-				System.out.println("Tric " + (k+1) + " - planting the tric");
-				for(int ctx = 0; ctx < bicsConts[k].length; ctx++) 
-					for (int row = 0; row < bicsRows[k].length; row++) {
-						
-						if(row % 10000 == 0)
-							System.out.println("Planting on ctx " + ctx + " row " + row);
+				System.out.println("Bic " + (k+1) + " - planting the bic");
 				
-						for (int col = 0; col < bicsCols[k].length; col++) {
+				for (int row = 0; row < bicsRows[k].length; row++) {
+					for (int col = 0; col < bicsCols[k].length; col++) {
 
-							Double value = bicsymbols[ctx][row][col];
+						Double value = bicsymbols[row][col];
 
-							if(data.getElements().contains(bicsConts[k][ctx] + ":" + bicsRows[k][row] + ":" + bicsCols[k][col])) {
+						if(data.getElements().contains(bicsRows[k][row] + ":" + bicsCols[k][col])) {
 
-								switch (plaidPattern) {
-								case ADDITIVE:
-									value += data.getMatrixItem(bicsConts[k][ctx], bicsRows[k][row], bicsCols[k][col]).doubleValue();
-									break;
-								case MULTIPLICATIVE:
-									value *= data.getMatrixItem(bicsConts[k][ctx], bicsRows[k][row], bicsCols[k][col]).doubleValue();
-									break;
-								case INTERPOLED:
-									value = ((value + data.getMatrixItem(bicsConts[k][ctx], bicsRows[k][row], bicsCols[k][col]).doubleValue()) / 2);
+							switch (plaidPattern) {
+							case ADDITIVE:
+								value += data.getMatrixItem(bicsRows[k][row], bicsCols[k][col]).doubleValue();
+								break;
+							case MULTIPLICATIVE:
+								value *= data.getMatrixItem(bicsRows[k][row], bicsCols[k][col]).doubleValue();
+								break;
+							case INTERPOLED:
+								value = ((value + data.getMatrixItem(bicsRows[k][row], bicsCols[k][col]).doubleValue()) / 2);
 
-									if(!realValued) {
-										if(Double.compare(Math.round(value), minAlphabet) >= 0 && 
-												Double.compare(Math.round(value), maxAlphabet) <= 0)
-											value = (double) Math.round(value);
-										else
-											value = (double) value.intValue();
-									}
+								if(!realValued) {
+									if(Double.compare(Math.round(value), minAlphabet) >= 0 && 
+											Double.compare(Math.round(value), maxAlphabet) <= 0)
+										value = (double) Math.round(value);
+									else
+										value = (double) value.intValue();
+								}
 
-									break;
-								default:
-									break;
-								}			
-							}
-
-							if(realValued)
-								data.setMatrixItem(bicsConts[k][ctx], bicsRows[k][row], bicsCols[k][col], value);
-							else
-								data.setMatrixItem(bicsConts[k][ctx], bicsRows[k][row], bicsCols[k][col], new Integer(value.intValue()));
-
-							if(Double.compare(value.doubleValue(), minAlphabet) < 0 || Double.compare(value.doubleValue(), maxAlphabet) > 0)
-								throw new ExceedDatasetBoundsException("Exceeded dataset limits: Value = " + value.doubleValue());
-
-							data.addElement(bicsConts[k][ctx] + ":" + bicsRows[k][row] + ":" + bicsCols[k][col], k);
+								break;
+							default:
+								break;
+							}			
 						}
+
+						if(realValued)
+							data.setMatrixItem(bicsRows[k][row], bicsCols[k][col], value);
+						else
+							data.setMatrixItem(bicsRows[k][row], bicsCols[k][col], new Integer(value.intValue()));
+
+						if(Double.compare(value.doubleValue(), minAlphabet) < 0 || Double.compare(value.doubleValue(), maxAlphabet) > 0)
+							throw new ExceedDatasetBoundsException("Exceeded dataset limits: Value = " + value.doubleValue());
+
+						data.addElement(bicsRows[k][row] + ":" + bicsCols[k][col], k);
 					}
-				data.addTricluster(tricK);
+				}
+				data.addBicluster(bicK);
 				
 				int mb = 1024*1024;
 
@@ -437,14 +408,13 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 		return data;
 	}
 
-	private Double[][][] generateMultiplicativeFactors(TriclusterPattern pattern, NumericTricluster<Double> tricK, double minAllowed,
-			double maxAllowed) throws ExceedTriclusterBoundsException {
+	private Double[][] generateMultiplicativeFactors(BiclusterPattern pattern, NumericBicluster<Double> bicK, double minAllowed,
+			double maxAllowed) throws ExceedBiclusterBoundsException {
 
-		Double[][][] bicsymbols = new Double[tricK.getNumContexts()][tricK.getNumRows()][tricK.getNumCols()];
+		Double[][] bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
 
 		PatternType rowType = pattern.getRowsPattern();
 		PatternType columnType = pattern.getColumnsPattern();
-		PatternType contextType = pattern.getContextsPattern();
 
 		double seed;
 		double maxContribution;
@@ -460,7 +430,7 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 				seed = (int) seed;
 		}
 
-		tricK.setSeed(seed);
+		bicK.setSeed(seed);
 
 		//System.out.println("Seed = " + seed);
 
@@ -484,7 +454,7 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 		double maxColCont = minContribution;
 
 		if(rowType.equals(PatternType.MULTIPLICATIVE)) {
-			for(int r = 0; r < tricK.getNumRows(); r++) {
+			for(int r = 0; r < bicK.getNumRows(); r++) {
 
 				double factor = minContribution + (maxContribution - minContribution) * 
 						random.nextDouble();
@@ -497,16 +467,16 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 						factor = (int) factor;
 				}
 
-				tricK.setRowFactor(r, factor);
+				bicK.setRowFactor(r, factor);
 
-				maxRowCont = tricK.getRowFactor(r) > maxRowCont ? tricK.getRowFactor(r) : maxRowCont;
-				minRowCont = tricK.getRowFactor(r) < minRowCont ? tricK.getRowFactor(r) : minRowCont;
+				maxRowCont = bicK.getRowFactor(r) > maxRowCont ? bicK.getRowFactor(r) : maxRowCont;
+				minRowCont = bicK.getRowFactor(r) < minRowCont ? bicK.getRowFactor(r) : minRowCont;
 				//System.out.println("Row " + r + " = " + tricK.getRowFactor(r));
 			}
 		}
 		else {
-			for(int r = 0; r < tricK.getNumRows(); r++) {
-				tricK.setRowFactor(r, 1.0);
+			for(int r = 0; r < bicK.getNumRows(); r++) {
+				bicK.setRowFactor(r, 1.0);
 
 				maxRowCont = 1.0;
 				minRowCont = 1.0;
@@ -578,7 +548,7 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 			//System.out.println("Col MinContribution = " + minContribution);
 			//System.out.println("Col MaxContribution = " + maxContribution);
 
-			for(int c = 0; c < tricK.getNumCols(); c++) {
+			for(int c = 0; c < bicK.getNumCols(); c++) {
 
 				double factor = minContribution + (maxContribution - minContribution) * 
 						random.nextDouble();
@@ -591,138 +561,52 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 						factor = (int) factor;
 				}
 
-				tricK.setColumnFactor(c, factor);
+				bicK.setColumnFactor(c, factor);
 
-				maxColCont = tricK.getColumnFactor(c) > maxColCont ? tricK.getColumnFactor(c) : maxColCont;
-				minColCont = tricK.getColumnFactor(c) < minColCont ? tricK.getColumnFactor(c) : minColCont;
+				maxColCont = bicK.getColumnFactor(c) > maxColCont ? bicK.getColumnFactor(c) : maxColCont;
+				minColCont = bicK.getColumnFactor(c) < minColCont ? bicK.getColumnFactor(c) : minColCont;
 				//System.out.println("Col " + c + " = " + tricK.getColumnFactor(c));
 			}
 		}
 		else {
-			for(int c = 0; c < tricK.getNumCols(); c++)
-				tricK.setColumnFactor(c, 1.0);
+			for(int c = 0; c < bicK.getNumCols(); c++)
+				bicK.setColumnFactor(c, 1.0);
 
 			maxColCont = 1.0;
 			minColCont = 1.0;
 		}
 
-		if(contextType.equals(PatternType.MULTIPLICATIVE)) {
-
-			if (minAllowed >= 0) {
-				maxContribution = maxAllowed / (seed * maxRowCont * maxColCont);
-				minContribution = minAllowed / (seed * minRowCont * minColCont);
-			}
-			else if (minAllowed < 0 && maxAllowed >= 0){
-
-				Pair<Double, Double> combined = getCombinedContributions(minRowCont, maxRowCont, minColCont, 
-						maxColCont);
-
-				double minCombined = combined.getFirst();
-				double maxCombined = combined.getSecond();
-
-				if (seed >= 0) {
-					if(minCombined >= 0 && maxCombined >=0) {
-						maxContribution = maxAllowed / (seed * maxCombined);
-						minContribution = minAllowed / (seed * maxCombined);
-					}
-					else if(minCombined < 0 && maxCombined >= 0) {
-						double int1Min = maxAllowed / (seed * minCombined);
-						double int1Max = minAllowed / (seed * minCombined);
-
-						double int2Min = minAllowed / (seed * maxCombined);
-						double int2Max = maxAllowed / (seed * maxCombined);
-
-						minContribution = (int1Min > int2Min) ? int1Min : int2Min;
-						maxContribution = (int1Max < int2Max) ? int1Max : int2Max;
-					}
-					else {
-						maxContribution = minAllowed / (seed * minCombined);
-						minContribution = maxAllowed / (seed * minCombined);
-					}
-				}
-				else {
-					if(minCombined >= 0 && maxCombined >=0) {
-						maxContribution = minAllowed / (seed * maxCombined);
-						minContribution = maxAllowed / (seed * maxCombined);
-					}
-					else if(minCombined < 0 && maxCombined >= 0) {
-						double int1Min = minAllowed / (seed * minCombined);
-						double int1Max = maxAllowed / (seed * minCombined);
-
-						double int2Min = maxAllowed / (seed * maxCombined);
-						double int2Max = minAllowed / (seed * maxCombined);
-
-						minContribution = (int1Min > int2Min) ? int1Min : int2Min;
-						maxContribution = (int1Max < int2Max) ? int1Max : int2Max;
-					}
-					else {
-						maxContribution = maxAllowed / (seed * minCombined);
-						minContribution = minAllowed / (seed * minCombined);
-					}
-				}
-			}
-			else {
-				//not implemented (negative dataset)
-			}
-
-			//System.out.println("Ctx MinContribution = " + minContribution);
-			//System.out.println("Ctx MaxContribution = " + maxContribution);
-
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-
-				double factor = minContribution + (maxContribution - minContribution) * 
-						random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(factor), minContribution) >= 0 && 
-							Double.compare(Math.round(factor), maxContribution) <= 0)
-						factor = Math.round(factor);
-					else
-						factor = (int) factor;
-				}
-				tricK.setContextFactor(ctx, factor);
-				//System.out.println("Ctx " + ctx + " = " + tricK.getContextFactor(ctx));
-			}
-		}
-		else 
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++)
-				tricK.setContextFactor(ctx, 1.0);
-
-
-
 		//criar o bic
-		for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++)
-			for(int row = 0; row < tricK.getNumRows(); row++)
-				for(int col = 0; col < tricK.getNumCols(); col++) {
+		
+		for(int row = 0; row < bicK.getNumRows(); row++)
+			for(int col = 0; col < bicK.getNumCols(); col++) {
 
-					double value = seed * tricK.getRowFactor(row) * tricK.getColumnFactor(col) * 
-							tricK.getContextFactor(ctx);
+				double value = seed * bicK.getRowFactor(row) * bicK.getColumnFactor(col);
 
-					if(Double.compare(value,  minAllowed) < 0 && Double.compare(Math.abs(value - minAllowed), 0.2) <= 0)
-						value = minAllowed;
+				if(Double.compare(value,  minAllowed) < 0 && Double.compare(Math.abs(value - minAllowed), 0.2) <= 0)
+					value = minAllowed;
 
-					if(Double.compare(value,  maxAllowed) > 0 && Double.compare(Math.abs(value - maxAllowed), 0.2) <= 0)
-						value = maxAllowed;
+				if(Double.compare(value,  maxAllowed) > 0 && Double.compare(Math.abs(value - maxAllowed), 0.2) <= 0)
+					value = maxAllowed;
 
-					bicsymbols[ctx][row][col] = value;
+				bicsymbols[row][col] = value;
 
-					if(!realValued)
-						bicsymbols[ctx][row][col] = (double) bicsymbols[ctx][row][col].intValue();
+				if(!realValued)
+					bicsymbols[row][col] = (double) bicsymbols[row][col].intValue();
 
-					if (Double.compare(bicsymbols[ctx][row][col], minAllowed) < 0 || Double.compare(bicsymbols[ctx][row][col], maxAllowed) > 0) 
-						throw new ExceedTriclusterBoundsException("Exceeded Tricluster limits: Value = " + bicsymbols[ctx][row][col]);
+				if (Double.compare(bicsymbols[row][col], minAllowed) < 0 || Double.compare(bicsymbols[row][col], maxAllowed) > 0) 
+					throw new ExceedBiclusterBoundsException("Exceeded Bicluster limits: Value = " + bicsymbols[row][col]);
 
-				}
+			}
 		return bicsymbols;
 	}
 
-	private Double[][][] generateAdditiveFactors(TriclusterPattern pattern, NumericTricluster<Double> tricK, double min, double max) throws ExceedTriclusterBoundsException {
+	private Double[][] generateAdditiveFactors(BiclusterPattern pattern, NumericBicluster<Double> bicK, double min, double max) throws ExceedBiclusterBoundsException {
 
-		Double[][][] bicsymbols = new Double[tricK.getNumContexts()][tricK.getNumRows()][tricK.getNumCols()];
+		Double[][] bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
 
 		PatternType rowType = pattern.getRowsPattern();
 		PatternType columnType = pattern.getColumnsPattern();
-		PatternType contextType = pattern.getContextsPattern();
 
 		double seed = min + (max - min) * random.nextDouble();
 
@@ -733,7 +617,7 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 				seed = (int) seed;
 		}
 
-		tricK.setSeed(seed);
+		bicK.setSeed(seed);
 
 		//System.out.println("Seed:" +  seed);
 
@@ -757,7 +641,7 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 			minColCont = maxContribution;
 			maxColCont = minContribution;
 
-			for(int r = 0; r < tricK.getNumRows(); r++) {
+			for(int r = 0; r < bicK.getNumRows(); r++) {
 				//System.out.println("*** Row " + r + " ***");
 				//System.out.println("MinContribution: " + minContribution);
 				//System.out.println("MaxContribution: " + maxContribution);
@@ -770,16 +654,16 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 						factor = (int) factor;
 				}
 
-				tricK.setRowFactor(r, factor);
+				bicK.setRowFactor(r, factor);
 				//System.out.println("Factor: " + factor);
-				maxRowCont = tricK.getRowFactor(r) > maxRowCont ? tricK.getRowFactor(r) : maxRowCont;
-				minRowCont = tricK.getRowFactor(r) < minRowCont ? tricK.getRowFactor(r) : minRowCont;
+				maxRowCont = bicK.getRowFactor(r) > maxRowCont ? bicK.getRowFactor(r) : maxRowCont;
+				minRowCont = bicK.getRowFactor(r) < minRowCont ? bicK.getRowFactor(r) : minRowCont;
 				//System.out.println("******");
 			}
 		}
 		else {
-			for(int r = 0; r < tricK.getNumRows(); r++)
-				tricK.setRowFactor(r, 0.0);
+			for(int r = 0; r < bicK.getNumRows(); r++)
+				bicK.setRowFactor(r, 0.0);
 
 			maxRowCont = 0.0;
 			minRowCont = 0.0;
@@ -793,7 +677,7 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 			minContribution = min - (seed + minRowCont);
 			maxContribution = max - (seed + maxRowCont);
 
-			for(int c = 0; c < tricK.getNumCols(); c++) {
+			for(int c = 0; c < bicK.getNumCols(); c++) {
 
 				//System.out.println("*** Column " + c + " ***");
 				//System.out.println("MinContribution: " + minContribution);
@@ -807,18 +691,18 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 						factor = (int) factor;
 				}
 
-				tricK.setColumnFactor(c, factor);
+				bicK.setColumnFactor(c, factor);
 				//System.out.println("Factor: " + factor);
-				maxColCont = tricK.getColumnFactor(c) > maxColCont ? tricK.getColumnFactor(c) : maxColCont;
-				minColCont = tricK.getColumnFactor(c) < minColCont ? tricK.getColumnFactor(c) : minColCont;
+				maxColCont = bicK.getColumnFactor(c) > maxColCont ? bicK.getColumnFactor(c) : maxColCont;
+				minColCont = bicK.getColumnFactor(c) < minColCont ? bicK.getColumnFactor(c) : minColCont;
 				//System.out.println("******");
 			}
 
 		}
 		else {
 
-			for(int c = 0; c < tricK.getNumCols(); c++)
-				tricK.setColumnFactor(c, 0.0);
+			for(int c = 0; c < bicK.getNumCols(); c++)
+				bicK.setColumnFactor(c, 0.0);
 
 			maxColCont = 0.0;
 			minColCont = 0.0;
@@ -827,154 +711,93 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 		//System.out.println("\nMinColCont:" + minColCont);
 		//System.out.println("MaxColCont:" + maxColCont + "\n");
 
-		if(contextType.equals(PatternType.ADDITIVE)) {
-
-			minContribution = min - (seed + minRowCont + minColCont);
-			maxContribution = max - (seed + maxRowCont + maxColCont);
-
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-				//System.out.println("*** Context " + ctx + " ***");
-				//System.out.println("MinContribution: " + minContribution);
-				//System.out.println("MaxContribution: " + maxContribution);
-				factor = minContribution + (maxContribution - minContribution) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(factor), minContribution) >= 0 && Double.compare(Math.round(factor), maxContribution) <= 0)
-						factor = Math.round(factor);
-					else
-						factor = (int) factor;
-				}
-
-				tricK.setContextFactor(ctx, factor);
-				//System.out.println("Factor: " + factor);
-				//System.out.println("******");
-			}		
-		}
-		else {
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++)
-				tricK.setContextFactor(ctx, 0.0);
-		}
-
 		//criar o bic
-		for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++)
-			for(int r = 0; r < tricK.getNumRows(); r++)
-				for(int c = 0; c < tricK.getNumCols(); c++) {
-					bicsymbols[ctx][r][c] = seed + tricK.getRowFactor(r) +  tricK.getColumnFactor(c) + 
-							tricK.getContextFactor(ctx);
-					if(Double.compare(bicsymbols[ctx][r][c], min) < 0 || Double.compare(bicsymbols[ctx][r][c], max) > 0) 
-						throw new ExceedTriclusterBoundsException("Exceeded Tricluster limits: Value = " + bicsymbols[ctx][r][c]);
+		
+		for(int r = 0; r < bicK.getNumRows(); r++)
+			for(int c = 0; c < bicK.getNumCols(); c++) {
+				bicsymbols[r][c] = seed + bicK.getRowFactor(r) +  bicK.getColumnFactor(c);
+				if(Double.compare(bicsymbols[r][c], min) < 0 || Double.compare(bicsymbols[r][c], max) > 0) 
+					throw new ExceedBiclusterBoundsException("Exceeded Bicluster limits: Value = " + bicsymbols[r][c]);
 
 
-				}
+			}
 
 		return bicsymbols;
 	}
 
-	private Double[][][] generateOrderPreserving(TriclusterPattern pattern, TimeProfile timeProfile, NumericTricluster<Double> tricK, double min, double max) {
+	private Double[][] generateOrderPreserving(BiclusterPattern pattern, TimeProfile timeProfile, NumericBicluster<Double> bicK, double min, double max) {
 
-		Double[][][] bicsymbols = null;
+		Double[][] bicsymbols = null;
 
 		PatternType rowType = pattern.getRowsPattern();
 		PatternType columnType = pattern.getColumnsPattern();
-		PatternType contextType = pattern.getContextsPattern();
 		
 		if(rowType.equals(PatternType.ORDER_PRESERVING)) {
 
-			bicsymbols = new Double[tricK.getNumContexts()][tricK.getNumCols()][tricK.getNumRows()];
-			Integer[] order = generateOrder(tricK.getNumRows());
+			bicsymbols = new Double[bicK.getNumCols()][bicK.getNumRows()];
+			Integer[] order = generateOrder(bicK.getNumRows());
 				
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-				for(int col = 0; col < tricK.getNumCols(); col++) {
+			
+			for(int col = 0; col < bicK.getNumCols(); col++) {
 
-					double minValue = min;
-					double maxValue = max;
+				double minValue = min;
+				double maxValue = max;
 
-					for (int row = 0; row < tricK.getNumRows(); row++) {
+				for (int row = 0; row < bicK.getNumRows(); row++) {
 
-						bicsymbols[ctx][col][row] = minValue + (maxValue - minValue) * random.nextDouble();
+					bicsymbols[col][row] = minValue + (maxValue - minValue) * random.nextDouble();
 
-						if(!realValued) {
-							if(Double.compare(Math.round(bicsymbols[ctx][col][row]), minValue) >= 0 && 
-									Double.compare(Math.round(bicsymbols[ctx][col][row]), maxValue) <= 0)
-								bicsymbols[ctx][col][row] = (double) Math.round(bicsymbols[ctx][col][row]);
-							else
-								bicsymbols[ctx][col][row] = (double) bicsymbols[ctx][col][row].intValue();
-						}	
-					}
-					Arrays.parallelSort(bicsymbols[ctx][col]);
-					bicsymbols[ctx][col] = shuffle(order, bicsymbols[ctx][col]);
+					if(!realValued) {
+						if(Double.compare(Math.round(bicsymbols[col][row]), minValue) >= 0 && 
+								Double.compare(Math.round(bicsymbols[col][row]), maxValue) <= 0)
+							bicsymbols[col][row] = (double) Math.round(bicsymbols[col][row]);
+						else
+							bicsymbols[col][row] = (double) bicsymbols[col][row].intValue();
+					}	
 				}
+				Arrays.parallelSort(bicsymbols[col]);
+				bicsymbols[col] = shuffle(order, bicsymbols[col]);
 			}
+			
 			bicsymbols = transposeMatrix(bicsymbols, "x", "y");
 		}
 		else if(columnType.equals(PatternType.ORDER_PRESERVING)) {
 
-			bicsymbols = new Double[tricK.getNumContexts()][tricK.getNumRows()][tricK.getNumCols()];
-			Integer[] order = generateOrder(tricK.getNumCols());
+			bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
 			
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-				for(int row = 0; row < tricK.getNumRows(); row++) {
+			Integer[] order = null;
+			if(timeProfile.equals(TimeProfile.RANDOM))
+				order = generateOrder(bicK.getNumRows());
+			
+			
+			for(int row = 0; row < bicK.getNumRows(); row++) {
+				for(int col = 0; col < bicK.getNumCols(); col++) {
+					
 
 					double minValue = min;
 					double maxValue = max;
 
-					for (int col = 0; col < tricK.getNumCols(); col++) {
+					bicsymbols[row][col] = minValue + (maxValue - minValue) * random.nextDouble();
 
-						bicsymbols[ctx][row][col] = minValue + (maxValue - minValue) * random.nextDouble();
-
-						if(!realValued) {
-							if(Double.compare(Math.round(bicsymbols[ctx][row][col]), minValue) >= 0 && 
-									Double.compare(Math.round(bicsymbols[ctx][row][col]), maxValue) <= 0)
-								bicsymbols[ctx][row][col] = (double) Math.round(bicsymbols[ctx][row][col]);
-							else
-								bicsymbols[ctx][row][col] = (double) bicsymbols[ctx][row][col].intValue();
-						}	
-					}
-					Arrays.parallelSort(bicsymbols[ctx][row]);
-					bicsymbols[ctx][row] = shuffle(order, bicsymbols[ctx][row]);
+					if(!realValued) {
+						if(Double.compare(Math.round(bicsymbols[row][col]), minValue) >= 0 && 
+								Double.compare(Math.round(bicsymbols[row][col]), maxValue) <= 0)
+							bicsymbols[row][col] = (double) Math.round(bicsymbols[row][col]);
+						else
+							bicsymbols[row][col] = (double) bicsymbols[row][col].intValue();
+					}	
 				}
-			}
-		}
-		else if(contextType.equals(PatternType.ORDER_PRESERVING)) {
-
-			bicsymbols = new Double[tricK.getNumCols()][tricK.getNumRows()][tricK.getNumContexts()];
-			
-			Integer[] order = null;
-			if(timeProfile.equals(TimeProfile.RANDOM))
-				order = generateOrder(tricK.getNumContexts());
-			
-			
-			for(int col = 0; col < tricK.getNumCols(); col++) {
-				for(int row = 0; row < tricK.getNumRows(); row++) {
-					for (int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-
-						double minValue = min;
-						double maxValue = max;
-
-						bicsymbols[col][row][ctx] = minValue + (maxValue - minValue) * random.nextDouble();
-
-						if(!realValued) {
-							if(Double.compare(Math.round(bicsymbols[col][row][ctx]), minValue) >= 0 && 
-									Double.compare(Math.round(bicsymbols[col][row][ctx]), maxValue) <= 0)
-								bicsymbols[col][row][ctx] = (double) Math.round(bicsymbols[col][row][ctx]);
-							else
-								bicsymbols[col][row][ctx] = (double) bicsymbols[col][row][ctx].intValue();
-						}	
-					}
-					
-					if(timeProfile.equals(TimeProfile.RANDOM)) {
-						Arrays.parallelSort(bicsymbols[col][row]);
-						bicsymbols[col][row] = shuffle(order, bicsymbols[col][row]);
-					}
-					else if(timeProfile.equals(TimeProfile.MONONICALLY_INCREASING))
-						Arrays.sort(bicsymbols[col][row]);
-					
-					else
-						Arrays.sort(bicsymbols[col][row], Collections.reverseOrder());
-					
+				
+				if(timeProfile.equals(TimeProfile.RANDOM)) {
+					Arrays.parallelSort(bicsymbols[row]);
+					bicsymbols[row] = shuffle(order, bicsymbols[row]);
 				}
+				else if(timeProfile.equals(TimeProfile.MONONICALLY_INCREASING))
+					Arrays.sort(bicsymbols[row]);
+				
+				else
+					Arrays.sort(bicsymbols[row], Collections.reverseOrder());
 			}
-			bicsymbols = transposeMatrix(bicsymbols, "z", "y");
 		}
 		return bicsymbols;
 	}
@@ -998,20 +821,18 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 		return newArray;
 	}
 	
-	private Double[][][] generateConstant(TriclusterPattern pattern, NumericTricluster<Double> tricK, double min, double max){
+	private Double[][] generateConstant(BiclusterPattern pattern, NumericBicluster<Double> bicK, double min, double max){
 
-		Double[][][] bicsymbols = new Double[tricK.getNumContexts()][tricK.getNumRows()][tricK.getNumCols()];
+		Double[][] bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
 
 		PatternType rowType = pattern.getRowsPattern();
 		PatternType columnType = pattern.getColumnsPattern();
-		PatternType contextType = pattern.getContextsPattern();
 
 		double seed;
 		double maxValue = max;
 		double minValue = min;
 
-		if(rowType.equals(PatternType.CONSTANT) && columnType.equals(PatternType.CONSTANT) && 
-				(contextType.equals(PatternType.CONSTANT))) {
+		if(rowType.equals(PatternType.CONSTANT) && columnType.equals(PatternType.CONSTANT)) {
 
 			//System.out.println("MaxValue = " + maxValue);
 			//System.out.println("MinValue = " + minValue);
@@ -1027,115 +848,51 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 
 			//System.out.println("Seed: " +  seed);
 
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-				for(int row = 0; row < tricK.getNumRows(); row++) 
-					for (int col = 0; col < tricK.getNumCols(); col++)
-						bicsymbols[ctx][row][col] = seed;	
-			}						
-			tricK.setSeed(bicsymbols[0]);
-		}
-		else if(rowType.equals(PatternType.CONSTANT) && columnType.equals(PatternType.CONSTANT)) {
-
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-
-				seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-						seed = Math.round(seed);
-					else
-						seed = (int) seed;
-				}
-
-				for(int row = 0; row < tricK.getNumRows(); row++) {
-					for (int col = 0; col < tricK.getNumCols(); col++)
-						bicsymbols[ctx][row][col] = seed;
-				}
-				tricK.setContextPattern(ctx, bicsymbols[ctx]);
-			}
-		}
-		else if(columnType.equals(PatternType.CONSTANT) && contextType.equals(PatternType.CONSTANT)) {
-
-			for(int row = 0; row < tricK.getNumRows(); row++) {
-
-				seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-						seed = Math.round(seed);
-					else
-						seed = (int) seed;
-				}
-
-				for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++)
-					for (int col = 0; col < tricK.getNumCols(); col++)
-						bicsymbols[ctx][row][col] = seed;
-			}
-
-			tricK.setSeed(bicsymbols[0]);
-
-		}
-		else if(rowType.equals(PatternType.CONSTANT) && contextType.equals(PatternType.CONSTANT)) {
-
-			for(int col = 0; col < tricK.getNumCols(); col++) {
-
-				seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-						seed = Math.round(seed);
-					else
-						seed = (int) seed;
-				}
-
-				for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++)
-					for (int row = 0; row < tricK.getNumRows(); row++)
-						bicsymbols[ctx][row][col] = seed;
-			}
-			tricK.setSeed(bicsymbols[0]);
+			
+			for(int row = 0; row < bicK.getNumRows(); row++) 
+				for (int col = 0; col < bicK.getNumCols(); col++)
+					bicsymbols[row][col] = seed;	
+									
+			bicK.setSeed(bicsymbols);
 		}
 		else if(columnType.equals(PatternType.CONSTANT)) {
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-				for (int row = 0; row < tricK.getNumRows(); row++) {
+			
+			for (int row = 0; row < bicK.getNumRows(); row++) {
 
-					seed = minValue + (maxValue - minValue) * random.nextDouble();
+				seed = minValue + (maxValue - minValue) * random.nextDouble();
 
-					if(!realValued) {
-						if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-							seed = Math.round(seed);
-						else
-							seed = (int) seed;
-					}
-
-					for(int col = 0; col < tricK.getNumCols(); col++)
-						bicsymbols[ctx][row][col] = seed;
+				if(!realValued) {
+					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
+						seed = Math.round(seed);
+					else
+						seed = (int) seed;
 				}
-				tricK.setContextPattern(ctx, bicsymbols[ctx]);
+
+				for(int col = 0; col < bicK.getNumCols(); col++)
+					bicsymbols[row][col] = seed;
 			}
+			
 		}
 		else if(rowType.equals(PatternType.CONSTANT)) {
-			for(int ctx = 0; ctx < tricK.getNumContexts(); ctx++) {
-				for (int col = 0; col < tricK.getNumCols(); col++) {
+			for (int col = 0; col < bicK.getNumCols(); col++) {
 
-					seed = minValue + (maxValue - minValue) * random.nextDouble();
+				seed = minValue + (maxValue - minValue) * random.nextDouble();
 
-					if(!realValued) {
-						if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-							seed = Math.round(seed);
-						else
-							seed = (int) seed;
-					}
-
-					for(int row = 0; row < tricK.getNumRows(); row++)
-						bicsymbols[ctx][row][col] = seed;
+				if(!realValued) {
+					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
+						seed = Math.round(seed);
+					else
+						seed = (int) seed;
 				}
-				tricK.setContextPattern(ctx, bicsymbols[ctx]);
+
+				for(int row = 0; row < bicK.getNumRows(); row++)
+					bicsymbols[row][col] = seed;
 			}
 		}
 		else {
 
-			for(int row = 0; row < tricK.getNumRows(); row++) {
-				for (int col = 0; col < tricK.getNumCols(); col++) {
+			for(int row = 0; row < bicK.getNumRows(); row++) {
+				for (int col = 0; col < bicK.getNumCols(); col++) {
 					seed = minValue + (maxValue - minValue) * random.nextDouble();
 
 					if(!realValued) {
@@ -1145,15 +902,10 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 							seed = (int) seed;
 					}
 
-					bicsymbols[0][row][col] = seed;
+					bicsymbols[row][col] = seed;
 				}
 			}
-
-			tricK.setSeed(bicsymbols[0]);
-
-			for(int ctx = 1; ctx < tricK.getNumContexts(); ctx++) {
-				bicsymbols[ctx] = bicsymbols[0];
-			}
+			bicK.setSeed(bicsymbols);
 		}
 
 		return bicsymbols;
@@ -1170,19 +922,18 @@ public class NumericDatasetGenerator extends TriclusterDatasetGenerator {
 		return new Pair<>(conts[0], conts[3]);
 	}
 
-	private Pair<Double, Double> getLimitsOnOverlappedArea(Set<String> existingValues, int[] rows, int[] cols, int[] ctxs) {
+	private Pair<Double, Double> getLimitsOnOverlappedArea(Set<String> existingValues, int[] rows, int[] cols) {
 
 		double min = this.data.getMaxM().doubleValue() + 1;
 		double max = this.data.getMinM().doubleValue() - 1 ;
 
-		for(Integer ctx : ctxs) {
-			for(Integer row : rows) {
-				for(Integer col : cols) {
-					if(existingValues.contains(ctx + ":" + row + ":" + col)) {
-						double value = this.data.getMatrixItem(ctx, row, col).doubleValue();
-						min = (Double.compare(value, min) < 0) ? value : min;
-						max = (Double.compare(value, max) > 0) ? value : max;
-					}
+		
+		for(Integer row : rows) {
+			for(Integer col : cols) {
+				if(existingValues.contains(row + ":" + col)) {
+					double value = this.data.getMatrixItem(row, col).doubleValue();
+					min = (Double.compare(value, min) < 0) ? value : min;
+					max = (Double.compare(value, max) > 0) ? value : max;
 				}
 			}
 		}

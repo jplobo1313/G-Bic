@@ -3,25 +3,22 @@ package com.gbic.utils;
 import com.gbic.types.PatternType;
 import com.gbic.types.TimeProfile;
 
-public class TriclusterPattern {
+public class BiclusterPattern {
 
 	PatternType rows;
 	PatternType columns;
-	PatternType contexts;
 	TimeProfile timeProfile;
 	
-	public TriclusterPattern(PatternType rows, PatternType columns, PatternType contexts) {
+	public BiclusterPattern(PatternType rows, PatternType columns) {
 		
 		this.rows = rows;
 		this.columns = columns;
-		this.contexts = contexts;
 	}
 	
-	public TriclusterPattern(PatternType rows, PatternType columns, PatternType contexts, TimeProfile timeProfile) {
+	public BiclusterPattern(PatternType rows, PatternType columns, TimeProfile timeProfile) {
 		
 		this.rows = rows;
 		this.columns = columns;
-		this.contexts = contexts;
 		this.timeProfile = timeProfile;
 	}
 	
@@ -33,12 +30,8 @@ public class TriclusterPattern {
 		return this.columns;
 	}
 	
-	public PatternType getContextsPattern() {
-		return this.contexts;
-	}
-	
 	public boolean contains(PatternType pattern) {
-		return (this.rows.equals(pattern) || this.columns.equals(pattern) || this.contexts.equals(pattern));
+		return (this.rows.equals(pattern) || this.columns.equals(pattern));
 	}
 
 	/**

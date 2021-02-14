@@ -1,5 +1,5 @@
 /**
- * TriclusterDatasetGenerator Class
+ * BiclusterDatasetGenerator Class
  * 
  * @author Joao Lobo - jlobo@lasige.di.fc.ul.pt
  * @version 1.0
@@ -20,40 +20,40 @@ import com.gbic.domain.dataset.Dataset;
 import com.gbic.exceptions.OutputErrorException;
 import com.gbic.types.Distribution;
 import com.gbic.utils.OverlappingSettings;
-import com.gbic.utils.TriclusterPattern;
-import com.gbic.utils.TriclusterStructure;
+import com.gbic.utils.BiclusterPattern;
+import com.gbic.utils.BiclusterStructure;
 
-public abstract class TriclusterDatasetGenerator extends Observable {
+public abstract class BiclusterDatasetGenerator extends Observable {
 
 	private String path;
 	private String datasetFileName;
-	private String tricsInfoFileName;
+	private String bicsInfoFileName;
 	private String statsFileName;
 	
 	Random random = new Random();
 	
 	/**
-	 * Generate a dataset with planted triclusters
-	 * @param patterns The list of patterns for each tricluster
-	 * @param tricStructure The information about the tricluster's structure
+	 * Generate a dataset with planted biclusters
+	 * @param patterns The list of patterns for each bicluster
+	 * @param bicStructure The information about the bicluster's structure
 	 * @param overlapping The information about overlapping properties
 	 * @return The generated dataset
 	 * @throws Exception
 	 */
-	public abstract Dataset generate(List<TriclusterPattern> patterns, TriclusterStructure tricStructure,
+	public abstract Dataset generate(List<BiclusterPattern> patterns, BiclusterStructure bicStructure,
 			OverlappingSettings overlapping) throws Exception;
 
-	protected int[] generateRows(int dimSize, int tricSize, double percOverlap, int[][] tricsRows,
-			int[] tricsWithOverlap, int[] tricsExcluded, int[] tricCols, int[] tricConts, Set<String> elements) throws Exception {
+	protected int[] generateRows(int dimSize, int bicSize, double percOverlap, int[][] bicsRows,
+			int[] bicsWithOverlap, int[] bicsExcluded, int[] bicCols, Set<String> elements) throws Exception {
 		
 		//guardar rows escolhidas
-		int[] result = new int[tricSize];
+		int[] result = new int[bicSize];
 		//guardar rows escolhidas (same, redudante talvez)
 		SortedSet<Integer> set = new TreeSet<>();
 		boolean noSpace = false;
 		//Se nao existir overlapping
 		if (Double.compare(percOverlap,0) <= 0) { // no need for plaid calculus
-			for (int i = 0, val = -1; i < tricSize; i++) {
+			for (int i = 0, val = -1; i < bicSize; i++) {
 				//guardar rows testadas
 				SortedSet<Integer> testedRows = new TreeSet<>();
 
@@ -66,12 +66,12 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 					
 					//condicoes para garantir que a row eh valida
 					alreadyExists = set.contains(val);
-					invalidOverlap = isOverlap(val, tricCols, tricConts, elements);
+					invalidOverlap = isOverlap(val, bicCols, elements);
 					notExhaustedDim = testedRows.size() < dimSize;
 				} while (alreadyExists || (invalidOverlap && notExhaustedDim));
 				
 				//verificar se a ultima row testada eh ou nao valida
-				if(i < tricSize && !alreadyExists && !invalidOverlap) {
+				if(i < bicSize && !alreadyExists && !invalidOverlap) {
 					set.add(val);
 					result[i] = val;
 				}
@@ -85,25 +85,25 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		else {
 			//Primeira tentativa - aproveitar ao maximo rows livres
 			SortedSet<Integer> setExc = new TreeSet<>();
-			for (int i = 0; i < tricsExcluded.length; i++)
-				for (int j = 0; j < tricsRows[tricsExcluded[i]].length; j++)
-					setExc.add(tricsRows[tricsExcluded[i]][j]);
+			for (int i = 0; i < bicsExcluded.length; i++)
+				for (int j = 0; j < bicsRows[bicsExcluded[i]].length; j++)
+					setExc.add(bicsRows[bicsExcluded[i]][j]);
 
 			int currentIndex = 0;
-			if (tricsWithOverlap != null) {
-				for (Integer tricID : tricsWithOverlap) {
-					for (int j = 0; j < tricsRows[tricID].length; j++)
-						setExc.add(tricsRows[tricID][j]);
+			if (bicsWithOverlap != null) {
+				for (Integer bicID : bicsWithOverlap) {
+					for (int j = 0; j < bicsRows[bicID].length; j++)
+						setExc.add(bicsRows[bicID][j]);
 
 					//TODO: edit this
 					int nrOverlapVals = 0;
-					if(tricsRows[tricID].length < tricSize)
-						nrOverlapVals = (int) (((double) tricsRows[tricID].length) * percOverlap);
+					if(bicsRows[bicID].length < bicSize)
+						nrOverlapVals = (int) (((double) bicsRows[bicID].length) * percOverlap);
 					else
-						nrOverlapVals = (int) (((double) tricSize) * percOverlap);
+						nrOverlapVals = (int) (((double) bicSize) * percOverlap);
 
-					for (int j = 0, val = -1; j < nrOverlapVals && currentIndex < tricSize; j++) {
-						val = tricsRows[tricID][j];
+					for (int j = 0, val = -1; j < nrOverlapVals && currentIndex < bicSize; j++) {
+						val = bicsRows[bicID][j];
 						if (set.contains(val))
 							continue;
 						set.add(val);
@@ -113,8 +113,8 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 			}		
 
 			//Depois de fazer o overlapping, caso não existam mais rows livres, usar as já escolhidas
-			if (setExc.size() + (tricSize - currentIndex) > dimSize) {
-				for(int val = -1; currentIndex < tricSize; currentIndex++) {
+			if (setExc.size() + (bicSize - currentIndex) > dimSize) {
+				for(int val = -1; currentIndex < bicSize; currentIndex++) {
 					SortedSet<Integer> testedRows = new TreeSet<>();
 					boolean alreadyExists = false;
 					boolean invalidOverlap = false;
@@ -125,12 +125,12 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 						
 						//condicoes para garantir que a row eh valida
 						alreadyExists = set.contains(val);
-						invalidOverlap = isOverlap(val, tricCols, tricConts, elements);
+						invalidOverlap = isOverlap(val, bicCols, elements);
 						notExhaustedDim = testedRows.size() < dimSize;
 					} while (alreadyExists || (invalidOverlap && notExhaustedDim));
 					
 					//verificar se a ultima row testada eh ou nao valida
-					if(currentIndex < tricSize && !alreadyExists && !invalidOverlap) {
+					if(currentIndex < bicSize && !alreadyExists && !invalidOverlap) {
 						set.add(val);
 						result[currentIndex] = val;
 					}
@@ -143,14 +143,14 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 			}
 			else {
 				//Enquanto houver rows livres usa-las
-				for (int val = -1; currentIndex < tricSize; currentIndex++) {
+				for (int val = -1; currentIndex < bicSize; currentIndex++) {
 					SortedSet<Integer> testedRows = new TreeSet<>();
 					do {
 						val = random.nextInt(dimSize);
 						testedRows.add(val);
-					}while ((set.contains(val) || setExc.contains(val) || isOverlap(val, tricCols, tricConts, elements)) && testedRows.size() < dimSize);
+					}while ((set.contains(val) || setExc.contains(val) || isOverlap(val, bicCols, elements)) && testedRows.size() < dimSize);
 					
-					if(testedRows.size() == dimSize && (set.contains(val) || setExc.contains(val) || isOverlap(val, tricCols, tricConts, elements)))
+					if(testedRows.size() == dimSize && (set.contains(val) || setExc.contains(val) || isOverlap(val, bicCols, elements)))
 						throw new OutputErrorException("noa ha espaço");
 					else {
 						set.add(val);
@@ -166,22 +166,22 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		return result;
 	}
 
-	protected int[] generateOthers(int dimSize, int tricSize, double percOverlap, int[][] tricsDimIndex, Set<Integer> chosenIndexes,
-			int[] tricsWithOverlap, int[] tricsExcluded, boolean contiguity) throws Exception {
+	protected int[] generateOthers(int dimSize, int bicSize, double percOverlap, int[][] bicsDimIndex, Set<Integer> chosenIndexes,
+			int[] bicsWithOverlap, int[] bicsExcluded, boolean contiguity) throws Exception {
 
-		int[] result = new int[tricSize];
+		int[] result = new int[bicSize];
 		SortedSet<Integer> set = new TreeSet<>();
 		boolean noSpace = false;
 		
 		//Se nao existir overlapping
 		if (Double.compare(percOverlap,0) <= 0) { // no need for plaid calculus
 			if(contiguity)
-				result = generateContiguous(tricSize, dimSize);
+				result = generateContiguous(bicSize, dimSize);
 			else
-				for (int i = 0, val = -1; i < tricSize; i++) {
+				for (int i = 0, val = -1; i < bicSize; i++) {
 					SortedSet<Integer> testedIndexes = new TreeSet<>();
 					boolean alreadyExists = false;
-					boolean chosenByOtherTric = false;
+					boolean chosenByOtherBic = false;
 					boolean notExhaustedDim = false;
 					do {
 						val = random.nextInt(dimSize);
@@ -189,9 +189,9 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 						testedIndexes.add(val);
 						
 						alreadyExists = set.contains(val);
-						chosenByOtherTric = chosenIndexes.contains(val);
+						chosenByOtherBic = chosenIndexes.contains(val);
 						notExhaustedDim = testedIndexes.size() < dimSize;
-					} while ((alreadyExists || chosenByOtherTric) && notExhaustedDim);
+					} while ((alreadyExists || chosenByOtherBic) && notExhaustedDim);
 					
 					if(!alreadyExists) {
 						set.add(val);
@@ -211,36 +211,36 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		else {
 			//Primeira tentativa - aproveitar ao maximo colunas livres
 			SortedSet<Integer> setExc = new TreeSet<>();
-			for (int i = 0; i < tricsExcluded.length; i++)
-				for (int j = 0; j < tricsDimIndex[tricsExcluded[i]].length; j++)
-					setExc.add(tricsDimIndex[tricsExcluded[i]][j]);
+			for (int i = 0; i < bicsExcluded.length; i++)
+				for (int j = 0; j < bicsDimIndex[bicsExcluded[i]].length; j++)
+					setExc.add(bicsDimIndex[bicsExcluded[i]][j]);
 
 			int currentIndex = 0;
-			if (tricsWithOverlap != null) {
-				for (Integer tricID : tricsWithOverlap) {
-					for (int j = 0; j < tricsDimIndex[tricID].length; j++)
-						setExc.add(tricsDimIndex[tricID][j]);
+			if (bicsWithOverlap != null) {
+				for (Integer bicID : bicsWithOverlap) {
+					for (int j = 0; j < bicsDimIndex[bicID].length; j++)
+						setExc.add(bicsDimIndex[bicID][j]);
 
 					//TODO: edit this
-					int nrOverlapVals = (int) (((double) tricsDimIndex[tricID].length) * percOverlap);
+					int nrOverlapVals = (int) (((double) bicsDimIndex[bicID].length) * percOverlap);
 
 					if(contiguity) {
-						int first = tricsDimIndex[tricID][0];
-						int last = tricsDimIndex[tricID][tricsDimIndex[tricID].length - 1];
+						int first = bicsDimIndex[bicID][0];
+						int last = bicsDimIndex[bicID][bicsDimIndex[bicID].length - 1];
 
-						if(first >= (tricSize - nrOverlapVals)) {
-							for (int j = 0, val = -1; currentIndex < tricSize; j++) {
-								if(j < (tricSize - nrOverlapVals))
-									val = first - (tricSize - nrOverlapVals - j);
+						if(first >= (bicSize - nrOverlapVals)) {
+							for (int j = 0, val = -1; currentIndex < bicSize; j++) {
+								if(j < (bicSize - nrOverlapVals))
+									val = first - (bicSize - nrOverlapVals - j);
 								else
-									val = tricsDimIndex[tricID][j - (tricSize - nrOverlapVals)];
+									val = bicsDimIndex[bicID][j - (bicSize - nrOverlapVals)];
 
 								set.add(val);
 								result[currentIndex++] = val;
 							}
 						}
-						else if((dimSize - last) >= (tricSize - nrOverlapVals)) {
-							for (int j = 0, val = -1; currentIndex < tricSize; j++) {
+						else if((dimSize - last) >= (bicSize - nrOverlapVals)) {
+							for (int j = 0, val = -1; currentIndex < bicSize; j++) {
 								if(j < nrOverlapVals)
 									val = last - (nrOverlapVals - (currentIndex + 1));
 								else
@@ -256,8 +256,8 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 							noSpace = true;
 					}
 					else {
-						for (int j = 0, val = -1; j < nrOverlapVals && currentIndex < tricSize; j++) {
-							val = tricsDimIndex[tricID][j];
+						for (int j = 0, val = -1; j < nrOverlapVals && currentIndex < bicSize; j++) {
+							val = bicsDimIndex[bicID][j];
 							if (set.contains(val))
 								continue;
 							set.add(val);
@@ -268,8 +268,8 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 			}		
 
 			//Depois de fazer o overlapping, caso não existam mais colunas livres, usar as já escolhidas
-			if (setExc.size() + (tricSize - currentIndex) > dimSize) {
-				for(int val = -1; currentIndex < tricSize; currentIndex++) {
+			if (setExc.size() + (bicSize - currentIndex) > dimSize) {
+				for(int val = -1; currentIndex < bicSize; currentIndex++) {
 					do {
 						val = random.nextInt(dimSize);
 					}while (set.contains(val));
@@ -279,11 +279,11 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 			}
 			else {
 				//Enquanto houver colunas livres usa-las
-				for (int val = -1; currentIndex < tricSize; currentIndex++) {
+				for (int val = -1; currentIndex < bicSize; currentIndex++) {
 					if(contiguity) {
 						if(currentIndex == 0) {
-							result = generateContiguous(tricSize, dimSize);
-							currentIndex = tricSize;
+							result = generateContiguous(bicSize, dimSize);
+							currentIndex = bicSize;
 						}
 						else
 							result[currentIndex] = result[currentIndex-1] + 1;
@@ -497,7 +497,7 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		return result;
 	}
 
-	protected int[] generateNonOverlappingRows(int nBicDim, int nDim, int[] bicCols, int[] bicConts, Set<String> elements) throws Exception {
+	protected int[] generateNonOverlappingRows(int nBicDim, int nDim, int[] bicCols, Set<String> elements) throws Exception {
 
 		int[] result = new int[nBicDim];
 		SortedSet<Integer> set = new TreeSet<>();
@@ -507,7 +507,7 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 			do {
 				val = random.nextInt(nDim);
 				testedRows.add(val);
-			} while ((set.contains(val) || isOverlap(val, bicCols, bicConts, elements)) && (testedRows.size() < nDim));
+			} while ((set.contains(val) || isOverlap(val, bicCols, elements)) && (testedRows.size() < nDim));
 
 
 			if (testedRows.size() >= nDim) {
@@ -523,57 +523,35 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		return result;
 	}
 
-	protected String[][][] transposeMatrix(String[][][] matrix, String oldDim, String newDim) {
+	protected String[][] transposeMatrix(String[][] matrix, String oldDim, String newDim) {
 
-		String[][][] transposed = null;
+		String[][] transposed = null;
 
-		if(oldDim.equals("z") && newDim.equals("x"))
-			transposed = new String[matrix[0].length][matrix.length][matrix[0][0].length];
-		else if(oldDim.equals("z") && newDim.equals("y"))
-			transposed = new String[matrix[0][0].length][matrix[0].length][matrix.length];
-		else
-			transposed = new String[matrix.length][matrix[0][0].length][matrix[0].length];
+		transposed = new String[matrix[0].length][matrix.length];
 
-		for(int ctx = 0; ctx < transposed.length; ctx++) {
-			for(int row = 0; row < transposed[ctx].length; row++) {
-				for(int col = 0; col < transposed[ctx][row].length; col++) {
-					if(oldDim.equals("z") && newDim.equals("x"))
-						transposed[ctx][row][col] = matrix[row][ctx][col];
-					else if(oldDim.equals("z") && newDim.equals("y"))
-						transposed[ctx][row][col] = matrix[col][row][ctx];
-					else
-						transposed[ctx][row][col] = matrix[ctx][col][row];
-				}
+		
+		for(int row = 0; row < transposed.length; row++) {
+			for(int col = 0; col < transposed[row].length; col++) {
+				transposed[row][col] = matrix[col][row];
 			}
 		}
+		
 
 		return transposed;
 	}
 
-	protected Double[][][] transposeMatrix(Double[][][] matrix, String oldDim, String newDim) {
+	protected Double[][] transposeMatrix(Double[][] matrix, String oldDim, String newDim) {
 
-		Double[][][] transposed = null;
-
-		if(oldDim.equals("z") && newDim.equals("x"))
-			transposed = new Double[matrix[0].length][matrix.length][matrix[0][0].length];
-		else if(oldDim.equals("z") && newDim.equals("y"))
-			transposed = new Double[matrix[0][0].length][matrix[0].length][matrix.length];
-		else
-			transposed = new Double[matrix.length][matrix[0][0].length][matrix[0].length];
-
-		for(int ctx = 0; ctx < transposed.length; ctx++) {
-			for(int row = 0; row < transposed[ctx].length; row++) {
-				for(int col = 0; col < transposed[ctx][row].length; col++) {
-					if(oldDim.equals("z") && newDim.equals("x"))
-						transposed[ctx][row][col] = matrix[row][ctx][col];
-					else if(oldDim.equals("z") && newDim.equals("y"))
-						transposed[ctx][row][col] = matrix[col][row][ctx];
-					else
-						transposed[ctx][row][col] = matrix[ctx][col][row];
-				}
+		Double[][] transposed = null;
+		
+		transposed = new Double[matrix[0].length][matrix.length];
+		
+		for(int row = 0; row < transposed.length; row++) {
+			for(int col = 0; col < transposed[row].length; col++) {
+				transposed[row][col] = matrix[col][row];
 			}
 		}
-
+	
 		return transposed;
 	}
 
@@ -584,16 +562,16 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 	 * @param elements
 	 * @return
 	 */
-	private boolean isOverlap(int val, int[] bicCols, int[] bicConts, Set<String> elements) {
-		for(int i = 0; i < bicConts.length; i++)
-			for (int j = 0, l = bicCols.length; j < l; j++)
-				if (elements.contains(bicConts[i] + ":" + val + ":" + bicCols[j]))
-					return true;
+	private boolean isOverlap(int val, int[] bicCols, Set<String> elements) {
+		
+		for (int j = 0, l = bicCols.length; j < l; j++)
+			if (elements.contains(val + ":" + bicCols[j]))
+				return true;
 		return false;
 	}
 
-	protected Map<String, Double> generateOverlappingDistribution(int tricSize, OverlappingSettings overlapping,
-			int numContsTrics, int numRowsTrics, int numColsTrics) throws OutputErrorException {
+	protected Map<String, Double> generateOverlappingDistribution(int bicSize, OverlappingSettings overlapping, int numRowsBics,
+			int numColsBics) throws OutputErrorException {
 		
 		Map<String, Double> overlappingDist = new HashMap<>();
 		
@@ -602,21 +580,10 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		
 		//System.out.println("Tric size = " + tricSize);
 		
-		double minContPerc = 1.0 / ((double) numContsTrics);
-		double maxContPerc = Math.min((maxOverlappingElems * tricSize) / numContsTrics, 1.0);
-		double overlappingContsPerc = minContPerc + (maxContPerc - minContPerc) * random.nextDouble();
-		
-		if(Double.compare(overlappingContsPerc, overlapping.getPercOfOverlappingContexts()) > 0)
-			overlappingContsPerc = overlapping.getPercOfOverlappingContexts();
-		
-		overlappingDist.put("contextPerc", overlappingContsPerc);
-		
-		int numOverlappingConts = (int) (overlappingContsPerc * numContsTrics);
-		
 		//System.out.println("PercCont = [" + minContPerc + ", " + maxContPerc + "] -> " + overlappingContsPerc + "(" + numOverlappingConts + ")");
 		
-		double minColPerc =  1.0 / ((double) numColsTrics);
-		double maxColPerc = Math.min((maxOverlappingElems * tricSize) / (numColsTrics * numOverlappingConts), 1.0);
+		double minColPerc =  1.0 / ((double) numColsBics);
+		double maxColPerc = Math.min((maxOverlappingElems * bicSize) / numColsBics, 1.0);
 		double overlappingColsPerc = minColPerc + (maxColPerc - minColPerc) * random.nextDouble();
 		
 		if(Double.compare(overlappingColsPerc, overlapping.getPercOfOverlappingColumns()) > 0)
@@ -624,12 +591,12 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		
 		overlappingDist.put("columnPerc", overlappingColsPerc);
 		
-		int numOverlappingCols = (int) (overlappingColsPerc * numColsTrics);
+		int numOverlappingCols = (int) (overlappingColsPerc * numColsBics);
 		
 		//System.out.println("PercCols = [" + minColPerc + ", " + maxColPerc + "] -> " + overlappingColsPerc + "(" + numOverlappingCols + ")");
 		
-		double minRowPerc = 1.0 / ((double) numRowsTrics);
-		double maxRowPerc = Math.min((maxOverlappingElems * tricSize) / (numRowsTrics * numOverlappingCols * numOverlappingConts),
+		double minRowPerc = 1.0 / ((double) numRowsBics);
+		double maxRowPerc = Math.min((maxOverlappingElems * bicSize) / (numRowsBics * numOverlappingCols),
 				1.0);
 		double overlappingRowsPerc = minRowPerc + (maxRowPerc - minRowPerc) * random.nextDouble();
 		
@@ -638,11 +605,11 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		
 		overlappingDist.put("rowPerc", overlappingRowsPerc);
 		
-		int numOverlappingRows = (int) (overlappingRowsPerc * numRowsTrics);
+		int numOverlappingRows = (int) (overlappingRowsPerc * numRowsBics);
 		
 		//System.out.println("PercRows = [" + minRowPerc + ", " + maxRowPerc + "] -> " + overlappingRowsPerc + "(" + numOverlappingRows + ")");
 		
-		int total_overlapping = numOverlappingRows * numOverlappingCols * numOverlappingConts;
+		int total_overlapping = numOverlappingRows * numOverlappingCols;
 		
 		//System.out.println("Total overlapping expected = " + total_overlapping);
 		
@@ -655,7 +622,7 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 		return overlappingDist;
 	}
 	
-	protected Map<String, Integer> generateTricStructure(TriclusterStructure tricStructure, int maxRows, int maxCols, int maxConts){
+	protected Map<String, Integer> generateBicStructure(BiclusterStructure bicStructure, int maxRows, int maxCols){
 
 		/**
 		 * PART II: select number of rows and columns according to distribution
@@ -664,17 +631,14 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 
 		int rows;
 		int cols;
-		int ctxs;
 		Map<String, Integer> result = new HashMap<>();
-		double rows1 = tricStructure.getRowsParam1();
-		double rows2 = tricStructure.getRowsParam2();
-		double cols1 = tricStructure.getColumnsParam1();
-		double cols2 = tricStructure.getColumnsParam2();
-		double context1 = tricStructure.getContextsParam1();
-		double context2 = tricStructure.getContextsParam2();
-
+		double rows1 = bicStructure.getRowsParam1();
+		double rows2 = bicStructure.getRowsParam2();
+		double cols1 = bicStructure.getColumnsParam1();
+		double cols2 = bicStructure.getColumnsParam2();
+		
 		do {
-			if (tricStructure.getRowsDistribution().equals(Distribution.UNIFORM))
+			if (bicStructure.getRowsDistribution().equals(Distribution.UNIFORM))
 				rows = (int) rows1 + (rows1 == rows2 ? 0 : random.nextInt((int) (rows2 - rows1)));
 			else
 				rows = (int) Math.round(random.nextGaussian() * rows2 + rows1);
@@ -686,7 +650,7 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 	
 			
 	
-			if (tricStructure.getColumnsDistribution().equals(Distribution.UNIFORM))
+			if (bicStructure.getColumnsDistribution().equals(Distribution.UNIFORM))
 				cols = (int) cols1 + (cols1 == cols2 ? 0 : random.nextInt((int) (cols2 - cols1)));
 			else
 				cols = (int) Math.round(random.nextGaussian() * cols2 + cols1);
@@ -696,22 +660,10 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 			else if(cols > maxCols)
 				cols = maxCols;
 	
-			
-	
-			if (tricStructure.getContextsDistribution().equals(Distribution.UNIFORM))
-				ctxs = (int) context1 + (context1 == context2 ? 0 : random.nextInt((int) (context2 - context1)));
-			else
-				ctxs = (int) Math.round(random.nextGaussian() * context2 + context1);
-	
-			if(ctxs < 1)
-				ctxs = 1;
-			else if(ctxs > maxConts)
-				ctxs = maxConts;
-		}while((rows == 1 && cols == 1) || (rows == 1 && ctxs == 1) || (cols == 1 && ctxs == 1));
+		}while((rows == 1 && cols == 1));
 
 		result.put("columns", cols);
 		result.put("rows", rows);
-		result.put("contexts", ctxs);
 
 		return result;
 	}
@@ -739,15 +691,15 @@ public abstract class TriclusterDatasetGenerator extends Observable {
 	/**
 	 * @return the tricsInfoFileName
 	 */
-	public String getTricsInfoFileName() {
-		return tricsInfoFileName;
+	public String getBicsInfoFileName() {
+		return bicsInfoFileName;
 	}
 
 	/**
-	 * @param tricsInfoFileName the tricsInfoFileName to set
+	 * @param bicsInfoFileName the tricsInfoFileName to set
 	 */
-	public void setTricsInfoFileName(String tricsInfoFileName) {
-		this.tricsInfoFileName = tricsInfoFileName;
+	public void setBicsInfoFileName(String bicsInfoFileName) {
+		this.bicsInfoFileName = bicsInfoFileName;
 	}
 
 	/**

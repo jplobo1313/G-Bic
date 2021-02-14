@@ -1,5 +1,5 @@
 /**
- * Tricluster Structure Class
+ * Bicluster Structure Class
  * 
  * @author Joao Lobo - jlobo@lasige.di.fc.ul.pt
  * @version 1.0
@@ -9,23 +9,20 @@ package com.gbic.utils;
 import com.gbic.types.Contiguity;
 import com.gbic.types.Distribution;
 
-public class TriclusterStructure {
+public class BiclusterStructure {
 
 	Distribution rowsDist;
 	Distribution columnsDist;
-	Distribution contextsDist;
 	double rowsParam1;
 	double rowsParam2;
 	double columnsParam1;
 	double columnsParam2;
-	double contextsParam1;
-	double contextsParam2;
 	Contiguity contiguity;
 	
 	/**
 	 * Constructor
 	 */
-	public TriclusterStructure() {}
+	public BiclusterStructure() {}
 	
 	/**
 	 * Constructor
@@ -40,18 +37,14 @@ public class TriclusterStructure {
 	 * @param contextsParam2 The second parameter of the context distribution (std or max)
 	 * @param contiguity which dimension is contiguous (COLUMNS or CONTEXTS) or NONE
 	 */
-	public TriclusterStructure(Distribution rowsDist, Distribution columnsDist, Distribution contextsDist,
-			double rowsParam1, double rowsParam2, double columnsParam1, double columnsParam2, double contextsParam1,
-			double contextsParam2, Contiguity contiguity) {
+	public BiclusterStructure(Distribution rowsDist, Distribution columnsDist,
+			double rowsParam1, double rowsParam2, double columnsParam1, double columnsParam2, Contiguity contiguity) {
 		this.rowsDist = rowsDist;
 		this.columnsDist = columnsDist;
-		this.contextsDist = contextsDist;
 		this.rowsParam1 = rowsParam1;
 		this.rowsParam2 = rowsParam2;
 		this.columnsParam1 = columnsParam1;
 		this.columnsParam2 = columnsParam2;
-		this.contextsParam1 = contextsParam1;
-		this.contextsParam2 = contextsParam2;
 		this.contiguity = contiguity;
 	}
 
@@ -104,22 +97,6 @@ public class TriclusterStructure {
 	}
 
 	/**
-	 * Get the context distribution
-	 * @return the context distribution
-	 */
-	public Distribution getContextsDistribution() {
-		return contextsDist;
-	}
-
-	/**
-	 * Set the context distribution
-	 * @param contextsDist The context distribution (NORMAL or UNIFORM)
-	 */
-	public void setContextsDistribution(Distribution contextsDist) {
-		this.contextsDist = contextsDist;
-	}
-
-	/**
 	 * Get rows distribution first parameter
 	 * @return first parameter
 	 */
@@ -149,18 +126,6 @@ public class TriclusterStructure {
 		this.columnsDist = dist;
 		this.columnsParam1 = param1;
 		this.columnsParam2 = param2;
-	}
-	
-	/**
-	 * Set context distribution and parameters
-	 * @param dist The distribution (NORMAL or UNIFORM)
-	 * @param param1 The distribution's first parameter (mean or min)
-	 * @param param2 The distribution's second parameter (std or max)
-	 */
-	public void setContextsSettings(Distribution dist, double param1, double param2) {
-		this.contextsDist = dist;
-		this.contextsParam1 = param1;
-		this.contextsParam2 = param2;
 	}
 	
 	/**
@@ -217,37 +182,5 @@ public class TriclusterStructure {
 	 */
 	public void setColumnsParam2(double columnsParam2) {
 		this.columnsParam2 = columnsParam2;
-	}
-
-	/**
-	 * Get contexts distribution first parameter
-	 * @return first parameter
-	 */
-	public double getContextsParam1() {
-		return contextsParam1;
-	}
-
-	/**
-	 * Set context distribution first parameter
-	 * @param contextsParam1 first parameter
-	 */
-	public void setContextsParam1(double contextsParam1) {
-		this.contextsParam1 = contextsParam1;
-	}
-
-	/**
-	 * Get contexts distribution second parameter
-	 * @return second parameter
-	 */
-	public double getContextsParam2() {
-		return contextsParam2;
-	}
-
-	/**
-	 * Set context distribution second parameter
-	 * @param contextsParam2 second parameter
-	 */
-	public void setContextsParam2(double contextsParam2) {
-		this.contextsParam2 = contextsParam2;
 	}
 }

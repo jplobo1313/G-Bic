@@ -1,10 +1,5 @@
-﻿Order Preserving,None,None,op_n_n
-None,Order Preserving,None
-None,None,Order Preserving
-Constant,Constant,Constant
-None,Constant,Constant
-Constant,Constant,None
-Constant,None,Constant
-Constant,None,None
-None,Constant,None
-None,None,Constant
+﻿Order Preserving,None
+None,Order Preserving
+Constant,Constant
+None,Constant
+Constant,None

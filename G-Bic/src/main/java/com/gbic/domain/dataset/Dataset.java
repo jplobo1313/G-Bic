@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.gbic.domain.tricluster.Tricluster;
+import com.gbic.domain.bicluster.Bicluster;
 import com.gbic.types.Background;
 
 public abstract class Dataset {
@@ -25,15 +25,14 @@ public abstract class Dataset {
 	
 	private int numRows;
 	private int numCols;
-	private int numContexts;
-	private int numTrics;
+	private int numBics;
 	
 	private Background background;
 	private int backgroundSize;
 
-	//Map <Tricluster ID, List of elements in the form "ctx:row:col"> to store tricluster's elements
+	//Map <Bicluster ID, List of elements in the form "<row:col"> to store bicluster's elements
 	//private HashMap<Integer, List<String>> elements;
-	//Map <"ctx:row:col", List<Tricluster IDs>> to store the triclusters associated to a specific element
+	//Map <"ctx:row:col", List<Bicluster IDs>> to store the biclusters associated to a specific element
 	private Map<String, List<Integer>> elementsReversed;
 	
 	private Set<String> missingElements;
@@ -52,18 +51,17 @@ public abstract class Dataset {
 	 * @param numContexts Dataset's number of contexts
 	 * @param background Background object with the background type and parameters
 	 */
-	public Dataset(int numRows, int numCols, int numContexts, int numTrics, Background background) {
+	public Dataset(int numRows, int numCols, int numBics, Background background) {
 		
 		this.numRows = numRows;
 		this.numCols = numCols;
-		this.numContexts = numContexts;
 		this.background = background;
 		//this.elements = new HashMap<>();
 		this.elementsReversed = new HashMap<>();
 		this.missingElements = new TreeSet<>();
 		this.noisyElements = new TreeSet<>();
 		this.errorElements = new TreeSet<>();
-		this.numTrics = numTrics;
+		this.numBics = numBics;
 		this.backgroundSize = 0;
 		
 	}
@@ -73,12 +71,12 @@ public abstract class Dataset {
 	 * @return Num of Rows * Num of Cols * Num of Ctxs
 	 */
 	public int getSize() {
-		return this.numRows * this.numCols * this.numContexts;
+		return this.numRows * this.numCols;
 	}
 	
 	/**
-	 * Get the number of dataset's elements that do not belong to any tricluster
-	 * @return Dataset Size - Triclusters Size
+	 * Get the number of dataset's elements that do not belong to any bicluster
+	 * @return Dataset Size - Biclusterlusters Size
 	 */
 	public int getBackgroundSize() {
 		
@@ -151,21 +149,13 @@ public abstract class Dataset {
 	public int getNumCols() {
 		return numCols;
 	}
-	
-	/**
-	 * Get dataet's number of contexts
-	 * @return the number of contexts
-	 */
-	public int getNumContexts() {
-		return numContexts;
-	}
 
 	/**
 	 * Get the dataset's number of planted triclusters
 	 * @return the number of planted triclusters
 	 */
-	public int getNumTrics() {
-		return this.numTrics;
+	public int getNumBics() {
+		return this.numBics;
 	}
 
 	/**
@@ -225,9 +215,9 @@ public abstract class Dataset {
 	}
 	
 	/**
-	 * Adds an element to a tricluster
+	 * Adds an element to a bicluster
 	 * @param e The element in ctx:row:col format
-	 * @param k The tricluster ID
+	 * @param k The bicluster ID
 	 */
 	public void addElement(String e, int k) {
 		/*
@@ -241,9 +231,9 @@ public abstract class Dataset {
 		*/
 		
 		if(!this.elementsReversed.containsKey(e)) {
-			List<Integer> trics = new ArrayList<>();
-			trics.add(k);
-			this.elementsReversed.put(e, trics);
+			List<Integer> bics = new ArrayList<>();
+			bics.add(k);
+			this.elementsReversed.put(e, bics);
 		}
 		else
 			this.elementsReversed.get(e).add(k);
@@ -253,18 +243,18 @@ public abstract class Dataset {
 	}
 	
 	/**
-	 * Get tricluster by its ID
-	 * @param id The tricluster ID
-	 * @return tricluster with the specified ID
+	 * Get bicluster by its ID
+	 * @param id The bicluster ID
+	 * @return bicluster with the specified ID
 	 */
-	public abstract Tricluster getTriclusterById(int id);
+	public abstract Bicluster getBiclusterById(int id);
 	
 	/**
-	 * Get tricluster's elements
-	 * @param id The tricluster ID
-	 * @return The list of the tricluster's elements
+	 * Get bicluster's elements
+	 * @param id The bicluster ID
+	 * @return The list of the bicluster's elements
 	 */
-	public List<String> getTriclusterElements(int id){
+	public List<String> getBiclusterElements(int id){
 		List<String> elements = new ArrayList<String>();
 		
 		for(Entry<String, List<Integer>> entry : this.elementsReversed.entrySet()) {
@@ -277,7 +267,7 @@ public abstract class Dataset {
 	}
 	
 	/**
-	 * Get the set of elements that belong to a any tricluster
+	 * Get the set of elements that belong to a any bicluster
 	 * @return The set of elements
 	 */
 	public Set<String> getElements() {
@@ -298,7 +288,7 @@ public abstract class Dataset {
 	
 	/**
 	 * Get the set of existing triclusters
-	 * @return The set of tricluster's ID
+	 * @return The set of bicluster's ID
 	 */
 	/*
 	public Set<Integer> getTriclusters(){
@@ -307,11 +297,11 @@ public abstract class Dataset {
 	*/
 	
 	/**
-	 * Get the tricluster's that contain a certain element
+	 * Get the bicluster's that contain a certain element
 	 * @param e The element in ctx:row:col format
-	 * @return List of tricluster to which the element belongs
+	 * @return List of bicluster to which the element belongs
 	 */
-	public List<Integer> getTricsByElem(String e){
+	public List<Integer> getBicsByElem(String e){
 		/*
 		List<Integer> trics = new ArrayList<>();
 		
@@ -329,7 +319,7 @@ public abstract class Dataset {
 	}
 	
 	/**
-	 * Checks if a certain element belongs to any tricluster
+	 * Checks if a certain element belongs to any bicluster
 	 * @param e The element
 	 * @return True if the elements belong to a certain element, False otherwise
 	 */
@@ -353,11 +343,11 @@ public abstract class Dataset {
 	
 	/**
 	 * Plant missing elements on the dataset
-	 * @param percMissing The percentage of missing elements in the background (elements that do not belong to any tricluster)
-	 * @param percTricluster The maximum percentage of missing elements in the triclusters
+	 * @param percMissing The percentage of missing elements in the background (elements that do not belong to any bicluster)
+	 * @param percBicluster The maximum percentage of missing elements in the triclusters
 	 */
-	public abstract void plantMissingElements(double percMissing, double percTricluster);
+	public abstract void plantMissingElements(double percMissing, double percBicluster);
 
-	public abstract String getTricsInfo(); 
+	public abstract String getBicsInfo(); 
 	
 }

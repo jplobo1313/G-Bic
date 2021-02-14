@@ -1,6 +1,5 @@
 package com.gbic.utils;
 
-import java.io.File;
 import java.util.Arrays;
 
 import javafx.collections.FXCollections;
@@ -16,23 +15,21 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-public class TriclusterPatternTableView {
+public class BiclusterPatternTableView {
 
 	private Integer num;
 	private String rowPattern;
 	private String columnPattern;
-	private String contextPattern;
 	private String imageName;
 	private ComboBox<String> timeProfile;
 	private Button example;
 	private CheckBox select;
 	
-	public TriclusterPatternTableView(Integer num, String rowPattern, String columnPattern, String contextPattern, String imageName,
+	public BiclusterPatternTableView(Integer num, String rowPattern, String columnPattern, String imageName,
 			ComboBox<String> timeProfile, Button example, CheckBox select) {
 		this.num = num;
 		this.rowPattern = rowPattern;
 		this.columnPattern = columnPattern;
-		this.contextPattern = contextPattern;
 		this.timeProfile = timeProfile;
 		this.select = select;
 		this.example = example;
@@ -47,7 +44,7 @@ public class TriclusterPatternTableView {
 		this.timeProfile.setItems(timeProfiles);
 		this.timeProfile.setValue(timeProfiles.get(0)); 
 		
-		if(!this.contextPattern.equals("Order Preserving")) {
+		if(!this.columnPattern.equals("Order Preserving")) {
 			this.timeProfile.setDisable(true);
 			this.timeProfile.setValue("Not applicable");
 		}
@@ -102,14 +99,6 @@ public class TriclusterPatternTableView {
 
 	public void setColumnPattern(String columnPattern) {
 		this.columnPattern = columnPattern;
-	}
-
-	public String getContextPattern() {
-		return contextPattern;
-	}
-
-	public void setContextPattern(String contextPattern) {
-		this.contextPattern = contextPattern;
 	}
 
 	public CheckBox getSelect() {

@@ -2,9 +2,9 @@ package com.gbic.utils;
 
 import java.util.List;
 
-public class HeatMapData {
+public abstract class HeatMapData {
 
-	private int sliceID;
+	private int bicID;
 	private List<String> xData;
 	private List<String> yData;
 	private Number[][] chartData;
@@ -12,21 +12,21 @@ public class HeatMapData {
 	private String title;
 
 	/**
-	 * @param sliceID
+	 * @param bicID
 	 * @param xData
 	 * @param yData
 	 * @param cha
 	 */
-	public HeatMapData(int sliceID, List<String> xData, List<String> yData, Number[][] chartData, String title) {
-		this.sliceID = sliceID;
+	public HeatMapData(int bicID, List<String> xData, List<String> yData, Number[][] chartData, String title) {
+		this.bicID = bicID;
 		this.xData = xData;
 		this.yData = yData;
 		this.chartData = chartData;
 		this.title = title;
 	}
 	
-	public HeatMapData(int sliceID, List<String> xData, List<String> yData, String[][] chartData, String title) {
-		this.sliceID = sliceID;
+	public HeatMapData(int bicID, List<String> xData, List<String> yData, String[][] chartData, String title) {
+		this.bicID = bicID;
 		this.xData = xData;
 		this.yData = yData;
 		this.symbolicChartData = chartData;
@@ -34,17 +34,17 @@ public class HeatMapData {
 	}
 
 	/**
-	 * @return the sliceID
+	 * @return the bicID
 	 */
-	public int getSliceID() {
-		return sliceID;
+	public int getBicID() {
+		return bicID;
 	}
 
 	/**
-	 * @param sliceID the sliceID to set
+	 * @param bicID the bicID to set
 	 */
-	public void setSliceID(int sliceID) {
-		this.sliceID = sliceID;
+	public void setBicID(int bicID) {
+		this.bicID = bicID;
 	}
 
 	/**
@@ -110,4 +110,6 @@ public class HeatMapData {
 	public void setTitle(String title) {
 		this.title = title;
 	}
+	
+	public abstract void produceChart();
 }

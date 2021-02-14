@@ -7,7 +7,7 @@ import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.generator.NumericDatasetGenerator;
 import com.gbic.generator.SymbolicDatasetGenerator;
-import com.gbic.generator.TriclusterDatasetGenerator;
+import com.gbic.generator.BiclusterDatasetGenerator;
 import com.gbic.service.GBicService;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
@@ -19,65 +19,19 @@ import com.gbic.types.TimeProfile;
 import com.gbic.utils.IOUtils;
 import com.gbic.utils.InputValidation;
 import com.gbic.utils.OverlappingSettings;
-import com.gbic.utils.TriclusterPattern;
-import com.gbic.utils.TriclusterStructure;
+import com.gbic.utils.BiclusterPattern;
+import com.gbic.utils.BiclusterStructure;
 public class GenerateDataset{
 
 	public static String path;
 	public static String outputFolder = "TriGenData";
-	public static int trics;
+	public static int bics;
 	public static double percMissings;
 	
 	public static void main (String[] args) throws Exception {
-		/*
-		int max = -1;
-		NumericDataset best;
-		
-		String currentDirectory = System.getProperty("user.dir");
-	    
-	    File directory = new File(outputFolder);
-
-	    if (!directory.exists()) {
-	        directory.mkdir();
-	    }
-		
-	    path = currentDirectory + "/" + outputFolder + "/";
-	    NumericDataset d = null;
-	    int run = 0;
-	    boolean cont = true;
-		while(run == 0) {
-			System.out.println("Run " + run + "\n");
-			
-			d = generateReal();
-			
-			if(d.getTriclusters().size() > max) {
-				best = d;
-				max = best.getTriclusters().size();
-				
-				File folder = new File(path);
-				File[] fList = folder.listFiles();
-			
-				for (int f = 0; f < fList.length; f++) {
-				    String pes = fList[f].getAbsolutePath();
-				    if (pes.endsWith(".txt") || pes.endsWith(".json")) {
-				        boolean success = (new File(fList[f].getAbsolutePath()).delete());
-				    }
-				}
-				saveResult(best, "dataset_trics_info", "dataset");
-			}
-			run++;
-		}
-		
-		System.out.println("Number of bics positions: " + d.getElements().size());
-		System.out.println("Background Size: " + d.getBackgroundSize());
-		System.out.println("Dataset - bics = " + (d.getSize() - d.getElements().size()));
-		System.out.println("Number of missings = " + ((double) d.getNumberOfMissings()));
-		System.out.println("perc of missings (background) = " + ((double) d.getNumberOfMissings()) / ((double) d.getBackgroundSize()) * 100 + "%");
-		System.out.println("perc of missings (whole dataset) % = " + ((double) d.getNumberOfMissings()) / ((double) d.getSize()) * 100 + "%");
-		*/
 		for(int i = 0; i < 1; i++) {
 			System.out.println("Run " + i);
-			generateReal();
+			generateSymbolic();
 		}
 	}
 
@@ -93,12 +47,11 @@ public class GenerateDataset{
 
 		//** 1 - Define dataset properties **//
 		//num de linhas do dataset
-		int numRows = 5;
+		int numRows = 100;
 		//num de colunas do dataset
-		int numCols = 5;
-		int numCtxs = 5;
+		int numCols = 100;
 		//num de bics a plantar
-		int numTrics = 3;
+		int numBics = 10;
 
 		//tamanho do alfabeto ou simbolos do alfabeto (escolher um)
 		int alphabetL = 10;
@@ -108,7 +61,7 @@ public class GenerateDataset{
 		boolean symmetries = false;
 
 		Background background = null;
-		TriclusterDatasetGenerator generator = null;
+		BiclusterDatasetGenerator generator = null;
 
 		/* Background Normal(2.5, 1)
     	background = new Background(BackgroundType.NORMAL, 2.5, 1);
@@ -124,41 +77,42 @@ public class GenerateDataset{
 		//background = new Background(BackgroundType.DISCRETE, probs);
 		// **************** //
 		
-		InputValidation.validateDatasetSettings(numRows, numCols, numCtxs, numTrics, alphabetL);
+		InputValidation.validateDatasetSettings(numRows, numCols, numBics, alphabetL);
 		
 		startTimeGen = System.currentTimeMillis();
 
-		generator = new SymbolicDatasetGenerator(numRows,numCols, numCtxs, numTrics, background, alphabetL, symmetries);
+		generator = new SymbolicDatasetGenerator(numRows,numCols, numBics, background, alphabetL, symmetries);
 		stopTimeGen = System.currentTimeMillis();
 
 		System.out.println("(BicMatrixGenerator) Execution Time: " + ((double)(stopTimeGen - startTimeGen))/1000 + " secs");
 
-		//** 2 - Set tricluster's patterns **//
-		List<TriclusterPattern> patterns = new ArrayList<>();
-		patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.NONE, PatternType.ORDER_PRESERVING, TimeProfile.RANDOM));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.NONE, PatternType.CONSTANT));
+		//** 2 - Set bicluster's patterns **//
+		List<BiclusterPattern> patterns = new ArrayList<>();
+		patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT));
+		patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.NONE));
+		patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.NONE, PatternType.CONSTANT));
 		// *************** //
 		
 		InputValidation.validatePatterns(patterns);
 		
-		//** 3 - Define tricluster's structure **//
-		//Object that encapsulates the configurations of the tricluster's structure
-		TriclusterStructure tricStructure = new TriclusterStructure();
+		//** 3 - Define bicluster's structure **//
+		//Object that encapsulates the configurations of the bicluster's structure
+		BiclusterStructure bicStructure = new BiclusterStructure();
 		
-		//Distribution used to calculate the number of rows/cols/ctxs for a tric (NORMAL or UNIFORM)
+		//Distribution used to calculate the number of rows/cols/ctxs for a bic (NORMAL or UNIFORM)
 		//Dist args: if dist=UNIFORM, then param1 and param2 represents the min and max, respectively
 		//			 if dist=NORMAL, then param1 and param2 represents the mean and stdDev, respectively
-		tricStructure.setRowsSettings(Distribution.UNIFORM, 2, 2);
-		tricStructure.setColumnsSettings(Distribution.UNIFORM, 2, 2);
-		tricStructure.setContextsSettings(Distribution.UNIFORM, 4, 5);
+		bicStructure.setRowsSettings(Distribution.UNIFORM, 4, 4);
+		bicStructure.setColumnsSettings(Distribution.UNIFORM, 4, 4);
 		
 		//Contiguity can occour on COLUMNS or CONTEXTS. To avoid contiguity use NONE
-		tricStructure.setContiguity(Contiguity.NONE);
+		bicStructure.setContiguity(Contiguity.NONE);
 		// ************* /
 		
 		//** 4- Define overlapping settings ** //
@@ -166,41 +120,40 @@ public class GenerateDataset{
 		OverlappingSettings overlapping = new OverlappingSettings();
 		
 		//Plaid Coherency (ADDITIVE, MULTIPLICATIVE, INTERPOLED, NONE or NO_OVERLAPPING)
-		overlapping.setPlaidCoherency(PlaidCoherency.NO_OVERLAPPING);
+		overlapping.setPlaidCoherency(PlaidCoherency.ADDITIVE);
 		
-		//Percentage of overlapping trics defines how many trics are allowed to overlap:
-		//if 0.5 only half of the dataset triclusters will overlap
-		overlapping.setPercOfOverlappingTrics(0.99);
+		//Percentage of overlapping bics defines how many bics are allowed to overlap:
+		//if 0.5 only half of the dataset biclusters will overlap
+		overlapping.setPercOfOverlappingBics(0.5);
 		
-		//Maximum number of triclusters that can overlap together. if equal to 3, there will be, at max, 3 triclusters
+		//Maximum number of biclusters that can overlap together. if equal to 3, there will be, at max, 3 biclusters
 		//that intersect each other(T1 ^ T2 ^ T3)
-		overlapping.setMaxTricsPerOverlappedArea(391);
+		overlapping.setMaxBicsPerOverlappedArea(2);
 		
-		//Maximum percentage of elements shared by overlapped triclusters. If 0.5, T1 ^ T2 will have, at max, 50% of the elements
-		//of the smallest tric
-		overlapping.setMaxPercOfOverlappingElements(0.93);
+		//Maximum percentage of elements shared by overlapped biclusters. If 0.5, T1 ^ T2 will have, at max, 50% of the elements
+		//of the smallest bic
+		overlapping.setMaxPercOfOverlappingElements(0.5);
 		
-		//Percentage of allowed amount of overlaping across triclusters rows, columns and contexts. if rows=0.5, then 
+		//Percentage of allowed amount of overlaping across biclusters rows, columns and contexts. if rows=0.5, then 
 		//T2 will intersect, at max, with half(50%) the rows of T1.
-		//if you dont want any restriction on the number of rows/cols/ctxs that can overlapp, use 1.0
+		//if you dont want any resbiction on the number of rows/cols/ctxs that can overlapp, use 1.0
 		overlapping.setPercOfOverlappingRows(1);
 		overlapping.setPercOfOverlappingColumns(1);
-		overlapping.setPercOfOverlappingContexts(1);
 		// ************* //
 		
 		startTimeBics = System.currentTimeMillis();
-		SymbolicDataset generatedDataset = (SymbolicDataset) generator.generate(patterns, tricStructure, overlapping);
+		SymbolicDataset generatedDataset = (SymbolicDataset) generator.generate(patterns, bicStructure, overlapping);
 		stopTimeBics = System.currentTimeMillis();
 
-		//Percentage of missing values on the background, that is, values that do not belong to planted trics (Range = [0,1])
+		//Percentage of missing values on the background, that is, values that do not belong to planted bics (Range = [0,1])
 		double missingPercOnBackground = 0.0;
-		//Maximum percentage of missing values on each tricluster. Range [0,1]. 
-		//Ex: 0.1 significa que cada tric tem no maximo 10% de missings. Pode ter menos
-		double missingPercOnPlantedTrics = 0.0;
+		//Maximum percentage of missing values on each bicluster. Range [0,1]. 
+		//Ex: 0.1 significa que cada bic tem no maximo 10% de missings. Pode ter menos
+		double missingPercOnPlantedBics = 0.0;
 
 		//Same as above but for noise
 		double noisePercOnBackground = 0.0;
-		double noisePercOnPlantedTrics = 0.0;
+		double noisePercOnPlantedBics = 0.0;
 		//Level of symbol deviation, that is, the maximum difference between the current symbol on the matrix and the one that
 		//will replaced it to be considered noise.
 		//Ex: Let Alphabet = [1,2,3,4,5] and CurrentSymbol = 3, if the noiseDeviation is '1', then CurrentSymbol will be, randomly,
@@ -213,44 +166,42 @@ public class GenerateDataset{
 		//Ex: Alphabet = [1,2,3,4,5], If currentValue = 2, and errorDeviation = 2, to turn currentValue an error, it's value must be
 		//replaced by '5', that is the only possible value that respects abs(currentValue - newValue) > noiseDeviation
 		double errorPercOnBackground = 0.0;
-		double errorPercOnPlantedTrics = 0.0;
+		double errorPercOnPlantedBics = 0.0;
 		
-		generatedDataset.plantMissingElements(missingPercOnBackground, missingPercOnPlantedTrics);
-		//generatedDataset.plantNoisyElements(noisePercOnBackground, noisePercOnPlantedTrics, noiseDeviation);
-		//generatedDataset.plantErrors(errorPercOnBackground, errorPercOnPlantedTrics, noiseDeviation);
+		generatedDataset.plantMissingElements(missingPercOnBackground, missingPercOnPlantedBics);
+		//generatedDataset.plantNoisyElements(noisePercOnBackground, noisePercOnPlantedBics, noiseDeviation);
+		//generatedDataset.plantErrors(errorPercOnBackground, errorPercOnPlantedBics, noiseDeviation);
 		
 		System.out.println("(GeneratePlaidSymbolicBics) Execution Time: " + ((double)(stopTimeBics - startTimeBics))/1000 + " secs");
 
-		String tricDataFileName;
+		String bicDataFileName;
 		String datasetFileName;
 		
 		if(patterns.size() == 1) {
-			tricDataFileName = "tric_" + patterns.get(0).getRowsPattern().name().charAt(0) 
+			bicDataFileName = "bic_" + patterns.get(0).getRowsPattern().name().charAt(0) 
 					+ patterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ patterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+					+ "_" + numRows + "x" + numCols;
 
 			datasetFileName = "data_" + patterns.get(0).getRowsPattern().name().charAt(0) 
-					+ patterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ patterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+					+ patterns.get(0).getColumnsPattern().name().charAt(0)  
+					+ "_" + numRows + "x" + numCols;
 		}
 		else {
-			tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols + "x" + numCtxs;
-			datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols + "x" + numCtxs;
+			bicDataFileName = "bic_multiple" + "_" + numRows + "x" + numCols;
+			datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols;
 		}
 
 		GBicService serv = new GBicService();
-		serv.setPath("/Users/atticus/git/G-Tric/G-Tric/temp/");
+		serv.setPath("/Users/atticus/git/G-Bic/G-Bic/temp/");
 		serv.setSingleFileOutput(true);
-		serv.saveResult(generatedDataset, tricDataFileName, datasetFileName);
+		serv.saveResult(generatedDataset, bicDataFileName, datasetFileName);
 
-		//Tests.testMaxTricsOnOverlappedArea(generatedDataset, overlapping, numTrics);
-		//Tests.testPercOfOverlappingTrics(generatedDataset, overlapping, numTrics);
-		//Tests.testContiguity(generatedDataset.getPlantedTrics(), tricStructure.getContiguity());
+		//Tests.testMaxBicsOnOverlappedArea(generatedDataset, overlapping, numBics);
+		//Tests.testPercOfOverlappingBics(generatedDataset, overlapping, numBics);
+		//Tests.testContiguity(generatedDataset.getPlantedBics(), bicStructure.getContiguity());
 		//Tests.testMissingNoiseError(generatedDataset);
 		
-		//generateHeatMap(tricDataFileName, datasetFileName);
+		//generateHeatMap(bicDataFileName, datasetFileName);
 	}
 
 	
@@ -262,24 +213,23 @@ public class GenerateDataset{
 		long stopTimeBics;
 
 		//num de linhas do dataset
-		int numRows = 500;
+		int numRows = 100;
 		//num de colunas do dataset
-		int numCols = 10;
-		int numCtxs = 5;
+		int numCols = 100;
 		//num de bics a plantar
-		int numTrics = 0;
+		int numBics = 6;
 
-		trics = numTrics;
+		bics = numBics;
 		
 		//TODO: limites dos valores do dataset (usar em caso de dataset real)
 		double min = 0;
-		double max = 50000;
+		double max = 100;
 
 		//use real valued or integer alphabet
 		boolean realValued = true;
 
 		Background background = null;
-		TriclusterDatasetGenerator generator = null;
+		BiclusterDatasetGenerator generator = null;
 
 		/* Background Normal(2.5, 1)
     	*/
@@ -305,56 +255,57 @@ public class GenerateDataset{
 		//background = new Background(BackgroundType.UNIFORM);
 
 		startTimeGen = System.currentTimeMillis();
-		generator = new NumericDatasetGenerator(realValued, numRows, numCols, numCtxs, numTrics, background, min, max);
+		generator = new NumericDatasetGenerator(realValued, numRows, numCols, numBics, background, min, max);
 		stopTimeGen = System.currentTimeMillis();
 		
 		System.out.println("(BackgroundGenerator) Execution Time: " + ((double)(stopTimeGen - startTimeGen)) / 1000);
 
 		//Padrao
-		List<TriclusterPattern> patterns = new ArrayList<>();
-		//patterns.add(new TriclusterPattern(PatternType.ORDER_PRESERVING, PatternType.NONE, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.ORDER_PRESERVING, PatternType.NONE));
-		patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.NONE, PatternType.ORDER_PRESERVING, TimeProfile.RANDOM));
+		List<BiclusterPattern> patterns = new ArrayList<>();
+		//patterns.add(new BiclusterPattern(PatternType.ORDER_PRESERVING, PatternType.NONE, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.ORDER_PRESERVING, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.ORDER_PRESERVING, TimeProfile.RANDOM));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.ORDER_PRESERVING, TimeProfile.MONONICALLY_DECREASING));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.ORDER_PRESERVING, TimeProfile.MONONICALLY_INCREASING));
 		
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.NONE, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.NONE));
-		//patterns.add(new TriclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.NONE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.NONE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.NONE));
+		//patterns.add(new BiclusterPattern(PatternType.NONE, PatternType.CONSTANT, PatternType.CONSTANT));
 		
-		//patterns.add(new TriclusterPattern(PatternType.ADDITIVE, PatternType.CONSTANT, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.ADDITIVE, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.ADDITIVE));
-		//patterns.add(new TriclusterPattern(PatternType.ADDITIVE, PatternType.ADDITIVE, PatternType.ADDITIVE));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.ADDITIVE, PatternType.ADDITIVE));
-		//patterns.add(new TriclusterPattern(PatternType.ADDITIVE, PatternType.CONSTANT, PatternType.ADDITIVE));
-		//patterns.add(new TriclusterPattern(PatternType.ADDITIVE, PatternType.ADDITIVE, PatternType.CONSTANT));
+		patterns.add(new BiclusterPattern(PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE));
+		patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.MULTIPLICATIVE));
+		patterns.add(new BiclusterPattern(PatternType.MULTIPLICATIVE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.ADDITIVE, PatternType.ADDITIVE, PatternType.ADDITIVE));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.ADDITIVE, PatternType.ADDITIVE));
+		//patterns.add(new BiclusterPattern(PatternType.ADDITIVE, PatternType.CONSTANT, PatternType.ADDITIVE));
+		//patterns.add(new BiclusterPattern(PatternType.ADDITIVE, PatternType.ADDITIVE, PatternType.CONSTANT));
 		
-		//patterns.add(new TriclusterPattern(PatternType.MULTIPLICATIVE, PatternType.CONSTANT, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.MULTIPLICATIVE, PatternType.CONSTANT));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.MULTIPLICATIVE));
-		//patterns.add(new TriclusterPattern(PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE));
-		//patterns.add(new TriclusterPattern(PatternType.CONSTANT, PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE));
-		//patterns.add(new TriclusterPattern(PatternType.MULTIPLICATIVE, PatternType.CONSTANT, PatternType.MULTIPLICATIVE));
-		//patterns.add(new TriclusterPattern(PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.MULTIPLICATIVE, PatternType.CONSTANT, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.MULTIPLICATIVE, PatternType.CONSTANT));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.CONSTANT, PatternType.MULTIPLICATIVE));
+		//patterns.add(new BiclusterPattern(PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE));
+		//patterns.add(new BiclusterPattern(PatternType.CONSTANT, PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE));
+		//patterns.add(new BiclusterPattern(PatternType.MULTIPLICATIVE, PatternType.CONSTANT, PatternType.MULTIPLICATIVE));
+		//patterns.add(new BiclusterPattern(PatternType.MULTIPLICATIVE, PatternType.MULTIPLICATIVE, PatternType.CONSTANT));
 		
 		
 
-		//** 3 - Define tricluster's structure **//
-		//Object that encapsulates the configurations of the tricluster's structure
-		TriclusterStructure tricStructure = new TriclusterStructure();
+		//** 3 - Define bicluster's structure **//
+		//Object that encapsulates the configurations of the bicluster's structure
+		BiclusterStructure bicStructure = new BiclusterStructure();
 		
-		//Distribution used to calculate the number of rows/cols/ctxs for a tric (NORMAL or UNIFORM)
+		//Distribution used to calculate the number of rows/cols/ctxs for a bic (NORMAL or UNIFORM)
 		//Dist args: if dist=UNIFORM, then param1 and param2 represents the min and max, respectively
 		//			 if dist=NORMAL, then param1 and param2 represents the mean and stdDev, respectively
-		tricStructure.setRowsSettings(Distribution.UNIFORM, 3, 3);
-		tricStructure.setColumnsSettings(Distribution.UNIFORM, 3, 3);
-		tricStructure.setContextsSettings(Distribution.UNIFORM, 3, 3);
+		bicStructure.setRowsSettings(Distribution.UNIFORM, 3, 3);
+		bicStructure.setColumnsSettings(Distribution.UNIFORM, 3, 3);
 		
 		//Contiguity can occour on COLUMNS or CONTEXTS. To avoid contiguity use NONE
-		tricStructure.setContiguity(Contiguity.NONE);
+		bicStructure.setContiguity(Contiguity.NONE);
 		// ************* /
 
 		//** Define overlapping settings ** //
@@ -365,54 +316,53 @@ public class GenerateDataset{
 		//Plaid Coherency (ADDITIVE, MULTIPLICATIVE, INTERPOLED, NONE or NO_OVERLAPPING
 		overlapping.setPlaidCoherency(PlaidCoherency.NO_OVERLAPPING);
 		
-		//Percentage of overlapping trics defines how many trics are allowed to overlap:
-		//if 0.5 only half of the dataset triclusters will overlap
-		overlapping.setPercOfOverlappingTrics(0.8);
+		//Percentage of overlapping bics defines how many bics are allowed to overlap:
+		//if 0.5 only half of the dataset biclusters will overlap
+		overlapping.setPercOfOverlappingBics(0.8);
 		
-		//Maximum number of triclusters that can overlap together. if equal to 3, there will be, at max, 3 triclusters
+		//Maximum number of biclusters that can overlap together. if equal to 3, there will be, at max, 3 biclusters
 		//that intersect each other(T1 ^ T2 ^ T3)
-		overlapping.setMaxTricsPerOverlappedArea(8);
+		overlapping.setMaxBicsPerOverlappedArea(8);
 		
-		//Maximum percentage of elements shared by overlapped triclusters. If 0.5, T1 ^ T2 will have, at max, 50% of the elements
-		//of the smallest tric
+		//Maximum percentage of elements shared by overlapped biclusters. If 0.5, T1 ^ T2 will have, at max, 50% of the elements
+		//of the smallest bic
 		overlapping.setMaxPercOfOverlappingElements(0.6);
 		
-		//Percentage of allowed amount of overlaping across triclusters rows, columns and contexts. if rows=0.5, then 
+		//Percentage of allowed amount of overlaping across biclusters rows, columns and contexts. if rows=0.5, then 
 		//T2 will intersect, at max, with half(50%) the rows of T1.
-		//if you dont want any restriction on the number of rows/cols/ctxs that can overlapp, use 1.0
+		//if you dont want any resbiction on the number of rows/cols/ctxs that can overlapp, use 1.0
 		overlapping.setPercOfOverlappingRows(1.0);
-		overlapping.setPercOfOverlappingColumns(1.0);
-		overlapping.setPercOfOverlappingContexts(1.0);		
+		overlapping.setPercOfOverlappingColumns(1.0);	
 		//** end of overlapping settings ** //
 		
 		startTimeBics = System.currentTimeMillis();
-		NumericDataset generatedDataset = (NumericDataset) generator.generate(patterns, tricStructure, overlapping);
+		NumericDataset generatedDataset = (NumericDataset) generator.generate(patterns, bicStructure, overlapping);
 		stopTimeBics = System.currentTimeMillis();
 		
-		System.out.println("(GenerateTrics) Execution Time: " + ((double) (stopTimeBics - startTimeBics)) / 1000);
-		//System.out.println("Number of planted trics = " + generatedDataset.getTriclusters().size());
+		System.out.println("(GenerateBics) Execution Time: " + ((double) (stopTimeBics - startTimeBics)) / 1000);
+		//System.out.println("Number of planted bics = " + generatedDataset.getBiclusters().size());
 		
 		/*
-		for(int id = 0; id < numTrics; id++) {
-			NumericTricluster<?> t = generatedDataset.getTricluster(id);
+		for(int id = 0; id < numBics; id++) {
+			NumericBicluster<?> t = generatedDataset.getBicluster(id);
 			System.out.println("ID = " + id + "(" + t.getNumContexts() + "x" + t.getNumRows() + "x" + t.getNumCols() + ")");
-			List<String> elements = generatedDataset.getTriclusterElements(id);
-			Map<Integer, Integer> overlappedTricsCounter = new HashMap<>();
+			List<String> elements = generatedDataset.getBiclusterElements(id);
+			Map<Integer, Integer> overlappedBicsCounter = new HashMap<>();
 			for(String elem : elements) {
-				List<Integer> overlappedTrics = generatedDataset.getTricsByElem(elem);
-				for(Integer tric : overlappedTrics) {
-					if(tric != id) {
-						if(overlappedTricsCounter.containsKey(tric))
-							overlappedTricsCounter.put(tric, overlappedTricsCounter.get(tric) + 1);
+				List<Integer> overlappedBics = generatedDataset.getBicsByElem(elem);
+				for(Integer bic : overlappedBics) {
+					if(bic != id) {
+						if(overlappedBicsCounter.containsKey(bic))
+							overlappedBicsCounter.put(bic, overlappedBicsCounter.get(bic) + 1);
 						else
-							overlappedTricsCounter.put(tric, 1);
+							overlappedBicsCounter.put(bic, 1);
 					}	
 				}
 			}
-			for(Integer k : overlappedTricsCounter.keySet()) {
-				int total = overlappedTricsCounter.get(k);
+			for(Integer k : overlappedBicsCounter.keySet()) {
+				int total = overlappedBicsCounter.get(k);
 				double perc = ((double) total) / ((double) t.getSize());
-				System.out.println("Overlaps with tric " + k + " in " + total + " (" + perc + ") positions");
+				System.out.println("Overlaps with bic " + k + " in " + total + " (" + perc + ") positions");
 				
 				if(Double.compare(perc, overlapping.getMaxPercOfOverlappingElements()) > 0)
 					throw new OutputErrorException("excedeu o max_overlap_elements (3)");
@@ -421,15 +371,15 @@ public class GenerateDataset{
 		*/
 		
 		
-		//Percentage of missing values on the background, that is, values that do not belong to planted trics (Range = [0,1])
-		//Maximum percentage of missing values on each tricluster. Range [0,1]. 
-		//Ex: 0.1 significa que cada tric tem no maximo 10% de missings. Pode ter menos
+		//Percentage of missing values on the background, that is, values that do not belong to planted bics (Range = [0,1])
+		//Maximum percentage of missing values on each bicluster. Range [0,1]. 
+		//Ex: 0.1 significa que cada bic tem no maximo 10% de missings. Pode ter menos
 		double missingPercOnBackground = 0.0;
-		double missingPercOnPlantedTrics = 0.0;
+		double missingPercOnPlantedBics = 0.0;
 		
 		//Same as above but for noise
 		double noisePercOnBackground = 0.0;
-		double noisePercOnPlantedTrics = 0.0;
+		double noisePercOnPlantedBics = 0.0;
 		//Level of symbol deviation, that is, the maximum difference between the current symbol on the matrix and the one that
 		//will replaced it to be considered noise.
 		//Ex: Let Alphabet = [1,2,3,4,5] and CurrentSymbol = 3, if the noiseDeviation is '1', then CurrentSymbol will be, randomly,
@@ -442,29 +392,27 @@ public class GenerateDataset{
 		//Ex: Alphabet = [1,2,3,4,5], If currentValue = 2, and errorDeviation = 2, to turn currentValue an error, it's value must be
 		//replaced by '5', that is the only possible value that respects abs(currentValue - newValue) > noiseDeviation
 		double errorPercOnBackground = 0.0;
-		double errorPercOnPlantedTrics = 0.0;
+		double errorPercOnPlantedBics = 0.0;
 		
-		generatedDataset.plantMissingElements(missingPercOnBackground, missingPercOnPlantedTrics);
-		generatedDataset.plantNoisyElements(noisePercOnBackground, noisePercOnPlantedTrics, noiseDeviation);
-		generatedDataset.plantErrors(errorPercOnBackground, errorPercOnPlantedTrics, noiseDeviation);
+		generatedDataset.plantMissingElements(missingPercOnBackground, missingPercOnPlantedBics);
+		generatedDataset.plantNoisyElements(noisePercOnBackground, noisePercOnPlantedBics, noiseDeviation);
+		generatedDataset.plantErrors(errorPercOnBackground, errorPercOnPlantedBics, noiseDeviation);
 		
 		
-		String tricDataFileName;
+		String bicDataFileName;
 		String datasetFileName;
 		
 		if(patterns.size() == 1) {
-			tricDataFileName = "tric_" + patterns.get(0).getRowsPattern().name().charAt(0) 
+			bicDataFileName = "bic_" + patterns.get(0).getRowsPattern().name().charAt(0) 
 					+ patterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ patterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+					+ "_" + numRows + "x" + numCols;
 
 			datasetFileName = "data_" + patterns.get(0).getRowsPattern().name().charAt(0) 
 					+ patterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ patterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+					+ "_" + numRows + "x" + numCols;
 		}
 		else {
-			tricDataFileName = "dataset_test_op_up_reg_trics";
+			bicDataFileName = "dataset_test_op_up_reg_bics";
 			datasetFileName = "dataset_test_op_up_reg_data";
 		}
 		 
@@ -474,11 +422,11 @@ public class GenerateDataset{
 		//System.out.println("Errors: " + Arrays.toString(generatedDataset.getErrorElements().toArray()));
 		
 		GBicService serv = new GBicService();
-		serv.setPath("/Users/atticus/git/G-Tric/G-Tric/temp/");
+		serv.setPath("/Users/atticus/git/G-Bic/G-Bic/temp/");
 		serv.setSingleFileOutput(true);
-		serv.saveResult(generatedDataset, tricDataFileName, datasetFileName);
+		serv.saveResult(generatedDataset, bicDataFileName, datasetFileName);
 
-		//IOUtils.generateHeatMap(tricDataFileName, datasetFileName);
+		//IOUtils.generateHeatMap(bicDataFileName, datasetFileName);
 		
 		return generatedDataset;
 	}
@@ -487,12 +435,12 @@ public class GenerateDataset{
 
 	
 
-	private static void saveResult(SymbolicDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
+	private static void saveResult(SymbolicDataset generatedDataset, String bicDataFileName, String datasetFileName) throws Exception {
 
 		//BicResult.println("Planted BICS:\n" + trueBics.toString());
-		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getTricsInfo(), false);
+		IOUtils.writeFile(path, bicDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
 		//BicResult.println("Dataset:\n" + BicPrinting.plot(dataset));
-		IOUtils.writeFile(path, tricDataFileName + ".json",generatedDataset.getTricsInfoJSON(generatedDataset).toString(), false);
+		IOUtils.writeFile(path, bicDataFileName + ".json",generatedDataset.getBicsInfoJSON(generatedDataset).toString(), false);
 
 		long startWriting;
 		long stopWriting;

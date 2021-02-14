@@ -29,7 +29,7 @@ import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.generator.NumericDatasetGenerator;
 import com.gbic.generator.SymbolicDatasetGenerator;
-import com.gbic.generator.TriclusterDatasetGenerator;
+import com.gbic.generator.BiclusterDatasetGenerator;
 import com.gbic.tests.OutputWriterThread;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
@@ -41,8 +41,8 @@ import com.gbic.types.TimeProfile;
 import com.gbic.utils.IOUtils;
 import com.gbic.utils.OverlappingSettings;
 import com.gbic.utils.QualitySettings;
-import com.gbic.utils.TriclusterPattern;
-import com.gbic.utils.TriclusterStructure;
+import com.gbic.utils.BiclusterPattern;
+import com.gbic.utils.BiclusterStructure;
 
 public class GBicService extends Observable implements Observer {
 
@@ -51,27 +51,24 @@ public class GBicService extends Observable implements Observer {
 	private boolean singleFile;
 	
 	//Helper class to organize the tricluster's patterns
-	public class TriclusterPatternWrapper{
+	public class BiclusterPatternWrapper{
 		
 		String rowPattern;
 		String columnPattern;
-		String contextPattern;
 		String timeProfile;
 		String imagePath;
 		
-		public TriclusterPatternWrapper(String rowPattern, String columnPattern, String contextPattern,
+		public BiclusterPatternWrapper(String rowPattern, String columnPattern,
 				String imagePath) {
 			this.rowPattern = rowPattern;
 			this.columnPattern = columnPattern;
-			this.contextPattern = contextPattern;
 			this.imagePath = imagePath;
 		}
 		
-		public TriclusterPatternWrapper(String rowPattern, String columnPattern, String contextPattern,
+		public BiclusterPatternWrapper(String rowPattern, String columnPattern,
 				String timeProfile, String imagePath) {
 			this.rowPattern = rowPattern;
-			this.columnPattern = columnPattern;
-			this.contextPattern = contextPattern;
+			this.columnPattern = columnPattern;	
 			this.timeProfile = timeProfile;
 			this.imagePath = imagePath;
 		}
@@ -82,10 +79,6 @@ public class GBicService extends Observable implements Observer {
 
 		public String getColumnPattern() {
 			return columnPattern;
-		}
-
-		public String getContextPattern() {
-			return contextPattern;
 		}
 
 		public String getImagePath() {
@@ -107,12 +100,12 @@ public class GBicService extends Observable implements Observer {
 		}
 
 		public String toString() {
-			return rowPattern + "|" + columnPattern + "|" + contextPattern;
+			return rowPattern + "|" + columnPattern;
 		}
 		
 	}
 	
-	private JSONObject triclustersJSON;
+	private JSONObject biclustersJSON;
 	private Dataset generatedDataset;
 	
 	private BiConsumer<Integer, Integer> progressUpdate;
@@ -121,15 +114,15 @@ public class GBicService extends Observable implements Observer {
 	
 	private String state;
 	//Paths to files with symbolic and numerics patterns
-	private static final String SYMBOLIC_PATTERNS_PATH = "src/main/java/com/gtric/app/service/symbolicPatterns.csv";
-	private static final String NUMERIC_PATTERNS_PATH = "src/main/java/com/gtric/app/service/numericPatterns.csv";
+	private static final String SYMBOLIC_PATTERNS_PATH = "src/main/java/com/gbic/app/service/symbolicPatterns.csv";
+	private static final String NUMERIC_PATTERNS_PATH = "src/main/java/com/gbic/app/service/numericPatterns.csv";
 	private List<String> numericDatasetDataTypes;
 	private List<String> datasetBackground;
 	private List<String> distributions;
 	private List<String> contiguity;
 	private List<String> plaidCoherency;
-	private List<TriclusterPatternWrapper> symbolicPatterns;
-	private List<TriclusterPatternWrapper> numericPatterns;
+	private List<BiclusterPatternWrapper> symbolicPatterns;
+	private List<BiclusterPatternWrapper> numericPatterns;
 	private List<String> symbolType;
 	
 	//Dataset Properties
@@ -137,7 +130,6 @@ public class GBicService extends Observable implements Observer {
 	private String datasetType;
 	private int numRows;
 	private int numCols;
-	private int numCtxs;
 	
 	//Numeric dataset
 	private boolean realValued;
@@ -151,12 +143,12 @@ public class GBicService extends Observable implements Observer {
 	
 	private Background background;
 	
-	//TriclusterProperties
-	private int numTrics;
-	private TriclusterStructure tricStructure;
+	//BiclusterProperties
+	private int numbics;
+	private BiclusterStructure bicStructure;
 	
-	//Tricluster's Patters
-	List<TriclusterPattern> tricPatterns;
+	//Bicluster's Patters
+	List<BiclusterPattern> bicPatterns;
 	
 	//Overlapping
 	private OverlappingSettings overlappingSettings;
@@ -246,7 +238,7 @@ public class GBicService extends Observable implements Observer {
 			    String img = "";
 			    if(data.length == 4)
 			    	img = data[3];
-			    numericPatterns.add(new TriclusterPatternWrapper(data[0], data[1], data[2], img));
+			    numericPatterns.add(new BiclusterPatternWrapper(data[0], data[1], img));
 			    //System.out.println("Added: (" + data[0] + ", " + data[1] + ", " + data[2] + ")");
 			    
 			}
@@ -275,7 +267,7 @@ public class GBicService extends Observable implements Observer {
 			    String img = "";
 			    if(data.length == 4)
 			    	img = data[3];
-			    symbolicPatterns.add(new TriclusterPatternWrapper(data[0], data[1], data[2], img));
+			    symbolicPatterns.add(new BiclusterPatternWrapper(data[0], data[1], img));
 			    //System.out.println("Added: (" + data[0] + ", " + data[1] + ", " + data[2] + ")");
 			    
 			}
@@ -303,7 +295,6 @@ public class GBicService extends Observable implements Observer {
 		
 		contiguity.add("None");
 		contiguity.add("Columns");
-		contiguity.add("Contexts");
 	}
 
 	private void fillDistributions() {
@@ -375,7 +366,7 @@ public class GBicService extends Observable implements Observer {
 	 * Get tricluster's symbolic patterns
 	 * @return list with the patterns
 	 */
-	public List<TriclusterPatternWrapper> getSymbolicPatterns(){
+	public List<BiclusterPatternWrapper> getSymbolicPatterns(){
 		return this.symbolicPatterns;
 	}
 	
@@ -383,7 +374,7 @@ public class GBicService extends Observable implements Observer {
 	 * Get tricluster's numeric patterns
 	 * @return list with numeric patterns
 	 */
-	public List<TriclusterPatternWrapper> getNumericPatterns(){
+	public List<BiclusterPatternWrapper> getNumericPatterns(){
 		return this.numericPatterns;
 	}
 	
@@ -400,12 +391,11 @@ public class GBicService extends Observable implements Observer {
 	 * @param backgroundParam2 The background's second parameter (std or max)
 	 * @param backgroundParam3 The background's third parameter (probabilities array)
 	 */
-	public void setDatasetProperties(int numRows, int numCols, int numCtxs, boolean realValued, double minM, double maxM, String background,
+	public void setDatasetProperties(int numRows, int numCols, boolean realValued, double minM, double maxM, String background,
 			double backgroundParam1, double backgroundParam2, double[] backgroundParam3) {
 		
 		this.numRows = numRows;
 		this.numCols = numCols;
-		this.numCtxs = numCtxs;
 		this.realValued = realValued;
 		this.minM = minM;
 		this.maxM = maxM;
@@ -444,12 +434,11 @@ public class GBicService extends Observable implements Observer {
 	 * @param backgroundParam2 The background's second parameter (std or max)
 	 * @param backgroundParam3 The background's third parameter (probabilities array)
 	 */
-	public void setDatasetProperties(int numRows, int numCols, int numCtxs, boolean defaultSymbols, int alphabetLength, String[] symbols, String background,
+	public void setDatasetProperties(int numRows, int numCols, boolean defaultSymbols, int alphabetLength, String[] symbols, String background,
 			double backgroundParam1, double backgroundParam2, double[] backgroundParam3) {
 		
 		this.numRows = numRows;
 		this.numCols = numCols;
-		this.numCtxs = numCtxs;
 		this.defaultSymbols = defaultSymbols;
 		
 		if(symbols == null)
@@ -477,7 +466,7 @@ public class GBicService extends Observable implements Observer {
 	
 	/**
 	 * Set tricluster's structure properties
-	 * @param numTrics The number of triclusters to plant
+	 * @param numBics The number of biclusters to plant
 	 * @param rowDist The row distribution (normal or uniform)
 	 * @param rowsParam1 The first parameter of the row distribution (mean or min)
 	 * @param rowsParam2 The second parameter of the row distribution (std or max)
@@ -489,57 +478,45 @@ public class GBicService extends Observable implements Observer {
 	 * @param contextsParam2 The second parameter of the context distribution (std or max)
 	 * @param contiguity Which dimension is contiguous (COLUMNS or CONTEXTS) or NONE
 	 */
-	public void setTriclustersProperties(int numTrics, String rowDist, double rowDistParam1, double rowDistParam2, String colDist, 
-			double colDistParam1, double colDistParam2, String ctxDist, double ctxDistParam1, double ctxDistParam2, String contiguity) {
+	public void setBiclustersProperties(int numBics, String rowDist, double rowDistParam1, double rowDistParam2, String colDist, 
+			double colDistParam1, double colDistParam2, String contiguity) {
 		
-		this.numTrics = numTrics;
-		this.tricStructure = new TriclusterStructure();
+		this.numbics = numBics;
+		this.bicStructure = new BiclusterStructure();
 		
 		if(rowDist.equals("Normal"))
-			this.tricStructure.setRowsDistribution(Distribution.NORMAL);
+			this.bicStructure.setRowsDistribution(Distribution.NORMAL);
 		if(rowDist.equals("Uniform"))
-			this.tricStructure.setRowsDistribution(Distribution.UNIFORM);
+			this.bicStructure.setRowsDistribution(Distribution.UNIFORM);
 		
 		if(colDist.equals("Normal"))
-			this.tricStructure.setColumnsDistribution(Distribution.NORMAL);
+			this.bicStructure.setColumnsDistribution(Distribution.NORMAL);
 		if(colDist.equals("Uniform"))
-			this.tricStructure.setColumnsDistribution(Distribution.UNIFORM);
+			this.bicStructure.setColumnsDistribution(Distribution.UNIFORM);
 		
-		if(ctxDist.equals("Normal"))
-			this.tricStructure.setContextsDistribution(Distribution.NORMAL);
-		if(ctxDist.equals("Uniform"))
-			this.tricStructure.setContextsDistribution(Distribution.UNIFORM);
+		this.bicStructure.setRowsParam1(rowDistParam1);
+		this.bicStructure.setRowsParam2(rowDistParam2);
 		
-		
-		this.tricStructure.setRowsParam1(rowDistParam1);
-		this.tricStructure.setRowsParam2(rowDistParam2);
-		
-		this.tricStructure.setColumnsParam1(colDistParam1);
-		this.tricStructure.setColumnsParam2(colDistParam2);
-		
-		this.tricStructure.setContextsParam1(ctxDistParam1);
-		this.tricStructure.setContextsParam2(ctxDistParam2);
+		this.bicStructure.setColumnsParam1(colDistParam1);
+		this.bicStructure.setColumnsParam2(colDistParam2);
 		
 		if(contiguity.equals("Columns"))
-			this.tricStructure.setContiguity(Contiguity.COLUMNS);
-		else if(contiguity.equals("Contexts"))
-			this.tricStructure.setContiguity(Contiguity.CONTEXTS);
+			this.bicStructure.setContiguity(Contiguity.COLUMNS);
 		else
-			this.tricStructure.setContiguity(Contiguity.NONE);
+			this.bicStructure.setContiguity(Contiguity.NONE);
 	}
 	
 	
-	public void setTriclusterPatterns(List<TriclusterPatternWrapper> patterns) {
+	public void setBiclusterPatterns(List<BiclusterPatternWrapper> patterns) {
 		
-		this.tricPatterns = new ArrayList<>();
+		this.bicPatterns = new ArrayList<>();
 		
-		for(TriclusterPatternWrapper p : patterns) {
-			TriclusterPattern tp = new TriclusterPattern(getPatternType(p.rowPattern), getPatternType(p.columnPattern),
-					getPatternType(p.contextPattern));
-			if(tp.getContextsPattern().equals(PatternType.ORDER_PRESERVING))
+		for(BiclusterPatternWrapper p : patterns) {
+			BiclusterPattern tp = new BiclusterPattern(getPatternType(p.rowPattern), getPatternType(p.columnPattern));
+			if(tp.getColumnsPattern().equals(PatternType.ORDER_PRESERVING))
 				tp.setTimeProfile(getTimeProfile(p.getTimeProfile()));
 			System.out.println(getPatternType(p.rowPattern));
-			this.tricPatterns.add(tp);
+			this.bicPatterns.add(tp);
 		}
 	}
 	
@@ -578,16 +555,16 @@ public class GBicService extends Observable implements Observer {
 	/**
 	 * 
 	 * @param plaidCoherency The plaid coherency
-	 * @param percOverlappingTrics The percentage of dataset's triclusters that can overlap
-	 * @param maxOverlappingTrics The maximum amount of trics that can overlap together
+	 * @param percOverlappingBics The percentage of dataset's biclusters that can overlap
+	 * @param maxOverlappingBics The maximum amount of bics that can overlap together
 	 * @param percOverlappingElements The maximum percentage of elements tha can be share between 
-	 * triclusters (relative to the smallest tric)
+	 * biclusters (relative to the smallest tric)
 	 * @param percOverlappingRows The maximum percentage of overlapping in the row dimension
 	 * @param percOverlappingColumns The maximum percentage of overlapping in the column dimension
 	 * @param percOverlappingContexts The maximum percentage of overlapping in the context dimension
 	 */
-	public void setOverlappingSettings(String plaidCoherency, double percOverlappingTrics, int maxOverlappingTrics, double percOverlappingElements,
-			double percOverlappingRows, double percOverlappingColumns, double percOverlappingContexts) {
+	public void setOverlappingSettings(String plaidCoherency, double percOverlappingBics, int maxOverlappingBics, double percOverlappingElements,
+			double percOverlappingRows, double percOverlappingColumns) {
 		
 		this.overlappingSettings = new OverlappingSettings();
 		
@@ -597,42 +574,41 @@ public class GBicService extends Observable implements Observer {
 			this.overlappingSettings.setPlaidCoherency(PlaidCoherency.MULTIPLICATIVE);
 		else if (plaidCoherency.equals("Interpoled"))
 			this.overlappingSettings.setPlaidCoherency(PlaidCoherency.INTERPOLED);
-		else if (plaidCoherency.equals("NONE"))
+		else if (plaidCoherency.equals("None"))
 			this.overlappingSettings.setPlaidCoherency(PlaidCoherency.NONE);
 		else
 			this.overlappingSettings.setPlaidCoherency(PlaidCoherency.NO_OVERLAPPING);
 		
 		
-		this.overlappingSettings.setPercOfOverlappingTrics(percOverlappingTrics);
-		this.overlappingSettings.setMaxTricsPerOverlappedArea(maxOverlappingTrics);
+		this.overlappingSettings.setPercOfOverlappingBics(percOverlappingBics);
+		this.overlappingSettings.setMaxBicsPerOverlappedArea(maxOverlappingBics);
 		this.overlappingSettings.setMaxPercOfOverlappingElements(percOverlappingElements);
 		this.overlappingSettings.setPercOfOverlappingRows(percOverlappingRows);
 		this.overlappingSettings.setPercOfOverlappingColumns(percOverlappingColumns);
-		this.overlappingSettings.setPercOfOverlappingContexts(percOverlappingContexts);
 	}
 	
 	/**
 	 * Set the Quality properties 
 	 * @param percMissingsOnBackground The percentage of missings on dataset's background
-	 * @param percMissingsOnTrics The maximum percentage of missings on planted triclusters
+	 * @param percMissingsOnBics The maximum percentage of missings on planted biclusters
 	 * @param percNoiseOnBackground  The percentage of noise on dataset's background
-	 * @param percNoiseOnTrics The maximum percentage of noise on planted triclusters
+	 * @param percNoiseOnBics The maximum percentage of noise on planted biclusters
 	 * @param noiseDeviation The noise deviation value
 	 * @param percErrorsOnBackground The percentage of errors on dataset's background
-	 * @param percErrorsOnTrics The maximum percentage of errors on planted triclusters
+	 * @param percErrorsOnBics The maximum percentage of errors on planted biclusters
 	 */
-	public void setQualitySettings(double percMissingsOnBackground, double percMissingsOnTrics, double percNoiseOnBackground, double percNoiseOnTrics,
-			double noiseDeviation, double percErrorsOnBackground, double percErrorsOnTrics) {
+	public void setQualitySettings(double percMissingsOnBackground, double percMissingsOnBics, double percNoiseOnBackground, double percNoiseOnBics,
+			double noiseDeviation, double percErrorsOnBackground, double percErrorsOnBics) {
 		
 		this.qualitySettings = new QualitySettings();
 		
 		this.qualitySettings.setPercMissingsOnBackground(percMissingsOnBackground);
-		this.qualitySettings.setPercMissingsOnTrics(percMissingsOnTrics);
+		this.qualitySettings.setPercMissingsOnBics(percMissingsOnBics);
 		this.qualitySettings.setPercNoiseOnBackground(percNoiseOnBackground);
-		this.qualitySettings.setPercNoiseOnTrics(percNoiseOnTrics);
+		this.qualitySettings.setPercNoiseOnBics(percNoiseOnBics);
 		this.qualitySettings.setNoiseDeviation(noiseDeviation); 
 		this.qualitySettings.setPercErrorsOnBackground(percErrorsOnBackground);
-		this.qualitySettings.setPercErrorsOnTrics(percErrorsOnTrics);
+		this.qualitySettings.setPercErrorsOnBics(percErrorsOnBics);
 	}
 	
 	/**
@@ -664,54 +640,52 @@ public class GBicService extends Observable implements Observer {
 		String datasetFileName;
 		
 		if(this.filename.isEmpty()) {
-			if(tricPatterns.size() == 1) {
-			tricDataFileName = "tric_" + tricPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+			if(bicPatterns.size() == 1) {
+			tricDataFileName = "tric_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
+					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
+					+ "_" + numRows + "x" + numCols;
 
-			datasetFileName = "data_" + tricPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+			datasetFileName = "data_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
+					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
+					+ "_" + numRows + "x" + numCols;
 			}
 			else {
-				tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols + "x" + numCtxs;
-				datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols + "x" + numCtxs;
+				tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols;
+				datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols;
 			}
 		}
 		else {
-			tricDataFileName = this.filename + "_trics";
+			tricDataFileName = this.filename + "_bics";
 			datasetFileName = this.filename + "_data";
 		}
 		
 		startTimeGen = System.currentTimeMillis();
-		generator = new NumericDatasetGenerator(realValued, numRows, numCols, numCtxs, numTrics, background, minM, maxM);
+		generator = new NumericDatasetGenerator(realValued, numRows, numCols, numbics, background, minM, maxM);
 		stopTimeGen = System.currentTimeMillis();
 		
 		generator.addObserver(this);
 		
 		System.out.println("(TricDatasetGenerator) Execution Time: " + ((double)(stopTimeGen - startTimeGen)) / 1000);
 		
-		updateProgressStatusAndMessage(20, "Generating Triclusters...");
+		updateProgressStatusAndMessage(20, "Generating Biclusters...");
 		
 		startTimeBics = System.currentTimeMillis();
-		NumericDataset generatedDataset = (NumericDataset) generator.generate(tricPatterns, tricStructure, overlappingSettings);
+		NumericDataset generatedDataset = (NumericDataset) generator.generate(bicPatterns, bicStructure, overlappingSettings);
 		stopTimeBics = System.currentTimeMillis();
 
-		System.out.println("(GeneratePlaidRealTrics) Execution Time: " + ((double) (stopTimeBics - startTimeBics)) / 1000);
+		System.out.println("(GeneratePlaidRealBics) Execution Time: " + ((double) (stopTimeBics - startTimeBics)) / 1000);
 		
 		updateProgressStatusAndMessage(80, "Generating Missings...");
 		System.out.println("Generating Missings...");
-		generatedDataset.plantMissingElements(this.qualitySettings.getPercMissingsOnBackground(), this.qualitySettings.getPercMissingsOnTrics());
+		generatedDataset.plantMissingElements(this.qualitySettings.getPercMissingsOnBackground(), this.qualitySettings.getPercMissingsOnBics());
 		
 		updateProgressStatusAndMessage(85, "Generating Noise...");
 		System.out.println("Generating Noise...");
-		generatedDataset.plantNoisyElements(this.qualitySettings.getPercNoiseOnBackground(), this.qualitySettings.getPercNoiseOnTrics(), this.qualitySettings.getNoiseDeviation());
+		generatedDataset.plantNoisyElements(this.qualitySettings.getPercNoiseOnBackground(), this.qualitySettings.getPercNoiseOnBics(), this.qualitySettings.getNoiseDeviation());
 		
 		updateProgressStatusAndMessage(90, "Generating Errors...");
 		System.out.println("Generating Errors...");
-		generatedDataset.plantErrors(this.qualitySettings.getPercErrorsOnBackground(), this.qualitySettings.getPercErrorsOnTrics(), this.qualitySettings.getNoiseDeviation());
+		generatedDataset.plantErrors(this.qualitySettings.getPercErrorsOnBackground(), this.qualitySettings.getPercErrorsOnBics(), this.qualitySettings.getNoiseDeviation());
 		
 		updateProgressStatusAndMessage(95, "Writing output...");
 		
@@ -747,11 +721,11 @@ public class GBicService extends Observable implements Observer {
 	}
 	
 	/**
-	 * Get the JSON with the triclusters info
+	 * Get the JSON with the biclusters info
 	 * @return the JSON Object
 	 */
-	public JSONObject getTriclustersJSON() {
-		return this.triclustersJSON;
+	public JSONObject getBiclustersJSON() {
+		return this.biclustersJSON;
 	}
 	
 	/**
@@ -767,7 +741,7 @@ public class GBicService extends Observable implements Observer {
 
 		printDatasetSettings();
 		
-		TriclusterDatasetGenerator generator = null;
+		BiclusterDatasetGenerator generator = null;
 		
 		this.progressUpdate.accept(5, 100);
 		this.messageUpdate.accept("Generating Background...");
@@ -776,35 +750,35 @@ public class GBicService extends Observable implements Observer {
 
 		if(!this.defaultSymbols) {
 			String[] symbols = this.listOfSymbols.toArray(new String[0]);
-			generator = new SymbolicDatasetGenerator(numRows,numCols, numCtxs, numTrics, background, symbols,
+			generator = new SymbolicDatasetGenerator(numRows,numCols, numbics, background, symbols,
 					false);
 		}
 		else
-			generator = new SymbolicDatasetGenerator(numRows,numCols, numCtxs, numTrics, background, numberOfSymbols, false);
+			generator = new SymbolicDatasetGenerator(numRows,numCols, numbics, background, numberOfSymbols, false);
 		stopTimeGen = System.currentTimeMillis();
 
 		generator.addObserver(this);
 		
 		System.out.println("(BicMatrixGenerator) Execution Time: " + ((double)(stopTimeGen - startTimeGen))/1000 + " secs");
 
-		updateProgressStatusAndMessage(20, "Generating Triclusters...");
+		updateProgressStatusAndMessage(20, "Generating Biclusters...");
 		
 		startTimeBics = System.currentTimeMillis();
-		SymbolicDataset generatedDataset = (SymbolicDataset) generator.generate(this.tricPatterns, tricStructure, this.overlappingSettings);
+		SymbolicDataset generatedDataset = (SymbolicDataset) generator.generate(this.bicPatterns, bicStructure, this.overlappingSettings);
 		stopTimeBics = System.currentTimeMillis();
 		
 		updateProgressStatusAndMessage(80, "Generating Missings...");
 		System.out.println("Generating Missings...");
-		generatedDataset.plantMissingElements(this.qualitySettings.getPercMissingsOnBackground(), this.qualitySettings.getPercMissingsOnTrics());
+		generatedDataset.plantMissingElements(this.qualitySettings.getPercMissingsOnBackground(), this.qualitySettings.getPercMissingsOnBics());
 		
 		updateProgressStatusAndMessage(85, "Generating Noise...");
 		System.out.println("Generating Noise...");
-		generatedDataset.plantNoisyElements(this.qualitySettings.getPercNoiseOnBackground(), this.qualitySettings.getPercNoiseOnTrics(), 
+		generatedDataset.plantNoisyElements(this.qualitySettings.getPercNoiseOnBackground(), this.qualitySettings.getPercNoiseOnBics(), 
 				(int)this.qualitySettings.getNoiseDeviation());
 		
 		updateProgressStatusAndMessage(90, "Generating Errors...");
 		System.out.println("Generating Errors...");
-		generatedDataset.plantErrors(this.qualitySettings.getPercErrorsOnBackground(), this.qualitySettings.getPercErrorsOnTrics(), 
+		generatedDataset.plantErrors(this.qualitySettings.getPercErrorsOnBackground(), this.qualitySettings.getPercErrorsOnBics(), 
 				(int)this.qualitySettings.getNoiseDeviation());
 		
 		String tricDataFileName;
@@ -813,24 +787,22 @@ public class GBicService extends Observable implements Observer {
 		updateProgressStatusAndMessage(95, "Writing output...");
 		
 		if(filename.isEmpty()) {
-			if(tricPatterns.size() == 1) {
-			tricDataFileName = "tric_" + tricPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+			if(bicPatterns.size() == 1) {
+			tricDataFileName = "tric_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
+					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
+					+ "_" + numRows + "x" + numCols;
 
-			datasetFileName = "data_" + tricPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ tricPatterns.get(0).getContextsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols + "x" + numCtxs;
+			datasetFileName = "data_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
+					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
+					+ "_" + numRows + "x" + numCols;
 			}
 			else {
-				tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols + "x" + numCtxs;
-				datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols + "x" + numCtxs;
+				tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols;
+				datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols;
 			}
 		}
 		else {
-			tricDataFileName = filename + "_trics";
+			tricDataFileName = filename + "_bics";
 			datasetFileName = filename + "_data";
 		}
 		
@@ -876,15 +848,15 @@ public class GBicService extends Observable implements Observer {
 
 		System.out.println("Writting output...");
 		
-		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getTricsInfo(), false);
-		System.out.println("Triclusters txt file written!");
+		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
+		System.out.println("Biclusters txt file written!");
 		
-		this.triclustersJSON = generatedDataset.getTricsInfoJSON(generatedDataset);
-		IOUtils.writeFile(path, tricDataFileName + ".json", this.triclustersJSON.toString(), false);
-		System.out.println("Triclusters JSON file written!");
+		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset);
+		IOUtils.writeFile(path, tricDataFileName + ".json", this.biclustersJSON.toString(), false);
+		System.out.println("Biclusters JSON file written!");
 		
 		
-		this.triclustersJSON = this.triclustersJSON.getJSONObject("Triclusters");
+		this.biclustersJSON = this.biclustersJSON.getJSONObject("biclusters");
 		
 		int threshold = generatedDataset.getNumRows() / 10;
 		
@@ -927,15 +899,15 @@ public class GBicService extends Observable implements Observer {
 
 		System.out.println("Writting output...");
 		
-		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getTricsInfo(), false);
-		System.out.println("Triclusters txt file written!");
+		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
+		System.out.println("Biclusters txt file written!");
 		
-		this.triclustersJSON = generatedDataset.getTricsInfoJSON(generatedDataset);
+		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset);
 		
-		IOUtils.writeFile(path, tricDataFileName + ".json", this.triclustersJSON.toString(), false);
-		System.out.println("Triclusters JSON file written");
+		IOUtils.writeFile(path, tricDataFileName + ".json", this.biclustersJSON.toString(), false);
+		System.out.println("Biclusters JSON file written");
 		
-		this.triclustersJSON = this.triclustersJSON.getJSONObject("Triclusters");
+		this.biclustersJSON = this.biclustersJSON.getJSONObject("biclusters");
 
 		int threshold = generatedDataset.getNumRows() / 10;
 		
@@ -998,8 +970,8 @@ public class GBicService extends Observable implements Observer {
 		String[] tricInfo = msg[1].split(" ");
 		int currentTric = Integer.parseInt(tricInfo[1]) + 1;
 		
-		double progress = (60 / ((double) this.numTrics));
-		updateProgressStatusAndMessage(this.currentProgress + (int)progress, "Generating Triclusters (" + currentTric + "/" + this.numTrics + ")...");
+		double progress = (60 / ((double) this.numbics));
+		updateProgressStatusAndMessage(this.currentProgress + (int)progress, "Generating Biclusters (" + currentTric + "/" + this.numbics + ")...");
 	}
 	
 	private void updateProgressStatusAndMessage(int prog, String msg) {
@@ -1014,7 +986,6 @@ public class GBicService extends Observable implements Observer {
 		System.out.println("*** Dataset Properties ***");
 		System.out.println("NumRows: " + this.numRows);
 		System.out.println("NumCols: " + this.numCols);
-		System.out.println("NumCtxs: " + this.numCtxs);
 		
 		if(this.datasetType.equals("Numeric")) {
 			System.out.println("RealValued: " + this.realValued );
@@ -1037,42 +1008,37 @@ public class GBicService extends Observable implements Observer {
 		else if(this.background.getType().equals(BackgroundType.DISCRETE))
 			System.out.println("Probabilities: " + Arrays.toString(this.background.getParam3()));
 		
-		System.out.println("\n*** Triclusters Properties ***");
-		System.out.println("NumTrics: " + this.numTrics);
-		System.out.println("RowDist: " + this.tricStructure.getRowsDistribution());
-		System.out.println("Row Param1: " + this.tricStructure.getRowsParam1());
-		System.out.println("Row Param2: " + this.tricStructure.getRowsParam2());
-		System.out.println("ColDist: " + this.tricStructure.getColumnsDistribution());
-		System.out.println("Col Param1: " + this.tricStructure.getColumnsParam1());
-		System.out.println("Col Param2: " + this.tricStructure.getColumnsParam2());
-		System.out.println("CtxDist: " + this.tricStructure.getContextsDistribution());
-		System.out.println("Ctx Param1: " + this.tricStructure.getContextsParam1());
-		System.out.println("Ctx Param2: " + this.tricStructure.getContextsParam2());
-		System.out.println("Contiguity: " + this.tricStructure.getContiguity().toString());
+		System.out.println("\n*** Biclusters Properties ***");
+		System.out.println("NumBics: " + this.numbics);
+		System.out.println("RowDist: " + this.bicStructure.getRowsDistribution());
+		System.out.println("Row Param1: " + this.bicStructure.getRowsParam1());
+		System.out.println("Row Param2: " + this.bicStructure.getRowsParam2());
+		System.out.println("ColDist: " + this.bicStructure.getColumnsDistribution());
+		System.out.println("Col Param1: " + this.bicStructure.getColumnsParam1());
+		System.out.println("Col Param2: " + this.bicStructure.getColumnsParam2());
+		System.out.println("Contiguity: " + this.bicStructure.getContiguity().toString());
 		
 		
 		System.out.println("\n*** Overlapping Settings ***");
 		System.out.println("Plaid Coherency: " + this.overlappingSettings.getPlaidCoherency().toString());
-		System.out.println("% of overlapping trics: " + this.overlappingSettings.getPercOfOverlappingTrics());
-		System.out.println("Max trics per overlapped area: " + this.overlappingSettings.getMaxTricsPerOverlappedArea());
+		System.out.println("% of overlapping bics: " + this.overlappingSettings.getPercOfOverlappingBics());
+		System.out.println("Max bics per overlapped area: " + this.overlappingSettings.getMaxBicsPerOverlappedArea());
 		System.out.println("Max % of overlapping elements per tric: " + this.overlappingSettings.getMaxPercOfOverlappingElements());
 		System.out.println("Max % of overlapping rows: " + this.overlappingSettings.getPercOfOverlappingRows());
 		System.out.println("Max % of overlapping cols: " + this.overlappingSettings.getPercOfOverlappingColumns());
-		System.out.println("Max % of overlapping ctxs: " + this.overlappingSettings.getPercOfOverlappingContexts());
 		
 		System.out.println("\n*** Patterns ***");
-		for(int p = 0; p < this.tricPatterns.size(); p++) {
-			System.out.println("Pattern " + p + ": (" + this.tricPatterns.get(p).getRowsPattern().toString() +
-					", " + this.tricPatterns.get(p).getColumnsPattern().toString() +
-					", " + this.tricPatterns.get(p).getContextsPattern().toString() + ")");
+		for(int p = 0; p < this.bicPatterns.size(); p++) {
+			System.out.println("Pattern " + p + ": (" + this.bicPatterns.get(p).getRowsPattern().toString() +
+					", " + this.bicPatterns.get(p).getColumnsPattern().toString() + ")");
 		}
 		
 		System.out.println("\n*** Missing/Noise/Error Settings ***");
 		System.out.println("% of missings on background: " + this.qualitySettings.getPercMissingsOnBackground());
-		System.out.println("Max % of missings on trics: " + this.qualitySettings.getPercMissingsOnTrics());
+		System.out.println("Max % of missings on bics: " + this.qualitySettings.getPercMissingsOnBics());
 		System.out.println("% of noise on background: " + this.qualitySettings.getPercNoiseOnBackground());
-		System.out.println("Max % of noise on trics: " + this.qualitySettings.getPercNoiseOnTrics());
+		System.out.println("Max % of noise on bics: " + this.qualitySettings.getPercNoiseOnBics());
 		System.out.println("% of errors on background: " + this.qualitySettings.getPercErrorsOnBackground());
-		System.out.println("Max % of errors on trics: " + this.qualitySettings.getPercErrorsOnTrics());
+		System.out.println("Max % of errors on bics: " + this.qualitySettings.getPercErrorsOnBics());
 	}
 }

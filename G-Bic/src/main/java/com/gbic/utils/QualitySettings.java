@@ -9,33 +9,33 @@ package com.gbic.utils;
 public class QualitySettings {
 
 	private double percMissingsOnBackground;
-	private double percMissingsOnTrics;
+	private double percMissingsOnBics;
 	private double percNoiseOnBackground;
-	private double percNoiseOnTrics;
+	private double percNoiseOnBics;
 	private double noiseDeviation;
 	private double percErrorsOnBackground;
-	private double percErrorsOnTrics;
+	private double percErrorsOnBics;
 	
 	public QualitySettings() {}
 	
 	/** Constructor
 	 * @param percMissingsOnBackground The percentage of missings on dataset's background
-	 * @param percMissingsOnTrics The maximum percentage of missings on planted triclusters
+	 * @param percMissingsOnBics The maximum percentage of missings on planted biclusters
 	 * @param percNoiseOnBackground  The percentage of noise on dataset's background
-	 * @param percNoiseOnTrics The maximum percentage of noise on planted triclusters
+	 * @param percNoiseOnBics The maximum percentage of noise on planted biclusters
 	 * @param noiseDeviation The noise deviation value
 	 * @param percErrorsOnBackground The percentage of errors on dataset's background
-	 * @param percErrorsOnTrics The maximum percentage of errors on planted triclusters
+	 * @param percErrorsOnBics The maximum percentage of errors on planted biclusters
 	 */
-	public QualitySettings(double percMissingsOnBackground, double percMissingsOnTrics, double percNoiseOnBackground,
-			double percNoiseOnTrics, double noiseDeviation, double percErrorsOnBackground, double percErrorsOnTrics) {
+	public QualitySettings(double percMissingsOnBackground, double percMissingsOnBics, double percNoiseOnBackground,
+			double percNoiseOnBics, double noiseDeviation, double percErrorsOnBackground, double percErrorsOnBics) {
 		this.percMissingsOnBackground = percMissingsOnBackground;
-		this.percMissingsOnTrics = percMissingsOnTrics;
+		this.percMissingsOnBics = percMissingsOnBics;
 		this.percNoiseOnBackground = percNoiseOnBackground;
-		this.percNoiseOnTrics = percNoiseOnTrics;
+		this.percNoiseOnBics = percNoiseOnBics;
 		this.noiseDeviation = noiseDeviation;
 		this.percErrorsOnBackground = percErrorsOnBackground;
-		this.percErrorsOnTrics = percErrorsOnTrics;
+		this.percErrorsOnBics = percErrorsOnBics;
 	}
 
 	/**
@@ -53,17 +53,17 @@ public class QualitySettings {
 	}
 
 	/**
-	 * @return The maximum percentage of missings on planted triclusters
+	 * @return The maximum percentage of missings on planted biclusters
 	 */
-	public double getPercMissingsOnTrics() {
-		return percMissingsOnTrics;
+	public double getPercMissingsOnBics() {
+		return percMissingsOnBics;
 	}
 
 	/**
-	 * @param percMissingsOnTrics The maximum percentage of missings on planted triclusters to set
+	 * @param percMissingsOnBics The maximum percentage of missings on planted biclusters to set
 	 */
-	public void setPercMissingsOnTrics(double percMissingsOnTrics) {
-		this.percMissingsOnTrics = percMissingsOnTrics;
+	public void setPercMissingsOnBics(double percMissingsOnBics) {
+		this.percMissingsOnBics = percMissingsOnBics;
 	}
 
 	/**
@@ -81,17 +81,17 @@ public class QualitySettings {
 	}
 
 	/**
-	 * @return The maximum percentage of noise on planted triclusters
+	 * @return The maximum percentage of noise on planted biclusters
 	 */
-	public double getPercNoiseOnTrics() {
-		return percNoiseOnTrics;
+	public double getPercNoiseOnBics() {
+		return percNoiseOnBics;
 	}
 
 	/**
-	 * @param percNoiseOnTrics The maximum percentage of noise on planted triclusters to set
+	 * @param percNoiseOnBics The maximum percentage of noise on planted biclusters to set
 	 */
-	public void setPercNoiseOnTrics(double percNoiseOnTrics) {
-		this.percNoiseOnTrics = percNoiseOnTrics;
+	public void setPercNoiseOnBics(double percNoiseOnBics) {
+		this.percNoiseOnBics = percNoiseOnBics;
 	}
 
 	/**
@@ -123,17 +123,17 @@ public class QualitySettings {
 	}
 
 	/**
-	 * @return The maximum percentage of errors on planted triclusters
+	 * @return The maximum percentage of errors on planted biclusters
 	 */
-	public double getPercErrorsOnTrics() {
-		return percErrorsOnTrics;
+	public double getPercErrorsOnBics() {
+		return percErrorsOnBics;
 	}
 
 	/**
-	 * @param percErrorsOnTrics The maximum percentage of errors on planted triclusters to set
+	 * @param percErrorsOnBics The maximum percentage of errors on planted biclusters to set
 	 */
-	public void setPercErrorsOnTrics(double percErrorsOnTrics) {
-		this.percErrorsOnTrics = percErrorsOnTrics;
+	public void setPercErrorsOnBics(double percErrorsOnBics) {
+		this.percErrorsOnBics = percErrorsOnBics;
 	}
 	
 	

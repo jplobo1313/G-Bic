@@ -1,13 +1,13 @@
 package com.gbic.exceptions;
 
-public class ExceedTriclusterBoundsException extends Exception {
+public class ExceedBiclusterBoundsException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public ExceedTriclusterBoundsException(String errorMessage) {
+	public ExceedBiclusterBoundsException(String errorMessage) {
         super(errorMessage);
     }
 }

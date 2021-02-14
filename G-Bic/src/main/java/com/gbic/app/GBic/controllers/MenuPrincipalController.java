@@ -3,7 +3,9 @@ package com.gbic.app.GBic.controllers;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 
+import java.awt.Color;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,22 +15,25 @@ import java.util.function.UnaryOperator;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.HeatMapChart;
+import org.knowm.xchart.HeatMapChartBuilder;
 
 import com.gbic.app.GBic.models.MenuPrincipalModel;
 import com.gbic.domain.dataset.Dataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
-import com.gbic.domain.tricluster.Tricluster;
+import com.gbic.domain.bicluster.Bicluster;
 import com.gbic.service.GBicService;
 import com.gbic.service.GenerateDatasetTask;
-import com.gbic.service.GBicService.TriclusterPatternWrapper;
+import com.gbic.service.GBicService.BiclusterPatternWrapper;
 import com.gbic.utils.DiscreteProbabilitiesTableView;
 import com.gbic.utils.HeatMapData;
 import com.gbic.utils.HeatMapTableView;
 import com.gbic.utils.InputValidation;
 import com.gbic.utils.NumericHeatMapTableView;
 import com.gbic.utils.SymbolicHeatMapTableView;
-import com.gbic.utils.TriclusterPatternTableView;
+import com.gbic.utils.BiclusterPatternTableView;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -36,6 +41,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -52,8 +58,10 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
@@ -72,7 +80,6 @@ public class MenuPrincipalController{
 	//Dataset Settings
 	@FXML private TextField numRowsTF;
 	@FXML private TextField numColumnsTF;
-	@FXML private TextField numContextsTF;
 	@FXML private RadioButton symbolicTypeRB;
 	@FXML private RadioButton numericTypeRB;
 	@FXML private Label dataTypeLB;
@@ -98,7 +105,7 @@ public class MenuPrincipalController{
 	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> probTC;
 
 	//Triclusters Properties
-	@FXML private TextField numTricsTF;
+	@FXML private TextField numBicsTF;
 	@FXML private ComboBox<String> rowStructureDistCB;
 	@FXML private Label rowDistParam1Label;
 	@FXML private TextField rowDistParam1TF;
@@ -111,48 +118,40 @@ public class MenuPrincipalController{
 	@FXML private Label columnDistParam2Label;
 	@FXML private TextField columnDistParam2TF;
 
-	@FXML private ComboBox<String> contextStructureDistCB;
-	@FXML private Label contextDistParam1Label;
-	@FXML private TextField contextDistParam1TF;
-	@FXML private Label contextDistParam2Label;
-	@FXML private TextField contextDistParam2TF;
-
 	@FXML private ComboBox<String> contiguityCB;
 
 	//Triclusters Patterns
-	@FXML private TableView<TriclusterPatternTableView> patternsTV;
-	@FXML private TableColumn<TriclusterPatternTableView, Integer> numTC;
-	@FXML private TableColumn<TriclusterPatternTableView, String> rowTC;
-	@FXML private TableColumn<TriclusterPatternTableView, String> columnTC;
-	@FXML private TableColumn<TriclusterPatternTableView, String> contextTC;
-	@FXML private TableColumn<TriclusterPatternTableView, ComboBox<String>> timeProfileTC;
-	@FXML private TableColumn<TriclusterPatternTableView, Label> exampleTC;
-	@FXML private TableColumn<TriclusterPatternTableView, CheckBox> selectTC;
-	ObservableList<TriclusterPatternTableView> patternList;
+	@FXML private TableView<BiclusterPatternTableView> patternsTV;
+	@FXML private TableColumn<BiclusterPatternTableView, Integer> numTC;
+	@FXML private TableColumn<BiclusterPatternTableView, String> rowTC;
+	@FXML private TableColumn<BiclusterPatternTableView, String> columnTC;
+	@FXML private TableColumn<BiclusterPatternTableView, String> contextTC;
+	@FXML private TableColumn<BiclusterPatternTableView, ComboBox<String>> timeProfileTC;
+	@FXML private TableColumn<BiclusterPatternTableView, Label> exampleTC;
+	@FXML private TableColumn<BiclusterPatternTableView, CheckBox> selectTC;
+	ObservableList<BiclusterPatternTableView> patternList;
 
 	//Overlapping
 	@FXML private ComboBox<String> plaidCoherencyCB;
-	@FXML private Label percOverlappingTricsLB;
-	@FXML private TextField percOverlappingTricsTF;
-	@FXML private Label maxOverlappingTricsLB;
-	@FXML private TextField maxOverlappingTricsTF;
+	@FXML private Label percOverlappingBicsLB;
+	@FXML private TextField percOverlappingBicsTF;
+	@FXML private Label maxOverlappingBicsLB;
+	@FXML private TextField maxOverlappingBicsTF;
 	@FXML private Label percOverlappingElementsLB;
 	@FXML private TextField percOverlappingElementsTF;
 	@FXML private Label percOverlappingRowsLB;
 	@FXML private TextField percOverlappingRowsTF;
 	@FXML private Label percOverlappingColumnsLB;
 	@FXML private TextField percOverlappingColumnsTF;
-	@FXML private Label percOverlappingContextsLB;
-	@FXML private TextField percOverlappingContextsTF;
 
 	//Extras
 	@FXML private TextField percMissingBackgroundTF;
-	@FXML private TextField percMissingTricsTF;
+	@FXML private TextField percMissingBicsTF;
 	@FXML private TextField percNoiseBackgroundTF;
-	@FXML private TextField percNoiseTricsTF;
+	@FXML private TextField percNoiseBicsTF;
 	@FXML private TextField noiseDeviationTF;
 	@FXML private TextField percErrorsBackgroundTF;
-	@FXML private TextField percErrorsTricsTF;
+	@FXML private TextField percErrorsBicsTF;
 
 	@FXML private ProgressBar statusBar;
 	@FXML private Text statusT;
@@ -166,18 +165,11 @@ public class MenuPrincipalController{
 	@FXML private TextField fileNameTF;
 
 	//Visualization
-	@FXML private Text rowPatternVizTF;
-	@FXML private Text colPatternVizTF;
-	@FXML private Text ctxPatternVizTF;
 	@FXML private Tab visualizationTab;
-	private Map<Integer, HeatMapData[]> triclusterVizData;
-	@FXML private ComboBox<String> tricIDCB;
+	@FXML private ComboBox<String> bicIDCB;
 	
-	@FXML private TextFlow tricSummaryTF;
-	@FXML private TableView<HeatMapTableView> heatMapTV;
-	@FXML private TableColumn<HeatMapTableView, Integer> contextIDTC;
-	@FXML private TableColumn<HeatMapTableView, Button> showButtonTC;
-	ObservableList<HeatMapTableView> contextList;
+	@FXML private TextFlow bicSummaryTF;
+	@FXML private Button heatMapB;
 	
 	private MenuPrincipalModel model;
 
@@ -203,19 +195,6 @@ public class MenuPrincipalController{
 
 		this.numColumnsTF.textProperty().bindBidirectional(model.getNumColumnsProperty(), new NumberStringConverter());
 		this.numColumnsTF.textProperty().setValue("100");
-
-		this.numContextsTF.textProperty().bindBidirectional(model.getNumContextsProperty(), new NumberStringConverter());
-		this.numContextsTF.textProperty().setValue("100");
-
-		this.numContextsTF.focusedProperty().addListener((obs, oldText, newText) -> {
-			if(newText == false && oldText == true && model.getNumContexts() == 1 ) {
-				enableBiclusteringGeneration();
-			}
-			else
-				disableBiclusteringGeneration();
-			// ...
-		});
-
 		
 		this.dataTypeCB.setItems(model.getDataTypes());
 		this.dataTypeCB.setValue(model.getDataTypeEscolhido());
@@ -260,8 +239,8 @@ public class MenuPrincipalController{
 		this.backgroundParamsPane.setVisible(false);
 		this.discreteProbsPane.setVisible(false);
 
-		//Triclusters properties
-		this.numTricsTF.textProperty().bindBidirectional(model.getNumTricsProperty(), new NumberStringConverter());
+		//Biclusters properties
+		this.numBicsTF.textProperty().bindBidirectional(model.getNumBicsProperty(), new NumberStringConverter());
 		this.rowStructureDistCB.setItems(model.getRowDistributions());
 		this.rowStructureDistCB.setValue(model.getRowDistributionEscolhida());
 		this.rowDistParam1TF.textProperty().bindBidirectional(model.getRowDistParam1Property(), new NumberStringConverter());
@@ -274,45 +253,37 @@ public class MenuPrincipalController{
 		this.columnDistParam2TF.textProperty().bindBidirectional(model.getColumnDistParam2Property(), new NumberStringConverter());
 		setDistributionLabels(this.columnDistParam1Label, this.columnDistParam2Label, model.getColumnDistributionEscolhida());
 
-		this.contextStructureDistCB.setItems(model.getContextDistributions());
-		this.contextStructureDistCB.setValue(model.getContextDistributionEscolhida());
-		this.contextDistParam1TF.textProperty().bindBidirectional(model.getContextDistParam1Property(), new NumberStringConverter());
-		this.contextDistParam2TF.textProperty().bindBidirectional(model.getContextDistParam2Property(), new NumberStringConverter());
-		setDistributionLabels(this.contextDistParam1Label, this.contextDistParam2Label, model.getContextDistributionEscolhida());	
-
 		this.contiguityCB.setItems(model.getContiguity());
 		this.contiguityCB.setValue(model.getContiguityEscolhida());
 
-		//Triclusters Patterns
+		//Biclusters Patterns
 		this.patternsTV.setItems(model.getSymbolicPatterns());
-		this.numTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, Integer>("num"));
-		this.rowTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("rowPattern"));
-		this.columnTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("columnPattern"));
-		this.contextTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("contextPattern"));
-		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, ComboBox<String>>("timeProfile"));
-		this.exampleTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, Label>("example"));
-		this.selectTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, CheckBox>("select"));
+		this.numTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Integer>("num"));
+		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
+		this.columnTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("columnPattern"));
+		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, ComboBox<String>>("timeProfile"));
+		this.exampleTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Label>("example"));
+		this.selectTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, CheckBox>("select"));
 
 		//Overlapping
 		this.plaidCoherencyCB.setItems(model.getPlaidCoherency());
 		this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
-		this.percOverlappingTricsTF.textProperty().bindBidirectional(model.getPercOverlappingTricsProperty(), new NumberStringConverter());
-		this.maxOverlappingTricsTF.textProperty().bindBidirectional(model.getMaxOverlappingTricsProperty(), new NumberStringConverter());
+		this.percOverlappingBicsTF.textProperty().bindBidirectional(model.getPercOverlappingBicsProperty(), new NumberStringConverter());
+		this.maxOverlappingBicsTF.textProperty().bindBidirectional(model.getMaxOverlappingBicsProperty(), new NumberStringConverter());
 		this.percOverlappingElementsTF.textProperty().bindBidirectional(model.getPercOverlappingElementsProperty(), new NumberStringConverter());
 		this.percOverlappingRowsTF.textProperty().bindBidirectional(model.getPercOverlappingRowsProperty(), new NumberStringConverter());
 		this.percOverlappingColumnsTF.textProperty().bindBidirectional(model.getPercOverlappingColumnsProperty(), new NumberStringConverter());
-		this.percOverlappingContextsTF.textProperty().bindBidirectional(model.getPercOverlappingContextsProperty(), new NumberStringConverter());
 		plaidCoherencySelecionada(new ActionEvent());
 
 
 		//Extras
 		this.percMissingBackgroundTF.textProperty().bindBidirectional(model.getPercMissingsBackgroundProperty(), new NumberStringConverter());
-		this.percMissingTricsTF.textProperty().bindBidirectional(model.getPercMissingsTricsProperty(), new NumberStringConverter());
+		this.percMissingBicsTF.textProperty().bindBidirectional(model.getPercMissingsBicsProperty(), new NumberStringConverter());
 		this.percNoiseBackgroundTF.textProperty().bindBidirectional(model.getPercNoiseBackgroundProperty(), new NumberStringConverter());
-		this.percNoiseTricsTF.textProperty().bindBidirectional(model.getPercNoiseTricsProperty(), new NumberStringConverter());
+		this.percNoiseBicsTF.textProperty().bindBidirectional(model.getPercNoiseBicsProperty(), new NumberStringConverter());
 		this.noiseDeviationTF.textProperty().bindBidirectional(model.getNoiseDeviationProperty(), new NumberStringConverter());
 		this.percErrorsBackgroundTF.textProperty().bindBidirectional(model.getPercErrorsBackgroundProperty(), new NumberStringConverter());
-		this.percErrorsTricsTF.textProperty().bindBidirectional(model.getPercErrorsTricsProperty(), new NumberStringConverter());
+		this.percErrorsBicsTF.textProperty().bindBidirectional(model.getPercErrorsBicsProperty(), new NumberStringConverter());
 
 
 		this.statusBar.progressProperty().bindBidirectional(model.getProgressProperty());
@@ -324,44 +295,7 @@ public class MenuPrincipalController{
 
 		this.fileNameTF.textProperty().bindBidirectional(model.getFileNameProperty());
 		model.setFileName("example_dataset");
-
-		this.triclusterVizData = new HashMap<>();
 	}
-
-	private void enableBiclusteringGeneration() {
-		
-		this.contextStructureDistCB.setValue("Uniform");
-		this.contextStructureDistCB.setDisable(true);
-		this.contextDistParam1TF.setText("1");
-		this.contextDistParam1TF.setDisable(true);
-		this.contextDistParam2TF.setText("1");
-		this.contextDistParam2TF.setDisable(true);
-		this.percOverlappingContextsTF.setText("100");
-		this.percOverlappingContextsTF.setDisable(true);
-		
-		this.model.getContiguity().remove((String) "Contexts");
-		this.contiguityCB.setValue(this.model.getContiguity().get(0));
-	}
-	
-	private void disableBiclusteringGeneration() {
-		
-		this.contextStructureDistCB.setDisable(false);
-		this.contextDistParam1TF.setText("3");
-		this.contextDistParam1TF.setDisable(false);
-		this.contextDistParam2TF.setText("5");
-		this.contextDistParam2TF.setDisable(false);
-		
-		boolean ov = (this.plaidCoherencyCB.getValue() == "No Overlapping");
-		this.percOverlappingContextsLB.setDisable(ov);
-		this.percOverlappingContextsTF.setDisable(ov);
-		
-				
-		
-		this.model.getContiguity().clear();
-		gBicService.getContiguity().forEach(c->this.model.getContiguity().add(c));
-		this.contiguityCB.setValue(this.model.getContiguity().get(0));
-	}
-
 
 	private void setNumericDatasetParametersVisible(boolean b) {
 
@@ -405,16 +339,14 @@ public class MenuPrincipalController{
 				0, integerFilter));
 		this.numColumnsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
-		this.numContextsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
+
+		this.numBicsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
-		this.numTricsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
+		this.percOverlappingBicsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
-		this.percOverlappingTricsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
-				0, integerFilter));
-
-		this.maxOverlappingTricsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
+		this.maxOverlappingBicsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
 		this.percOverlappingElementsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
@@ -426,25 +358,22 @@ public class MenuPrincipalController{
 		this.percOverlappingColumnsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
-		this.percOverlappingContextsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
-				0, integerFilter));
-
 		this.percMissingBackgroundTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
-		this.percMissingTricsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
+		this.percMissingBicsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
 		this.percNoiseBackgroundTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
-		this.percNoiseTricsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
+		this.percNoiseBicsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
 		this.percErrorsBackgroundTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
-		this.percErrorsTricsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
+		this.percErrorsBicsTF.setTextFormatter(new TextFormatter<Integer>(new IntegerStringConverter(),
 				0, integerFilter));
 
 		this.minValueTF.setTextFormatter(new TextFormatter<Double>(new DoubleStringConverter(),
@@ -463,12 +392,6 @@ public class MenuPrincipalController{
 				0.0, doubleFilter));
 
 		this.columnDistParam2TF.setTextFormatter(new TextFormatter<Double>(new DoubleStringConverter(),
-				0.0, doubleFilter));
-
-		this.contextDistParam1TF.setTextFormatter(new TextFormatter<Double>(new DoubleStringConverter(),
-				0.0, doubleFilter));
-
-		this.contextDistParam2TF.setTextFormatter(new TextFormatter<Double>(new DoubleStringConverter(),
 				0.0, doubleFilter));
 
 	}
@@ -597,12 +520,6 @@ public class MenuPrincipalController{
 	}
 
 	@FXML
-	void contextStructureDistSelecionada(ActionEvent event) {
-		model.setContextDistributionEscolhida(this.contextStructureDistCB.getValue());
-		setDistributionLabels(this.contextDistParam1Label, this.contextDistParam2Label, this.contextStructureDistCB.getValue());
-	}
-
-	@FXML
 	void contiguitySelecionada(ActionEvent event) {
 		model.setContiguityEscolhida(this.contiguityCB.getValue());
 	}
@@ -611,35 +528,28 @@ public class MenuPrincipalController{
 	void plaidCoherencySelecionada(ActionEvent event) {
 		model.setPlaidCoherencyEscolhida(this.plaidCoherencyCB.getValue());
 		if(this.plaidCoherencyCB.getValue().equals("No Overlapping")) {
-			this.percOverlappingTricsLB.setDisable(true);
-			this.percOverlappingTricsTF.setDisable(true);
-			this.maxOverlappingTricsLB.setDisable(true);
-			this.maxOverlappingTricsTF.setDisable(true);
+			this.percOverlappingBicsLB.setDisable(true);
+			this.percOverlappingBicsTF.setDisable(true);
+			this.maxOverlappingBicsLB.setDisable(true);
+			this.maxOverlappingBicsTF.setDisable(true);
 			this.percOverlappingElementsLB.setDisable(true);
 			this.percOverlappingElementsTF.setDisable(true);
 			this.percOverlappingRowsLB.setDisable(true);
 			this.percOverlappingRowsTF.setDisable(true);
 			this.percOverlappingColumnsLB.setDisable(true);
 			this.percOverlappingColumnsTF.setDisable(true);
-			this.percOverlappingContextsLB.setDisable(true);
-			this.percOverlappingContextsTF.setDisable(true);
 		}
 		else {
-			this.percOverlappingTricsLB.setDisable(false);
-			this.percOverlappingTricsTF.setDisable(false);
-			this.maxOverlappingTricsLB.setDisable(false);
-			this.maxOverlappingTricsTF.setDisable(false);
+			this.percOverlappingBicsLB.setDisable(false);
+			this.percOverlappingBicsTF.setDisable(false);
+			this.maxOverlappingBicsLB.setDisable(false);
+			this.maxOverlappingBicsTF.setDisable(false);
 			this.percOverlappingElementsLB.setDisable(false);
 			this.percOverlappingElementsTF.setDisable(false);
 			this.percOverlappingRowsLB.setDisable(false);
 			this.percOverlappingRowsTF.setDisable(false);
 			this.percOverlappingColumnsLB.setDisable(false);
 			this.percOverlappingColumnsTF.setDisable(false);
-			if(model.getNumContexts() != 1 ) {
-				this.percOverlappingContextsLB.setDisable(false);
-				this.percOverlappingContextsTF.setDisable(false);
-			}
-			
 		}
 
 	}
@@ -663,15 +573,18 @@ public class MenuPrincipalController{
 		this.setNumericDatasetParametersVisible(false);
 
 		model.setSymbolicTypeBoolean(true);
+		
+		model.updatePlaidCoherency(false);
+		this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
 
 		this.patternsTV.setItems(model.getSymbolicPatterns());
-		this.numTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, Integer>("num"));
-		this.rowTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("rowPattern"));
-		this.columnTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("columnPattern"));
-		this.contextTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("contextPattern"));
-		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, ComboBox<String>>("timeProfile"));
-		this.exampleTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, Label>("example"));
-		this.selectTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, CheckBox>("select"));
+		this.numTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Integer>("num"));
+		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
+		this.columnTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("columnPattern"));
+		this.contextTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("contextPattern"));
+		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, ComboBox<String>>("timeProfile"));
+		this.exampleTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Label>("example"));
+		this.selectTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, CheckBox>("select"));
 	}
 
 	@FXML
@@ -681,15 +594,16 @@ public class MenuPrincipalController{
 		this.setNumericDatasetParametersVisible(true);
 
 		model.setSymbolicTypeBoolean(false);
-
+		model.updatePlaidCoherency(true);
+		this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
+		
 		this.patternsTV.setItems(model.getNumericPatterns());
-		this.numTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, Integer>("num"));
-		this.rowTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("rowPattern"));
-		this.columnTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("columnPattern"));
-		this.contextTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, String>("contextPattern"));
-		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, ComboBox<String>>("timeProfile"));
-		this.exampleTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, Label>("example"));
-		this.selectTC.setCellValueFactory(new PropertyValueFactory<TriclusterPatternTableView, CheckBox>("select"));
+		this.numTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Integer>("num"));
+		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
+		this.columnTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("columnPattern"));
+		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, ComboBox<String>>("timeProfile"));
+		this.exampleTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Label>("example"));
+		this.selectTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, CheckBox>("select"));
 
 	}
 
@@ -761,55 +675,55 @@ public class MenuPrincipalController{
 					this.gBicService.setDatasetType("Numeric");
 					boolean realValued = model.getDataTypeEscolhido().equals("Real Valued");
 
-					this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), model.getNumContexts(), realValued, 
+					this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), realValued, 
 							model.getMinValue(), model.getMaxValue(), model.getBackgroundTypeEscolhido(), backgroundParam1,
 							backgroundParam2, backgroundParam3);
 				}
 				else {
 					this.gBicService.setDatasetType("Symbolic");
 					if(model.getSymbolTypeEscolhido().equals("Default")) {
-						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), model.getNumContexts(), true, model.getNumberOfSymbols(), 
+						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), true, model.getNumberOfSymbols(), 
 								null, model.getBackgroundTypeEscolhido(), backgroundParam1, backgroundParam2, backgroundParam3);
 					}
 					else {
 						String[] symbols = model.getListOfSymbols().toArray(new String[0]);
-						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), model.getNumContexts(), false, -1, 
+						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), false, -1, 
 								symbols, model.getBackgroundTypeEscolhido(), backgroundParam1, backgroundParam2, backgroundParam3);
 					}
 				}
 
-				this.gBicService.setTriclustersProperties(model.getNumTrics(), model.getRowDistributionEscolhida(), model.getRowDistParam1(), 
-						model.getRowDistParam2(), model.getColumnDistributionEscolhida(), model.getColumnDistParam1(), model.getColumnDistParam2(), 
-						model.getContextDistributionEscolhida(), model.getContextDistParam1(), model.getContextDistParam2(), model.getContiguityEscolhida());
+				this.gBicService.setBiclustersProperties(model.getNumBics(), model.getRowDistributionEscolhida(), model.getRowDistParam1(), 
+						model.getRowDistParam2(), model.getColumnDistributionEscolhida(), model.getColumnDistParam1(), model.getColumnDistParam2(),
+						model.getContiguityEscolhida());
 
 				//set patterns
-				List<TriclusterPatternWrapper> listPatterns = new ArrayList<>();
-				List<TriclusterPatternTableView> availablePatterns = null;
+				List<BiclusterPatternWrapper> listPatterns = new ArrayList<>();
+				List<BiclusterPatternTableView> availablePatterns = null;
 
 				if(model.isSymbolic())
 					availablePatterns = model.getSymbolicPatterns();
 				else
 					availablePatterns = model.getNumericPatterns();
 
-				for(TriclusterPatternTableView p : availablePatterns) {
+				for(BiclusterPatternTableView p : availablePatterns) {
 					if(p.getSelect().isSelected()) {
-						TriclusterPatternWrapper tric;
-						if(p.getContextPattern().equals("Order Preserving"))
-							tric = this.gBicService.new TriclusterPatternWrapper(p.getRowPattern(), p.getColumnPattern(), p.getContextPattern(), p.getTimeProfile().getValue(), null);
+						BiclusterPatternWrapper bic;
+						if(p.getColumnPattern().equals("Order Preserving"))
+							bic = this.gBicService.new BiclusterPatternWrapper(p.getRowPattern(), p.getColumnPattern(), p.getTimeProfile().getValue(), null);
 						else
-							tric = this.gBicService.new TriclusterPatternWrapper(p.getRowPattern(), p.getColumnPattern(), p.getContextPattern(), null);
-						System.out.println(tric.toString());
-						listPatterns.add(tric);
+							bic = this.gBicService.new BiclusterPatternWrapper(p.getRowPattern(), p.getColumnPattern(), null);
+						System.out.println(bic.toString());
+						listPatterns.add(bic);
 					}
 				}
-				this.gBicService.setTriclusterPatterns(listPatterns);
+				this.gBicService.setBiclusterPatterns(listPatterns);
 
-				this.gBicService.setOverlappingSettings(model.getPlaidCoherencyEscolhida(), model.getPercOverlappingTrics() / 100, model.getMaxOverlappingTrics(),
-						model.getPercOverlappingElements() / 100, model.getPercOverlappingRows() / 100, model.getPercOverlappingColumns() / 100, model.getPercOverlappingContexts() / 100);
+				this.gBicService.setOverlappingSettings(model.getPlaidCoherencyEscolhida(), model.getPercOverlappingBics() / 100, model.getMaxOverlappingBics(),
+						model.getPercOverlappingElements() / 100, model.getPercOverlappingRows() / 100, model.getPercOverlappingColumns() / 100);
 				
-				this.gBicService.setQualitySettings(model.getPercMissingsBackground() / 100, model.getPercMissingsTrics() / 100, 
-						model.getPercNoiseBackground() / 100, model.getPercNoiseTrics() / 100, model.getNoiseDeviation(), 
-						model.getPercErrorsBackground() / 100, model.getPercErrorsTrics() / 100);
+				this.gBicService.setQualitySettings(model.getPercMissingsBackground() / 100, model.getPercMissingsBics() / 100, 
+						model.getPercNoiseBackground() / 100, model.getPercNoiseBics() / 100, model.getNoiseDeviation(), 
+						model.getPercErrorsBackground() / 100, model.getPercErrorsBics() / 100);
 
 				if(!model.getFileName().isEmpty()){
 					this.gBicService.setFilename(model.getFileName());
@@ -833,20 +747,20 @@ public class MenuPrincipalController{
 					else
 						this.gBicService.generateNumericDataset();
 					
-					System.out.println(gBicService.getGeneratedDataset().getNumTrics());
-					System.out.println(model.getNumTrics());
+					System.out.println(gBicService.getGeneratedDataset().getNumBics());
+					System.out.println(model.getNumBics());
 					
-					boolean noSpace = gBicService.getGeneratedDataset().getNumTrics() < model.getNumTrics();
+					boolean noSpace = gBicService.getGeneratedDataset().getNumBics() < model.getNumBics();
 					
 					if(noSpace) {
-						model.setNumTrics(gBicService.getGeneratedDataset().getNumTrics());
+						model.setNumBics(gBicService.getGeneratedDataset().getNumBics());
 					}
 					
-					tricIDCB.getItems().clear();
+					bicIDCB.getItems().clear();
 					visualizationTab.setDisable(false);
-					model.setTriclusterIDList();
-					tricIDCB.setItems(model.getTriclusterIDs());
-					tricIDCB.setValue(model.getTriclusterIDs().get(0));
+					model.setBiclusterIDList();
+					bicIDCB.setItems(model.getBiclusterIDs());
+					bicIDCB.setValue(model.getBiclusterIDs().get(0));
 					
 					updateProgress(100, 100);
 					updateMessage("Completed!");
@@ -859,7 +773,7 @@ public class MenuPrincipalController{
 								@Override
 								public void run() {
 									
-									int generatedTrics = gBicService.getGeneratedDataset().getNumTrics();
+									int generatedBics = gBicService.getGeneratedDataset().getNumBics();
 									
 									if(!noSpace) {
 										Alert alert = new Alert(AlertType.INFORMATION);
@@ -871,7 +785,7 @@ public class MenuPrincipalController{
 										Alert alert = new Alert(AlertType.WARNING);
 										alert.setTitle("Warning Dialog");
 										alert.setHeaderText("Due to space restrictions the dataset was generated with only " +
-												generatedTrics + " triclusters!\nTry planting less, or smaller triclusters, or incresing"
+												generatedBics + " biclusters!\nTry planting less, or smaller biclusters, or incresing"
 														+ " the dataset's size!");
 										alert.showAndWait();
 									}
@@ -945,18 +859,18 @@ public class MenuPrincipalController{
 
 		// ** Validate Dataset Properties **
 
-		List<TriclusterPatternTableView> patterns = null;
+		List<BiclusterPatternTableView> patterns = null;
 		boolean errorsOnDatasetProperties = false;
 
 		if(model.isSymbolic()) {
 
 			if(model.getSymbolTypeEscolhido().equals("Default")) {
 				messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(), 
-						this.numContextsTF.getText(), this.symbolTypeParamTF.getText(), new ArrayList<String>()));
+						this.symbolTypeParamTF.getText(), new ArrayList<String>()));
 			}
 			else {
 				messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(), 
-						this.numContextsTF.getText(), null, (List<String>) model.getListOfSymbols()));
+						null, (List<String>) model.getListOfSymbols()));
 			}	
 
 			patterns = model.getSymbolicPatterns();
@@ -964,7 +878,7 @@ public class MenuPrincipalController{
 		else {
 
 			messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(),
-					this.numContextsTF.getText(), this.minValueTF.getText(), this.maxValueTF.getText()));
+					this.minValueTF.getText(), this.maxValueTF.getText()));
 
 			patterns = model.getNumericPatterns();
 		}
@@ -972,11 +886,11 @@ public class MenuPrincipalController{
 		errorsOnDatasetProperties = messages.length() > 1;
 
 		boolean selectedPattern = false;
-		for(TriclusterPatternTableView p : patterns)
+		for(BiclusterPatternTableView p : patterns)
 			if(p.getSelect().isSelected())
 				selectedPattern = true;
 		if(!selectedPattern)
-			messages.append("(Tricluster Patterns) Error: At least one pattern should be selected!\n");
+			messages.append("(Bicluster Patterns) Error: At least one pattern should be selected!\n");
 
 		if(model.getBackgroundTypeEscolhido().equals("Normal")) {
 			messages.append(InputValidation.validateBackgroundSettings(this.distMeanTF.getText(), this.distStdTF.getText()));
@@ -986,19 +900,18 @@ public class MenuPrincipalController{
 			messages.append(InputValidation.validateBackgroundSettings(probs));
 		}
 
-		// ** Validate Triclusters Structure ** 
+		// ** Validate Biclusters Structure ** 
 
 		if(errorsOnDatasetProperties) {
-			messages.append(InputValidation.validateTriclusterStructure(model.getNumRows(), model.getNumColumns(), model.getNumContexts(), 
+			messages.append(InputValidation.validateBiclusterStructure(model.getNumRows(), model.getNumColumns(), 
 					model.getRowDistributionEscolhida(), model.getRowDistParam1(), model.getRowDistParam2(), 
-					model.getColumnDistributionEscolhida(), model.getColumnDistParam1(), model.getColumnDistParam2(), 
-					model.getContextDistributionEscolhida(), model.getContextDistParam1(), model.getContextDistParam2()));
+					model.getColumnDistributionEscolhida(), model.getColumnDistParam1(), model.getColumnDistParam2()));
 		}
 
 		// ** Validate Overlapping **
-		messages.append(InputValidation.validateOverlappingSettings(model.getPlaidCoherencyEscolhida(), model.getPercOverlappingTrics(), 
-				model.getMaxOverlappingTrics(), model.getPercOverlappingElements(), model.getPercOverlappingRows(), 
-				model.getPercOverlappingColumns(), model.getPercOverlappingContexts(), model.getNumTrics()));
+		messages.append(InputValidation.validateOverlappingSettings(model.getPlaidCoherencyEscolhida(), model.getPercOverlappingBics(), 
+				model.getMaxOverlappingBics(), model.getPercOverlappingElements(), model.getPercOverlappingRows(), 
+				model.getPercOverlappingColumns(), model.getNumBics()));
 
 		// ** Validate Quality **
 		messages.append(InputValidation.validateMissingNoiseAndErrorsOnBackground(model.getPercMissingsBackground(), model.getPercNoiseBackground(),
@@ -1006,16 +919,16 @@ public class MenuPrincipalController{
 
 		if(model.isSymbolic()) {
 			if(model.getSymbolTypeEscolhido().equals("Default"))
-				messages.append(InputValidation.validateMissingNoiseAndErrorsOnPlantedTrics(model.getPercMissingsTrics(), model.getPercNoiseTrics(),
-						model.getPercErrorsTrics(), (int) model.getNoiseDeviation(), model.getNumberOfSymbols()));
+				messages.append(InputValidation.validateMissingNoiseAndErrorsOnPlantedBics(model.getPercMissingsBics(), model.getPercNoiseBics(),
+						model.getPercErrorsBics(), (int) model.getNoiseDeviation(), model.getNumberOfSymbols()));
 			else
-				messages.append(InputValidation.validateMissingNoiseAndErrorsOnPlantedTrics(model.getPercMissingsTrics(), model.getPercNoiseTrics(),
-						model.getPercErrorsTrics(), (int) model.getNoiseDeviation(), model.getListOfSymbols().size()));
+				messages.append(InputValidation.validateMissingNoiseAndErrorsOnPlantedBics(model.getPercMissingsBics(), model.getPercNoiseBics(),
+						model.getPercErrorsBics(), (int) model.getNoiseDeviation(), model.getListOfSymbols().size()));
 		}
 			
 		else
-			messages.append(InputValidation.validateMissingNoiseAndErrorsOnPlantedTrics(model.getPercMissingsTrics(), model.getPercNoiseTrics(),
-					model.getPercErrorsTrics(), model.getNoiseDeviation(), model.getMinValue(), model.getMaxValue()));
+			messages.append(InputValidation.validateMissingNoiseAndErrorsOnPlantedBics(model.getPercMissingsBics(), model.getPercNoiseBics(),
+					model.getPercErrorsBics(), model.getNoiseDeviation(), model.getMinValue(), model.getMaxValue()));
 
 		return messages.toString();
 	}
@@ -1023,19 +936,19 @@ public class MenuPrincipalController{
 	@FXML
 	void changeTriclusterVisualization(ActionEvent event) {
 		
-		if(this.tricIDCB.getItems().size() > 0) {
-			int tricID = Integer.parseInt(this.tricIDCB.getValue().split(" ")[1].strip());
+		if(this.bicIDCB.getItems().size() > 0) {
+			int bicID = Integer.parseInt(this.bicIDCB.getValue().split(" ")[1].strip());
 			//if(!this.triclusterVizData.containsKey(tricID))
 				//this.triclusterVizData.put(tricID, generateTriclusterVizData(tricID));
 	
-			this.currentTriclusterVisualization = tricID;
+			this.currentTriclusterVisualization = bicID;
 			//this.currentSliceVisualization = 0;
 			
 			//Restart context buttons
 			//this.nextCtxB.setDisable(false);
 			//this.previousCtxB.setDisable(true);
 			
-			JSONObject tric = gBicService.getTriclustersJSON().getJSONObject(String.valueOf(currentTriclusterVisualization));
+			JSONObject bic = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(currentTriclusterVisualization));
 			
 			Task<Void> nextContext = new Task<Void>() {
 				@Override
@@ -1045,66 +958,59 @@ public class MenuPrincipalController{
 						@Override
 						public void run() {
 							
-							tricSummaryTF.getChildren().clear();
+							bicSummaryTF.getChildren().clear();
 							
-							Text title = new Text("Tricluster " + tricID + " information: \n\n");
+							Text title = new Text("Tricluster " + bicID + " information: \n\n");
 							title.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
 							
-							Text dimensions = new Text("Dimensions:\t\t" + tric.getInt("#rows") + "x" + tric.getInt("#columns") +  "x" + 
-									tric.getInt("#contexts") + "\n\n");
+							Text dimensions = new Text("Dimensions:\t\t" + bic.getInt("#rows") + "x" + bic.getInt("#columns") + "\n\n");
 							dimensions.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							Text rows = new Text("Rows:\t\t\t\t" + tric.getJSONArray("X").toString() + "\n\n");
-							Text cols = new Text("Columns:\t\t\t" + tric.getJSONArray("Y").toString() + "\n\n");
-							Text ctxs = new Text("Contexts:\t\t\t" + tric.getJSONArray("Z").toString() + "\n\n");
+							Text rows = new Text("Rows:\t\t\t\t" + bic.getJSONArray("X").toString() + "\n\n");
+							Text cols = new Text("Columns:\t\t\t" + bic.getJSONArray("Y").toString() + "\n\n");
 							
 							rows.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							cols.setFont(Font.font("System", FontPosture.REGULAR, 14));
-							ctxs.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							Text rowPattern = new Text("Row Pattern:\t\t" + tric.getString("RowPattern").toString() + "\n\n");
-							Text colPattern = new Text("Column Pattern:\t" + tric.getString("ColumnPattern").toString() + "\n\n");
-							Text ctxPattern = new Text("Context Pattern:\t" + tric.getString("ContextPattern").toString() + "\n\n");
+							Text rowPattern = new Text("Row Pattern:\t\t" + bic.getString("RowPattern").toString() + "\n\n");
+							Text colPattern = new Text("Column Pattern:\t" + bic.getString("ColumnPattern").toString() + "\n\n");
 							
 							rowPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							colPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
-							ctxPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							tricSummaryTF.getChildren().addAll(title, dimensions, rows, cols, ctxs, rowPattern, colPattern, ctxPattern);
+							bicSummaryTF.getChildren().addAll(title, dimensions, rows, cols, rowPattern, colPattern);
 							
-							if(tric.getString("ContextPattern").toString().equals("OrderPreserving")) {
-								Text timeProfile = new Text("Time Profile:\t\t" + tric.getString("TimeProfile").toString() + "\n\n");
+							if(bic.getString("ColumnPattern").toString().equals("OrderPreserving")) {
+								Text timeProfile = new Text("Time Profile:\t\t" + bic.getString("TimeProfile").toString() + "\n\n");
 								timeProfile.setFont(Font.font("System", FontPosture.REGULAR, 14));
-								tricSummaryTF.getChildren().add(timeProfile);
+								bicSummaryTF.getChildren().add(timeProfile);
 							}
 							
 							
-							if(tric.has("Seed")) {
-								Text seed = new Text("Seed:\t\t\t\t" + tric.getString("Seed").toString() + "\n\n");
-								Text rowFactors = new Text("Row Factors:\t\t" + tric.getString("RowFactors").toString() + "\n\n");
-								Text colFactors = new Text("Column Factors:\t" + tric.getString("ColumnFactors").toString() + "\n\n");
-								Text ctxFactors = new Text("Context Factors:\t" + tric.getString("ContextFactors").toString() + "\n\n");
+							if(bic.has("Seed")) {
+								Text seed = new Text("Seed:\t\t\t\t" + bic.getString("Seed").toString() + "\n\n");
+								Text rowFactors = new Text("Row Factors:\t\t" + bic.getString("RowFactors").toString() + "\n\n");
+								Text colFactors = new Text("Column Factors:\t" + bic.getString("ColumnFactors").toString() + "\n\n");
 								
 								seed.setFont(Font.font("System", FontPosture.REGULAR, 14));
 								rowFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
 								colFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
-								ctxFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
 									
-								tricSummaryTF.getChildren().addAll(seed, rowFactors, colFactors, ctxFactors);
+								bicSummaryTF.getChildren().addAll(seed, rowFactors, colFactors);
 							}
 							
-							Text plaid = new Text("Plaid Coherency:\t" + tric.getString("PlaidCoherency").toString() + "\n\n");
-							Text missings = new Text("Missings:\t\t\t" + tric.getString("%Missings").toString() + "%" + "\n\n");
-							Text noise = new Text("Noise:\t\t\t\t" + tric.getString("%Noise").toString() + "%" + "\n\n");
-							Text errors = new Text("Errors:\t\t\t\t" + tric.getString("%Errors").toString() + "%" + "\n\n");
+							Text plaid = new Text("Plaid Coherency:\t" + bic.getString("PlaidCoherency").toString() + "\n\n");
+							Text missings = new Text("Missings:\t\t\t" + bic.getString("%Missings").toString() + "%" + "\n\n");
+							Text noise = new Text("Noise:\t\t\t\t" + bic.getString("%Noise").toString() + "%" + "\n\n");
+							Text errors = new Text("Errors:\t\t\t\t" + bic.getString("%Errors").toString() + "%" + "\n\n");
 							
 							plaid.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							missings.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							noise.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							errors.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							tricSummaryTF.getChildren().addAll(plaid, missings, noise, errors);
+							bicSummaryTF.getChildren().addAll(plaid, missings, noise, errors);
 						}
 					});
 					return null;
@@ -1118,23 +1024,23 @@ public class MenuPrincipalController{
 			//showTriclusterVisualization(tricID, this.currentSliceVisualization);
 			
 			//Triclusters Patterns
-			this.heatMapTV.setItems(generateTriclusterVizData(tricID));
-			this.contextIDTC.setCellValueFactory(new PropertyValueFactory<HeatMapTableView, Integer>("contextID"));
-			this.showButtonTC.setCellValueFactory(new PropertyValueFactory<>("show"));
+			//this.heatMapTV.setItems(generateTriclusterVizData(tricID));
+			//this.contextIDTC.setCellValueFactory(new PropertyValueFactory<HeatMapTableView, Integer>("contextID"));
+			//this.showButtonTC.setCellValueFactory(new PropertyValueFactory<>("show"));
 			
 		}
 	}
 	
-	private ObservableList<HeatMapTableView> generateTriclusterVizData(int id) {
+	private HeatMapTableView generateTriclusterVizData(int id) {
 
 		System.out.println("Generating chartData");
 		//get generated dataset
 		Dataset dataset = gBicService.getGeneratedDataset();
 		//get context's slices for the desired tricluster
-		JSONObject data = gBicService.getTriclustersJSON().getJSONObject(String.valueOf(id)).getJSONObject("Data");
+		JSONArray data = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(id)).getJSONArray("Data");
 		//get the tricluster to obtain rows/columns/contexts
-		Tricluster t = dataset.getTriclusterById(id);
-		ObservableList<HeatMapTableView> contextList = FXCollections.observableArrayList();
+		Bicluster t = dataset.getBiclusterById(id);
+		//ObservableList<HeatMapTableView> contextList = FXCollections.observableArrayList();
 		
 		List<String> yTicks = new ArrayList<>();
 		List<String> xTicks = new ArrayList<>();
@@ -1146,49 +1052,63 @@ public class MenuPrincipalController{
 			xTicks.add("y" + c);
 		Collections.reverse(yTicks);
 
-		int chartNumber = 1;
+		//int chartNumber = 1;
 
-		for(Integer ctx : t.getContexts()) {
+		
+		HeatMapTableView bicChart = null;
+		
+		String title = "Bicluster " + id;
+		HeatMapData sliceHeatMap = null;
+		
+		if(model.isSymbolic()) {
+			String[][] chartData = new String[t.getRows().size()][t.getColumns().size()];
+			System.out.println(data.toString());
+			System.out.println(data.length());
+			System.out.println(data.getJSONArray(0).length());
 			
-			JSONArray slice = data.getJSONArray(String.valueOf(ctx));
-			String title = "Context " + ctx + " (" + (chartNumber++) + " of " + t.getContexts().size() + ")";
-			HeatMapData sliceHeatMap = null;
-			
-			if(model.isSymbolic()) {
-				String[][] chartData = new String[t.getRows().size()][t.getColumns().size()];
-				
-				for(int s = 0; s < slice.length(); s++) 
-					for(int c = 0; c < slice.getJSONArray(s).length(); c++) 	
-						chartData[s][c] = slice.getJSONArray(s).get(c).toString();
-
-				String[] alphabet = ((SymbolicDataset) this.gBicService.getGeneratedDataset()).getAlphabet();
-				HeatMapTableView contextChart = new SymbolicHeatMapTableView(xTicks, yTicks, alphabet, title, chartData, ctx.intValue());
-				contextList.add(contextChart);
-			}
-			else {
-				Number[][] chartData = new Number[t.getRows().size()][t.getColumns().size()];
-				
-				for(int s = 0; s < slice.length(); s++) {
-					for(int c = 0; c < slice.getJSONArray(s).length(); c++) {
-						if(slice.getJSONArray(s).get(c) == null)
-							chartData[s][c] = null;
-						else {
-							String value = slice.getJSONArray(s).get(c).toString();
-							value = value.replaceAll(",","");
-							if(value.equals(""))
-								chartData[s][c] = null;
-							else
-								chartData[s][c] = (Number) new Double(value);
-						}
-							
-					}
+			for(int s = 0; s < data.length(); s++) 
+				for(int c = 0; c < data.getJSONArray(s).length(); c++) {
+					System.out.println("Row " + s + " Column " + c);
+					chartData[s][c] = data.getJSONArray(s).get(c).toString();
 				}
-				double min = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMinM().doubleValue();
-				double max = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMaxM().doubleValue();
-				HeatMapTableView contextChart = new NumericHeatMapTableView(xTicks, yTicks, min, max, title, chartData, ctx.intValue());
-				contextList.add(contextChart);
-			}
+					
+
+			String[] alphabet = ((SymbolicDataset) this.gBicService.getGeneratedDataset()).getAlphabet();
+			bicChart = new SymbolicHeatMapTableView(xTicks, yTicks, alphabet, title, chartData, id);
 		}
-		return contextList;
+		else {
+			Number[][] chartData = new Number[t.getRows().size()][t.getColumns().size()];
+			
+			for(int s = 0; s < data.length(); s++) {
+				for(int c = 0; c < data.getJSONArray(s).length(); c++) {
+					if(data.getJSONArray(s).get(c) == null)
+						chartData[s][c] = null;
+					else {
+						String value = data.getJSONArray(s).get(c).toString();
+						value = value.replaceAll(",","");
+						if(value.equals(""))
+							chartData[s][c] = null;
+						else
+							chartData[s][c] = (Number) new Double(value);
+					}
+						
+				}
+			}
+			double min = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMinM().doubleValue();
+			double max = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMaxM().doubleValue();
+			bicChart = new NumericHeatMapTableView(xTicks, yTicks, min, max, title, chartData, id);
+		}
+		
+		return bicChart;
+	}
+	
+	@FXML
+	private void showHeatMap(ActionEvent event) {
+		
+		int bicID = Integer.parseInt(this.bicIDCB.getValue().split(" ")[1].strip());
+		HeatMapTableView chartData = generateTriclusterVizData(bicID);
+		chartData.produceChart();
+		
+		
 	}
 }
