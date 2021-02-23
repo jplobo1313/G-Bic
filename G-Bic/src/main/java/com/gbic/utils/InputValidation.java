@@ -290,11 +290,14 @@ public class InputValidation {
 		boolean valid = true;
 		
 		for(int i = 0; i < patterns.size(); i++) {
-			BiclusterPattern p = patterns.get(i);
 			
-			if(p.contains(PatternType.ADDITIVE) || p.contains(PatternType.MULTIPLICATIVE))
-				throw new InvalidInputException("Invalid pattern on symbolic dataset (additive or multiplicative patterns"
-						+ " are not allowed!)");
+			if(patterns.get(i) instanceof SingleBiclusterPattern) {
+				SingleBiclusterPattern p = (SingleBiclusterPattern) patterns.get(i);
+				
+				if(p.contains(PatternType.ADDITIVE) || p.contains(PatternType.MULTIPLICATIVE))
+					throw new InvalidInputException("Invalid pattern on symbolic dataset (additive or multiplicative patterns"
+							+ " are not allowed!)");
+			}
 		}
 		
 	}

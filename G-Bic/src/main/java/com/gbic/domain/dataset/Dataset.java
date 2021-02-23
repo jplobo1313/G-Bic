@@ -27,12 +27,9 @@ public abstract class Dataset {
 	private int numCols;
 	private int numBics;
 	
-	private Background background;
+	//private Background background;
 	private int backgroundSize;
 
-	//Map <Bicluster ID, List of elements in the form "<row:col"> to store bicluster's elements
-	//private HashMap<Integer, List<String>> elements;
-	//Map <"ctx:row:col", List<Bicluster IDs>> to store the biclusters associated to a specific element
 	private Map<String, List<Integer>> elementsReversed;
 	
 	private Set<String> missingElements;
@@ -51,12 +48,10 @@ public abstract class Dataset {
 	 * @param numContexts Dataset's number of contexts
 	 * @param background Background object with the background type and parameters
 	 */
-	public Dataset(int numRows, int numCols, int numBics, Background background) {
+	public Dataset(int numRows, int numCols, int numBics) {
 		
 		this.numRows = numRows;
 		this.numCols = numCols;
-		this.background = background;
-		//this.elements = new HashMap<>();
 		this.elementsReversed = new HashMap<>();
 		this.missingElements = new TreeSet<>();
 		this.noisyElements = new TreeSet<>();
@@ -159,14 +154,6 @@ public abstract class Dataset {
 	}
 
 	/**
-	 * Get the dataset's background
-	 * @return the background object
-	 */
-	public Background getBackground() {
-		return background;
-	}
-
-	/**
 	 * Get the dataset's number of missing elements
 	 * @return |Missing elements set|
 	 */
@@ -220,15 +207,6 @@ public abstract class Dataset {
 	 * @param k The bicluster ID
 	 */
 	public void addElement(String e, int k) {
-		/*
-		if(!this.elements.containsKey(k)) {
-			List<String> elems = new ArrayList<>();
-			elems.add(e);
-			this.elements.put(k, elems);
-		}
-		else
-			this.elements.get(k).add(e);
-		*/
 		
 		if(!this.elementsReversed.containsKey(e)) {
 			List<Integer> bics = new ArrayList<>();
@@ -263,7 +241,6 @@ public abstract class Dataset {
 		}
 		
 		return elements;
-		//return this.elements.get(id);
 	}
 	
 	/**
@@ -271,30 +248,9 @@ public abstract class Dataset {
 	 * @return The set of elements
 	 */
 	public Set<String> getElements() {
-		
-		//this.elements.values();
-		
-		
-		//Set<String> flat = 
-		//    this.elements.values().stream()
-		//        .flatMap(List::stream)
-		//        .collect(Collectors.toSet());
-		
-		//System.out.println("Elements reversed: " + flat);
 
 		return elementsReversed.keySet();
-		//return flat;
 	}
-	
-	/**
-	 * Get the set of existing triclusters
-	 * @return The set of bicluster's ID
-	 */
-	/*
-	public Set<Integer> getTriclusters(){
-		return elements.keySet();
-	}
-	*/
 	
 	/**
 	 * Get the bicluster's that contain a certain element
@@ -302,18 +258,6 @@ public abstract class Dataset {
 	 * @return List of bicluster to which the element belongs
 	 */
 	public List<Integer> getBicsByElem(String e){
-		/*
-		List<Integer> trics = new ArrayList<>();
-		
-		for(Entry<Integer, List<String>> tric : this.elements.entrySet()) {
-			if(tric.getValue().contains(e))
-				trics.add(tric.getKey());
-			
-		}
-		
-		//return this.elementsReversed.get(e);
-		return trics;
-		*/
 		
 		return this.elementsReversed.get(e);
 	}
@@ -324,16 +268,7 @@ public abstract class Dataset {
 	 * @return True if the elements belong to a certain element, False otherwise
 	 */
 	public boolean isPlanted(String e) {
-		/*
-		boolean isPlanted = false;
 		
-		for(Entry<Integer, List<String>> tric : this.elements.entrySet()) 
-			if(isPlanted = tric.getValue().contains(e))
-				 break;
-		
-		//return this.elementsReversed.containsKey(e);
-		return isPlanted;
-		*/
 		return this.elementsReversed.containsKey(e);
 	}
 	

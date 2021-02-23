@@ -28,8 +28,9 @@ import com.gbic.utils.IOUtils;
 public class NumericDataset<T extends Number> extends Dataset {
 
 	private Random r = new Random();
+	private Background background;
 	//The map that stores the elements
-	private Map<String, T> realMatrixMap;
+	private Map<String, T> matrix;
 	private T maxM;
 	private T minM;
 
@@ -46,14 +47,23 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 */
 	public NumericDataset(int numRows, int numCols, int numBics, Background background, T minM, T maxM) {
 
-		super(numRows, numCols, numBics, background);
-
+		super(numRows, numCols, numBics);
+		
+		this.background = background;
 		plantedBics = new ArrayList<>();
 		this.minM = minM;
 		this.maxM = maxM;
-		this.realMatrixMap = new HashMap<>();
+		this.matrix = new HashMap<>();
 	}
 
+	/**
+	 * Get the dataset's background
+	 * @return the background object
+	 */
+	public Background getBackground() {
+		return background;
+	}
+	
 	/**
 	 * Add a Bicluster to this dataset
 	 * @param bic The Bicluster object
@@ -91,7 +101,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @param newItem The element's value
 	 */
 	public void setMatrixItem(int row, int column, T newItem) {
-		this.realMatrixMap.put(row + ":" + column, newItem);
+		this.matrix.put(row + ":" + column, newItem);
 	}
 	
 	/**
@@ -102,7 +112,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @return The element's value
 	 */
 	public T getMatrixItem(int row, int column) {
-		return this.realMatrixMap.get(row + ":" + column);
+		return this.matrix.get(row + ":" + column);
 	}
 
 	/**
@@ -113,7 +123,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 	 * @return True if the elements exists, False otherwise
 	 */
 	public boolean existsMatrixItem(int row, int column) {
-		return this.realMatrixMap.containsKey(row + ":" + column);
+		return this.matrix.containsKey(row + ":" + column);
 	}
 	
 	/**
@@ -140,12 +150,12 @@ public class NumericDataset<T extends Number> extends Dataset {
 		
 		T element = null;
 		
-		if(super.getBackground().getType().equals(BackgroundType.UNIFORM))
+		if(getBackground().getType().equals(BackgroundType.UNIFORM))
 			element = generateBackgroundValue(null);
-		else if (super.getBackground().getType().equals(BackgroundType.DISCRETE))
-			element = generateBackgroundValue(super.getBackground().getParam3());
-		else if (super.getBackground().getType().equals(BackgroundType.NORMAL))
-			element = generateBackgroundValue(super.getBackground().getParam1(), super.getBackground().getParam2());
+		else if (getBackground().getType().equals(BackgroundType.DISCRETE))
+			element = generateBackgroundValue(getBackground().getParam3());
+		else if (getBackground().getType().equals(BackgroundType.NORMAL))
+			element = generateBackgroundValue(getBackground().getParam1(), getBackground().getParam2());
 		else
 			element = (T) new Integer(Integer.MIN_VALUE);
 		
@@ -226,7 +236,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 		
 		for(NumericBicluster<? extends Number> bic : plantedBics) {
 			res.append(bic.toString() + "\r\n\n");
-			res.append(IOUtils.printNumericBicluster(this.realMatrixMap, bic.getRows(), bic.getColumns()) + "\n");
+			res.append(IOUtils.printNumericBicluster(this.matrix, bic.getRows(), bic.getColumns()) + "\n");
 			/*
 			for(Integer context : tric.getContexts()) {
 				res.append("Context: " + context + "\n");
@@ -238,7 +248,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 		return res.toString().replace(",]","]");
 	}
 	
-	public JSONObject getBicsInfoJSON(Dataset generatedDataset) {
+	public JSONObject getBicsInfoJSON(Dataset generatedDataset, boolean heterogeneous) {
 		JSONObject dataset = new JSONObject();
 		
 		dataset.put("#DatasetRows", this.getNumRows());
@@ -249,7 +259,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 		JSONObject biclusters = new JSONObject();
 		
 		for(Bicluster bic : plantedBics) 
-			biclusters.putOpt(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset));
+			biclusters.putOpt(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset, heterogeneous));
 		
 		dataset.put("biclusters", biclusters);
 		//System.out.println("\n\n" + dataset.toString());

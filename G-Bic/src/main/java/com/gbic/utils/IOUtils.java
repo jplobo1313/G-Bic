@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.types.PatternType;
@@ -165,6 +166,66 @@ public class IOUtils {
 		return result.toString();
 	}
 
+	
+	/**
+	 * Converts the dataset into a string oriented by columns
+	 * @param dataset The generated dataset
+	 * @param threshold How many rows to convert
+	 * @param step In which row to start printing
+	 * @param printHeader boolean that indicates if the header should be added
+	 * @return
+	 */
+	public static String matrixToStringColOriented(HeterogeneousDataset dataset, int threshold, int step, boolean printHeader) {
+
+		StringBuilder result = new StringBuilder();
+		DecimalFormat df = new DecimalFormat();
+		int decimal = (dataset.isRealValued()) ? 2 : 0;
+		df.setMaximumFractionDigits(decimal);
+		df.setGroupingUsed(false);
+
+		System.out.println("Writing dataset file: " + (((double) step) / (dataset.getNumRows() / threshold) * 100) + "%");
+		
+		if(printHeader) {
+			result.append("X\t"); 
+
+			//O Header é sempre igual para cada excerto logo podemos guardar numa variavel local/global
+				for(int y=0; y< dataset.getNumCols(); y++) {
+					if(y == dataset.getNumCols() - 1)
+						result.append("y" + y + "\n");
+					else
+						result.append("y" + y + "\t");  			
+				}
+		}    	
+
+		int max = ((threshold * (step + 1)) > dataset.getNumRows()) ? dataset.getNumRows() - (threshold * step) : threshold;
+		for(int row = 0; row < max; row++){
+			result.append("x"+ (step * threshold + row) +"\t");
+			for(int col = 0; col < dataset.getNumCols(); col ++) {
+				
+				if(dataset.isSymbolicFeature(col)) {
+					if(dataset.existsSymbolicElement(step * threshold + row, col))
+						result.append(dataset.getSymbolicElement(step * threshold + row, col) + "\t");
+					else
+						result.append(dataset.generateSymbolicBackgroundValue() + "\t");
+				}
+				else {
+					if(dataset.existsNumericElement(step * threshold + row, col)) {
+						if(dataset.getNumericElement(step * threshold + row, col).intValue() == Integer.MIN_VALUE) {
+							result.append("\t");
+						}
+						else
+							result.append(df.format(dataset.getNumericElement(step * threshold + row, col))+"\t");
+					}
+					else {
+						result.append(df.format(dataset.generateNumericBackgroundValue()) + "\t");
+					}
+				}				
+			}
+			result.replace(result.length()-1, result.length(),"\n"); 
+		}
+		return result.toString();
+	}
+	
 	/**
 	 * Writes the dataset into a file
 	 * @param path The file path
@@ -213,7 +274,7 @@ public class IOUtils {
 	
 	public static String printNumericBicluster(Map<String, ? extends Number> matrix, Set<Integer> rows, Set<Integer> cols) {
 
-		DecimalFormat df = new DecimalFormat();
+		DecimalFormat df = new DecimalFormat("#.##");
 		df.setMaximumFractionDigits(2);
 		StringBuilder result = new StringBuilder();
 
@@ -241,6 +302,51 @@ public class IOUtils {
 					result.append("\t");
 				else
 					result.append(df.format(matrix.get(rowsArray[row] + ":" + colsArray[col])) + "\t");
+			
+			result.replace(result.length()-1, result.length(),"\n"); 
+		}
+		
+		return result.toString();
+	}
+	
+	public static String printMixedBicluster(Map<String, ? extends Number> numericMatrix, Map<String, String> symbolicMatrix,
+			Set<Integer> rows, Set<Integer> cols) {
+
+		DecimalFormat df = new DecimalFormat("#.##");
+		df.setMaximumFractionDigits(2);
+		StringBuilder result = new StringBuilder();
+
+		result.append("X\t"); 
+		
+		Integer[] rowsArray = new Integer[rows.size()];
+	    rows.toArray(rowsArray);
+		
+		Integer[] colsArray = new Integer[cols.size()];
+	    cols.toArray(colsArray);
+		
+		for(int y = 0; y < colsArray.length; y++) {
+			if((y == colsArray.length - 1))
+				result.append("y" + colsArray[y] + "\n");
+			else
+				result.append("y" + colsArray[y] + "\t");  			
+		}
+	
+		  
+		for(int row = 0; row < rowsArray.length; row++){
+			result.append("x"+ rowsArray[row] +"\t");
+			
+			for(int col = 0; col < colsArray.length; col ++) {
+				if(numericMatrix.containsKey(rowsArray[row] + ":" + colsArray[col])) {
+					if(numericMatrix.get(rowsArray[row] + ":" + colsArray[col]).intValue() == Integer.MIN_VALUE)
+						result.append("\t");
+					else
+						result.append(df.format(numericMatrix.get(rowsArray[row] + ":" + colsArray[col])) + "\t");
+				}
+				else {
+					result.append(symbolicMatrix.get(rowsArray[row] + ":" + colsArray[col]) + "\t");
+				}
+				
+			}
 			
 			result.replace(result.length()-1, result.length(),"\n"); 
 		}

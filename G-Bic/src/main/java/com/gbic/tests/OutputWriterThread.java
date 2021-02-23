@@ -1,5 +1,6 @@
 package com.gbic.tests;
 
+import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.utils.IOUtils;
@@ -13,15 +14,18 @@ public class OutputWriterThread implements Runnable {
 	
 	private NumericDataset numericDataset;
 	private SymbolicDataset symbolicDataset;
+	private HeterogeneousDataset mixedDataset;
 	
 	@Override
 	public void run() {
 		try {
 			
-			if(symbolicDataset == null)
+			if(numericDataset != null)
 				IOUtils.writeFile(path, this.name + "_" + step + ".txt", IOUtils.matrixToStringColOriented(numericDataset, threshold, step, true), false);
-			else
+			else if(symbolicDataset != null)
 				IOUtils.writeFile(path, this.name + "_" + step + ".txt", IOUtils.matrixToStringColOriented(symbolicDataset, threshold, step, true), false);
+			else
+				IOUtils.writeFile(path, this.name + "_" + step + ".txt", IOUtils.matrixToStringColOriented(mixedDataset, threshold, step, true), false);
 				
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -46,6 +50,15 @@ public class OutputWriterThread implements Runnable {
 		this.step = step;
 		this.threshold = threshold;
 		this.symbolicDataset = symbolicDataset;
+		this.numericDataset = null;
+	}
+	
+	public OutputWriterThread(String path, String name, int step, int threshold, HeterogeneousDataset miedDataset) {
+		this.path = path;
+		this.name = name;
+		this.step = step;
+		this.threshold = threshold;
+		this.mixedDataset = mixedDataset;
 		this.numericDataset = null;
 	}
 }

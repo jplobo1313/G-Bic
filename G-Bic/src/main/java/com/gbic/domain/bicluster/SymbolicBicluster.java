@@ -14,12 +14,20 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.gbic.domain.dataset.Dataset;
+import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.types.PatternType;
 import com.gbic.types.PlaidCoherency;
 import com.gbic.types.TimeProfile;
 
 public class SymbolicBicluster extends Bicluster{
+	
+	//Row and column patterns of the bicluster
+	private PatternType rowPattern;
+	private PatternType columnPattern;
+	
+	private TimeProfile timeProfile;
+	private PlaidCoherency plaidPattern;
 	
 	//Pattern seed
 	private String[][] seed;
@@ -33,15 +41,80 @@ public class SymbolicBicluster extends Bicluster{
 	 */
 	public SymbolicBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer> cols, PatternType rowPattern, PatternType columnPattern, PlaidCoherency plaidPattern) {
 		
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
+		super(id, rows, cols);
+		this.rowPattern = rowPattern;
+		this.columnPattern = columnPattern;
+		this.plaidPattern = plaidPattern;
 	}
 	
 	public SymbolicBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer> cols, PatternType rowPattern, PatternType columnPattern, PlaidCoherency plaidPattern,
 			TimeProfile timeProfile) {
 		
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern, timeProfile);
+		super(id, rows, cols);
+		this.rowPattern = rowPattern;
+		this.columnPattern = columnPattern;
+		this.plaidPattern = plaidPattern;
+		this.timeProfile = timeProfile;
 	}
 
+	/**
+	 * @return the timeProfile
+	 */
+	public TimeProfile getTimeProfile() {
+		return timeProfile;
+	}
+
+	/**
+	 * @param timeProfile the timeProfile to set
+	 */
+	public void setTimeProfile(TimeProfile timeProfile) {
+		this.timeProfile = timeProfile;
+	}
+	
+	/**
+	 * Get trilcuster's plaid coherency
+	 * @return the plaid pattern
+	 */
+	public PlaidCoherency getPlaidCoherency() {
+		return this.plaidPattern;
+	}
+	
+	public void setPlaidCoherency(PlaidCoherency plaidPattern) {
+		this.plaidPattern = plaidPattern;
+	}
+	
+	/**
+	 * Get the bicluster's row pattern
+	 * @return The row pattern
+	 */
+	public PatternType getRowPattern() {
+		return rowPattern;
+	}
+
+	/**
+	 * Set the bicluster's row pattern
+	 * @param rowPattern the row pattern
+	 */
+	public void setRowPattern(PatternType rowPattern) {
+		this.rowPattern = rowPattern;
+	}
+
+	/**
+	 * Get the bicluster's column pattern
+	 * @return The column pattern
+	 */
+	public PatternType getColumnPattern() {
+		return columnPattern;
+	}
+
+	/**
+	 * Set the bicluster's column pattern
+	 * @param rowPattern the column pattern
+	 */
+	public void setColumnPattern(PatternType columnPattern) {
+		this.columnPattern = columnPattern;
+	}
+	
 	/**
 	 * Set the biclusters seed
 	 * @param seed The matrix
@@ -66,13 +139,13 @@ public class SymbolicBicluster extends Bicluster{
 		
 		Set<Integer> rows = getRows();
 		Set<Integer> columns = getColumns();
-		String[][] seed = getSeed();
 		
 		StringBuilder res = new StringBuilder();
-		res.append("(" + rows.size() + ", " + columns.size() + "), X=[");
+		res.append("Bicluster #" + this.getId());
+		res.append(" (" + rows.size() + ", " + columns.size() + ")\nRows=[");
 		for (int i : rows)
 			res.append(i + ",");
-		res.append("], Y=[");
+		res.append("], Columns=[");
 		for (int i : columns)
 			res.append(i + ",");
 		res.append("],");
@@ -84,20 +157,20 @@ public class SymbolicBicluster extends Bicluster{
 		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
 		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
 		
-		if(super.getColumnPattern().equals(PatternType.ORDER_PRESERVING))
-			res.append(" TimeProfile=" + super.getTimeProfile() + ",");
+		if(getColumnPattern().equals(PatternType.ORDER_PRESERVING))
+			res.append(" TimeProfile=" + getTimeProfile() + ",");
 		
 		res.append(" %Missings=" + df.format(missingsPerc) + ",");
 		res.append(" %Noise=" + df.format(noisePerc) + ",");
 		res.append(" %Errors=" + df.format(errorsPerc));
 		
-		res.append(" PlaidCoherency=" + super.getPlaidCoherency().toString());
+		res.append(" PlaidCoherency=" + getPlaidCoherency().toString());
 		
 		return res.toString().replace(",]", "]");
 	}	
 		
 	@Override
-	public JSONObject toStringJSON(Dataset generatedDataset) {
+	public JSONObject toStringJSON(Dataset generatedDataset, boolean heterogeneous) {
 
 		JSONObject tricluster = new JSONObject();
 		
@@ -113,7 +186,7 @@ public class SymbolicBicluster extends Bicluster{
 		tricluster.put("X", rows);
 		tricluster.put("Y", columns);
 		
-		tricluster.put("PlaidCoherency", new String(super.getPlaidCoherency().toString()));
+		tricluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
 		
 		tricluster.put("RowPattern", new String(getRowPattern().toString()));
 		tricluster.put("ColumnPattern", new String(getColumnPattern().toString()));
@@ -122,14 +195,14 @@ public class SymbolicBicluster extends Bicluster{
 		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
 		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
 
-		if(super.getColumnPattern().equals(PatternType.ORDER_PRESERVING))
-			tricluster.put("TimeProfile",new String(super.getTimeProfile().toString()));
+		if(getColumnPattern().equals(PatternType.ORDER_PRESERVING))
+			tricluster.put("TimeProfile",new String(getTimeProfile().toString()));
 		
 		tricluster.put("%Missings", df.format(missingsPerc));
 		tricluster.put("%Noise", df.format(noisePerc));
 		tricluster.put("%Errors", df.format(errorsPerc));
 		
-		tricluster.put("PlaidCoherency", new String(super.getPlaidCoherency().toString()));
+		tricluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
 		
 		Integer[] rowsArray = new Integer[rows.size()];
 	    rows.toArray(rowsArray);
@@ -142,8 +215,12 @@ public class SymbolicBicluster extends Bicluster{
     	
     	for(int row = 0; row < rowsArray.length; row++){
     		JSONArray rowData = new JSONArray();
-			for(int col = 0; col < colsArray.length; col ++) 
-				rowData.put(((SymbolicDataset)generatedDataset).getMatrixItem(rowsArray[row], colsArray[col]));
+			for(int col = 0; col < colsArray.length; col ++) {
+				if(!heterogeneous)
+					rowData.put(((SymbolicDataset)generatedDataset).getMatrixItem(rowsArray[row], colsArray[col]));
+				else
+					rowData.put(((HeterogeneousDataset)generatedDataset).getSymbolicElement(rowsArray[row], colsArray[col]));
+			}
 			bicData.put(rowData);
     	}
     	

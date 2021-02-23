@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.gbic.domain.dataset.Dataset;
+import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.types.PatternType;
 import com.gbic.types.PlaidCoherency;
@@ -22,6 +23,13 @@ import com.gbic.types.TimeProfile;
 
 public class NumericBicluster<T extends Number> extends Bicluster{
 
+	//Row and column patterns of the bicluster
+	private PatternType rowPattern;
+	private PatternType columnPattern;
+	
+	private TimeProfile timeProfile;
+	private PlaidCoherency plaidPattern;
+	
 	private T numericSeed;
 	
 	//Matrix seed to use in the case of constant patterns
@@ -29,79 +37,6 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	
 	private T[] rowFactors;
 	private T[] columnFactors;
-	
-	//Adaptar e testar isto
-	/*
-	private List<T> rowFactorsList;
-	private List<T> columnFactorsList;
-	private List<ArrayList<T>> patternSeedList;
-	*/
-	
-	/**
-	 * Constructs a Numeric Bicluster
-	 * @param rows Set of bicluster's rows
-	 * @param cols Set of bilcuster's columns
-	 * @param rowPattern Bicluster's row pattern
-	 * @param columnPattern Bicluster's column pattern
-	 * @param seed Bicluster's seed
-	 * @param rowFactors Bicluster's row factors
-	 * @param columnFactors Bicluster's column factors
-	 */
-	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
-			T seed, T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern) {
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
-		this.numericSeed = seed;
-		this.patternSeed = null;
-		this.rowFactors = rowFactors;
-		this.columnFactors = columnFactors;
-	}
-	
-	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
-			T seed, T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern, TimeProfile timeProfile) {
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern, timeProfile);
-		this.numericSeed = seed;
-		this.patternSeed = null;
-		this.rowFactors = rowFactors;
-		this.columnFactors = columnFactors;
-	}
-	
-	//Adaptar e testar isto
-	/*
-	public NumericBicluster(SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
-			T[][] seed, T[] rowFactors, T[] columnFactors) {
-		super(rows, cols, rowPattern, columnPattern);
-		this.patternSeed = seed;
-		this.numericSeed = null;
-		this.rowFactors = rowFactors;
-		this.columnFactors = columnFactors;
-		
-		this.rowFactorsList = new ArrayList<>();
-		this.columnFactorsList = new ArrayList<>();
-		this.patternSeedList = new ArrayList<ArrayList<T>>();
-		
-		for(int i = 0; i < seed.length; i++) {
-			ArrayList<T> innerList = new ArrayList<>();
-			for(int j = 0; j < seed[0].length; j++) {
-				innerList.add(seed[i][j]);
-			}
-			this.patternSeedList.add(innerList);
-		}
-			
-	}
-	*/
-	
-	/**
-	 * Constructs a Numeric Bicluster
-	 * @param rows Set of bicluster's rows
-	 * @param cols Set of bilcuster's columns
-	 * @param rowPattern Bicluster's row pattern
-	 * @param columnPattern Bicluster's column pattern
-	 */
-	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern, PlaidCoherency plaidPattern) {
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
-		this.patternSeed = null;
-		this.numericSeed = null;
-	}
 	
 	/**
 	 * Constructs a Numeric Biclusters
@@ -114,7 +49,10 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	 */
 	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
 			T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern) {
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern);
+		super(id, rows, cols);
+		this.rowPattern = rowPattern;
+		this.columnPattern = columnPattern;
+		this.plaidPattern = plaidPattern;
 		this.patternSeed = null;
 		this.numericSeed = null;
 		this.rowFactors = rowFactors;
@@ -123,11 +61,73 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	
 	public NumericBicluster(int id, SortedSet<Integer> rows, SortedSet<Integer>  cols, PatternType rowPattern, PatternType columnPattern,
 			T[] rowFactors, T[] columnFactors, PlaidCoherency plaidPattern, TimeProfile timeProfile) {
-		super(id, rows, cols, rowPattern, columnPattern, plaidPattern, timeProfile);
+		super(id, rows, cols);
+		this.rowPattern = rowPattern;
+		this.columnPattern = columnPattern;
+		this.plaidPattern = plaidPattern;
+		this.timeProfile = timeProfile;
 		this.patternSeed = null;
 		this.numericSeed = null;
 		this.rowFactors = rowFactors;
 		this.columnFactors = columnFactors;
+	}
+	
+	/**
+	 * @return the timeProfile
+	 */
+	public TimeProfile getTimeProfile() {
+		return timeProfile;
+	}
+
+	/**
+	 * @param timeProfile the timeProfile to set
+	 */
+	public void setTimeProfile(TimeProfile timeProfile) {
+		this.timeProfile = timeProfile;
+	}
+	
+	/**
+	 * Get trilcuster's plaid coherency
+	 * @return the plaid pattern
+	 */
+	public PlaidCoherency getPlaidCoherency() {
+		return this.plaidPattern;
+	}
+	
+	public void setPlaidCoherency(PlaidCoherency plaidPattern) {
+		this.plaidPattern = plaidPattern;
+	}
+	
+	/**
+	 * Get the bicluster's row pattern
+	 * @return The row pattern
+	 */
+	public PatternType getRowPattern() {
+		return rowPattern;
+	}
+
+	/**
+	 * Set the bicluster's row pattern
+	 * @param rowPattern the row pattern
+	 */
+	public void setRowPattern(PatternType rowPattern) {
+		this.rowPattern = rowPattern;
+	}
+
+	/**
+	 * Get the bicluster's column pattern
+	 * @return The column pattern
+	 */
+	public PatternType getColumnPattern() {
+		return columnPattern;
+	}
+
+	/**
+	 * Set the bicluster's column pattern
+	 * @param rowPattern the column pattern
+	 */
+	public void setColumnPattern(PatternType columnPattern) {
+		this.columnPattern = columnPattern;
 	}
 	
 	/**
@@ -239,14 +239,13 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 		Set<Integer> rows = getRows();
 		Set<Integer> columns = getColumns();
 		T numericSeed = getNumericSeed();
-		T[][] patternSeed = getPatternSeed();
 
 		StringBuilder res = new StringBuilder();
-		res.append("Bicluster #" + this.getId() + "\n");
-		res.append(" (" + rows.size() + ", " + columns.size() + "), X=[");
+		res.append("Bicluster #" + this.getId());
+		res.append(" (" + rows.size() + ", " + columns.size() + ")\nRows=[");
 		for (int i : rows)
 			res.append(i + ",");
-		res.append("], Y=[");
+		res.append("], Columns=[");
 		for (int i : columns)
 			res.append(i + ",");
 		res.append("],");
@@ -278,20 +277,20 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
 		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
 		
-		if(super.getColumnPattern().equals(PatternType.ORDER_PRESERVING))
-			res.append(" TimeProfile=" + super.getTimeProfile() + ",");
+		if(getColumnPattern().equals(PatternType.ORDER_PRESERVING))
+			res.append(" TimeProfile=" + getTimeProfile() + ",");
 		
 		res.append(" %Missings=" + df.format(missingsPerc) + ",");
 		res.append(" %Noise=" + df.format(noisePerc) + ",");
 		res.append(" %Errors=" + df.format(errorsPerc) + ",");
 		
-		res.append(" PlaidCoherency=" + super.getPlaidCoherency().toString());
+		res.append(" PlaidCoherency=" + getPlaidCoherency().toString());
 
 		return res.toString().replace(",]", "]");
 	}
 	
 	@Override
-	public JSONObject toStringJSON(Dataset generatedDataset) {
+	public JSONObject toStringJSON(Dataset generatedDataset, boolean heterogeneous) {
 
 		JSONObject bicluster = new JSONObject();
 		
@@ -342,14 +341,14 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
 		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
 
-		if(super.getColumnPattern().equals(PatternType.ORDER_PRESERVING))
-			bicluster.put("TimeProfile",new String(super.getTimeProfile().toString()));
+		if(getColumnPattern().equals(PatternType.ORDER_PRESERVING))
+			bicluster.put("TimeProfile",new String(getTimeProfile().toString()));
 		
 		bicluster.put("%Missings", df.format(missingsPerc));
 		bicluster.put("%Noise", df.format(noisePerc));
 		bicluster.put("%Errors", df.format(errorsPerc));
 		
-		bicluster.put("PlaidCoherency", new String(super.getPlaidCoherency().toString()));
+		bicluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
 		
 		JSONObject data = new JSONObject();
 		
@@ -366,7 +365,11 @@ public class NumericBicluster<T extends Number> extends Bicluster{
     	for(int row = 0; row < rowsArray.length; row++){
     		JSONArray rowData = new JSONArray();
 			for(int col = 0; col < colsArray.length; col ++) {
-				double value = ((NumericDataset)generatedDataset).getMatrixItem(rowsArray[row], colsArray[col]).doubleValue();
+				double value = 0;
+				if(heterogeneous)
+					value = ((HeterogeneousDataset)generatedDataset).getNumericElement(rowsArray[row], colsArray[col]).doubleValue();
+				else
+					value = ((NumericDataset)generatedDataset).getMatrixItem(rowsArray[row], colsArray[col]).doubleValue();
 				if(Double.compare(value, Integer.MIN_VALUE) == 0)
 					rowData.put("");
 				else

@@ -25,6 +25,7 @@ import com.gbic.types.PlaidCoherency;
 import com.gbic.types.TimeProfile;
 import com.gbic.utils.BicMath;
 import com.gbic.utils.OverlappingSettings;
+import com.gbic.utils.SingleBiclusterPattern;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
 
@@ -108,12 +109,12 @@ public class SymbolicDatasetGenerator extends BiclusterDatasetGenerator {
 			if(k >= overlappingThreshold)
 				allowsOverlap = false;
 			
-			BiclusterPattern currentPattern;
+			SingleBiclusterPattern currentPattern;
 			
 			if(numBics < patterns.size())
-				currentPattern = patterns.get(random.nextInt(patterns.size()));
+				currentPattern = (SingleBiclusterPattern) patterns.get(random.nextInt(patterns.size()));
 			else
-				currentPattern = patterns.get(k % patterns.size());
+				currentPattern = (SingleBiclusterPattern) patterns.get(k % patterns.size());
 			
 			PatternType rowType = currentPattern.getRowsPattern();
 			PatternType columnType = currentPattern.getColumnsPattern();
@@ -160,11 +161,11 @@ public class SymbolicDatasetGenerator extends BiclusterDatasetGenerator {
 				
 				System.out.println("Tric " + (k+1) + " - Generating columns...");
 				bicsCols[k] = generate(numColsBics, numCols, overlappingColsPerc, bicsCols, bicsWithOverlap,
-						bicsExcluded, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
+						bicsExcluded, tricStructure.getContiguity().equals(Contiguity.COLUMNS), null);
 				
 				System.out.println("Tric " + (k+1) + " - Generating rows...");
 				bicsRows[k] = generate(numRowsBics, numRows, overlappingRowsPerc, bicsRows, bicsWithOverlap,
-						bicsExcluded, false);
+						bicsExcluded, false, null);
 				System.out.println("Rows: " + bicsRows[k].length);
 				
 				
@@ -184,7 +185,8 @@ public class SymbolicDatasetGenerator extends BiclusterDatasetGenerator {
 			else {
 				
 				System.out.println("Tric " + (k+1) + " - Generating columns...");
-				bicsCols[k] = generateNonOverlappingOthers(numColsBics, numCols, chosenCols, tricStructure.getContiguity().equals(Contiguity.COLUMNS));
+				bicsCols[k] = generateNonOverlappingOthers(numColsBics, numCols, chosenCols, tricStructure.getContiguity().equals(Contiguity.COLUMNS),
+						null);
 				System.out.println("Columns: " + bicsCols[k].length);
 				
 				System.out.println("Tric " + (k+1) + " - Generating rows...");
@@ -322,25 +324,4 @@ public class SymbolicDatasetGenerator extends BiclusterDatasetGenerator {
 		}
 		return data;
 	}
-	
-	private Integer[] generateOrder(int size) {
-		Integer[] order = new Integer[size];
-		for(int i = 0; i < size; i++)
-			order[i] = i;
-		Collections.shuffle(Arrays.asList(order));
-		return order;
-	}
-	
-	private  String[] shuffle(Integer[] order, String[] array) {
-		
-		String[] newArray = new String[array.length];
-		
-		for(int i = 0; i < order.length; i++) {
-			newArray[order[i]] = array[i];
-		}
-		
-		return newArray;
-	}
-	
-	
 }

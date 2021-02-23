@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 import org.json.JSONObject;
 
 import com.gbic.domain.dataset.Dataset;
+import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.generator.NumericDatasetGenerator;
@@ -851,7 +852,7 @@ public class GBicService extends Observable implements Observer {
 		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
 		System.out.println("Biclusters txt file written!");
 		
-		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset);
+		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset, false);
 		IOUtils.writeFile(path, tricDataFileName + ".json", this.biclustersJSON.toString(), false);
 		System.out.println("Biclusters JSON file written!");
 		
@@ -902,7 +903,7 @@ public class GBicService extends Observable implements Observer {
 		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
 		System.out.println("Biclusters txt file written!");
 		
-		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset);
+		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset, false);
 		
 		IOUtils.writeFile(path, tricDataFileName + ".json", this.biclustersJSON.toString(), false);
 		System.out.println("Biclusters JSON file written");
@@ -938,6 +939,56 @@ public class GBicService extends Observable implements Observer {
 
 	}
 
+	/**
+	 * Save the generated datset's output
+	 * @param generatedDataset The dataset
+	 * @param tricDataFileName The name of the tricluster's files
+	 * @param datasetFileName The name of the dataset file
+	 * @throws Exception
+	 */
+	public void saveResult(HeterogeneousDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
+
+		System.out.println("Writting output...");
+		
+		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
+		System.out.println("Biclusters txt file written!");
+		
+		this.biclustersJSON = generatedDataset.getBicsInfoJSON(generatedDataset);
+		IOUtils.writeFile(path, tricDataFileName + ".json", this.biclustersJSON.toString(), false);
+		System.out.println("Biclusters JSON file written!");
+		
+		
+		//this.biclustersJSON = this.biclustersJSON.getJSONObject("biclusters");
+		
+		int threshold = generatedDataset.getNumRows() / 10;
+		
+		if (threshold == 0)
+			threshold++;
+		
+		int step = generatedDataset.getNumRows() / threshold;
+
+		ExecutorService es = null;
+		
+		if(!this.isSingleFileOutput())
+			es = Executors.newCachedThreadPool();
+		
+		for(int s = 0; s < step; s++)
+			if(this.isSingleFileOutput())
+				IOUtils.writeFile(path, datasetFileName + ".tsv", IOUtils.matrixToStringColOriented(generatedDataset, threshold, s, s==0), s!=0);	
+			else {
+				Thread t = new Thread(new OutputWriterThread(path, datasetFileName, s, threshold, generatedDataset));
+				es.execute(t);
+			}
+		
+
+		if(!this.isSingleFileOutput()) {
+			es.shutdown();
+			es.awaitTermination(5, TimeUnit.MINUTES);
+		}
+		
+		System.out.println("Dataset tsv file written!");
+	}
+	
 	public void setProgressUpdate(BiConsumer<Integer, Integer> progressUpdate) {
         this.progressUpdate = progressUpdate ;
     }

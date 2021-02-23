@@ -26,10 +26,10 @@ import com.gbic.utils.IOUtils;
 public class SymbolicDataset extends Dataset {
 
 	private Random r = new Random();
-
+	private Background background;
 	private String[] alphabet;
 	//The map that stores the elements
-	private Map<String, String> symbolicMatrixMap;
+	private Map<String, String> matrix;
 	private boolean symmetries;
 
 	private List<SymbolicBicluster> plantedBics;
@@ -46,8 +46,9 @@ public class SymbolicDataset extends Dataset {
 	public SymbolicDataset(int numRows, int numCols, int numBics, Background background, boolean symmetries,
 			int alphabetL) {
 
-		super(numRows, numCols, numBics, background);
+		super(numRows, numCols, numBics);
 
+		this.background = background;
 		this.plantedBics = new ArrayList<>();
 		this.symmetries = symmetries;
 
@@ -59,7 +60,7 @@ public class SymbolicDataset extends Dataset {
 			for (int i = alphabetL / 2; i < alphabetL; i++)
 				alphabet[i] = Integer.toString(Integer.parseInt(alphabet[i]) + 1);
 
-		this.symbolicMatrixMap = new HashMap<>();
+		this.matrix = new HashMap<>();
 	}
 
 	/**
@@ -74,15 +75,25 @@ public class SymbolicDataset extends Dataset {
 	public SymbolicDataset(int numRows, int numCols, int numBics, Background background, boolean symmetries,
 			String[] alphabet) {
 
-		super(numRows, numCols, numBics, background);
+		super(numRows, numCols, numBics);
 
+		this.background = background;
 		this.plantedBics = new ArrayList<>();
 		this.symmetries = symmetries;
 		this.alphabet = alphabet;
 
-		this.symbolicMatrixMap = new HashMap<>();
+		this.matrix = new HashMap<>();
 	}
 
+	/**
+	 * Get the dataset's background
+	 * @return the background object
+	 */
+	public Background getBackground() {
+		return background;
+	}
+	
+	
 	/**
 	 * Get symbol index in the alphabet
 	 * @param s The symbol
@@ -144,7 +155,7 @@ public class SymbolicDataset extends Dataset {
 	 * @param newItem The element's value
 	 */
 	public void setMatrixItem(int row, int column, String newItem) {
-		this.symbolicMatrixMap.put(row + ":" + column, newItem);
+		this.matrix.put(row + ":" + column, newItem);
 	}
 
 	/**
@@ -155,7 +166,7 @@ public class SymbolicDataset extends Dataset {
 	 * @return The element's value
 	 */
 	public String getMatrixItem(int row, int column) {
-		return this.symbolicMatrixMap.get(row + ":" + column);
+		return this.matrix.get(row + ":" + column);
 	}
 
 	/**
@@ -167,7 +178,7 @@ public class SymbolicDataset extends Dataset {
 	 */
 	public boolean existsMatrixItem(int row, int column) {
 		
-		return this.symbolicMatrixMap.containsKey(row + ":" + column);
+		return this.matrix.containsKey(row + ":" + column);
 	}
 
 	@Override
@@ -191,12 +202,12 @@ public class SymbolicDataset extends Dataset {
 		
 		String element = null;
 		
-		if(super.getBackground().getType().equals(BackgroundType.UNIFORM))
+		if(getBackground().getType().equals(BackgroundType.UNIFORM))
 			element = generateBackgroundValue(null);
-		else if (super.getBackground().getType().equals(BackgroundType.DISCRETE))
-			element = generateBackgroundValue(super.getBackground().getParam3());
-		else if (super.getBackground().getType().equals(BackgroundType.NORMAL))
-			element = generateBackgroundValue(super.getBackground().getParam1(), super.getBackground().getParam2());
+		else if (getBackground().getType().equals(BackgroundType.DISCRETE))
+			element = generateBackgroundValue(getBackground().getParam3());
+		else if (getBackground().getType().equals(BackgroundType.NORMAL))
+			element = generateBackgroundValue(getBackground().getParam1(), getBackground().getParam2());
 		else
 			element = "";
 		
@@ -252,7 +263,7 @@ public class SymbolicDataset extends Dataset {
 		
 		for(SymbolicBicluster bic : plantedBics) {
 			res.append(bic.toString() + "\r\n\n");
-			res.append(IOUtils.printSymbolicBicluster(this.symbolicMatrixMap, bic.getRows(), bic.getColumns()) + "\n");
+			res.append(IOUtils.printSymbolicBicluster(this.matrix, bic.getRows(), bic.getColumns()) + "\n");
 		}
 		return res.toString().replace(",]","]");
 	}
@@ -525,8 +536,9 @@ public class SymbolicDataset extends Dataset {
 
 		return respects;
 	}
-
-	public JSONObject getBicsInfoJSON(SymbolicDataset generatedDataset) {
+	
+	
+	public JSONObject getBicsInfoJSON(SymbolicDataset generatedDataset, boolean heterogeneous) {
 		JSONObject dataset = new JSONObject();
 		
 		dataset.put("#DatasetRows", this.getNumRows());
@@ -539,7 +551,7 @@ public class SymbolicDataset extends Dataset {
 		JSONObject biclusters = new JSONObject();
 		
 		for(Bicluster bic : plantedBics) 
-			biclusters.put(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset));
+			biclusters.put(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset, heterogeneous));
 		
 		dataset.put("biclusters", biclusters);
 		

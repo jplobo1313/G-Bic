@@ -29,6 +29,7 @@ import com.gbic.types.PlaidCoherency;
 import com.gbic.types.TimeProfile;
 import com.gbic.utils.BicMath;
 import com.gbic.utils.OverlappingSettings;
+import com.gbic.utils.SingleBiclusterPattern;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
 
@@ -117,12 +118,12 @@ public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 
 			System.out.println("Generating bicluster " + (k+1) + " of " + numBics + "...");
 			
-			BiclusterPattern currentPattern;
+			SingleBiclusterPattern currentPattern;
 
 			if(numBics < patterns.size())
-				currentPattern = patterns.get(random.nextInt(patterns.size()));
+				currentPattern = (SingleBiclusterPattern) patterns.get(random.nextInt(patterns.size()));
 			else
-				currentPattern = patterns.get(k % patterns.size());
+				currentPattern = (SingleBiclusterPattern) patterns.get(k % patterns.size());
 
 			PatternType rowType = currentPattern.getRowsPattern();
 			PatternType columnType = currentPattern.getColumnsPattern();
@@ -169,7 +170,7 @@ public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 				
 				System.out.println("Bic " + (k+1) + " - Generating columns...");
 				bicsCols[k] = generate(numColsBics, numCols, overlappingColsPerc, bicsCols, bicsWithOverlap,
-						bicsExcluded, bicStructure.getContiguity().equals(Contiguity.COLUMNS));
+						bicsExcluded, bicStructure.getContiguity().equals(Contiguity.COLUMNS), null);
 				System.out.println("Columns: " + bicsCols[k].length);
 			
 				System.out.println("Bic " + (k+1) + " - Generating rows...");
@@ -192,7 +193,8 @@ public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 			}
 			else {
 				System.out.println("Bic " + (k+1) + " - Generating columns...");
-				bicsCols[k] = generateNonOverlappingOthers(numColsBics, numCols, chosenCols, bicStructure.getContiguity().equals(Contiguity.COLUMNS));
+				bicsCols[k] = generateNonOverlappingOthers(numColsBics, numCols, chosenCols, bicStructure.getContiguity().equals(Contiguity.COLUMNS),
+						null);
 				System.out.println("Columns: " + bicsCols[k].length);
 				
 				System.out.println("Bic " + (k+1) + " - Generating rows...");
@@ -315,21 +317,21 @@ public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 				}
 
 				if(currentPattern.contains(PatternType.ADDITIVE)) {				
-					bicsymbols = generateAdditiveFactors(currentPattern, bicK, minAllowed, maxAllowed);
+					bicsymbols = generateAdditiveFactors(realValued, currentPattern, bicK, minAllowed, maxAllowed);
 				}
 
 				else if(currentPattern.contains(PatternType.MULTIPLICATIVE)) {
 
-					bicsymbols = generateMultiplicativeFactors(currentPattern, bicK, minAllowed, maxAllowed);
+					bicsymbols = generateMultiplicativeFactors(realValued, currentPattern, bicK, minAllowed, maxAllowed);
 				} 
 
 				else if(currentPattern.contains(PatternType.ORDER_PRESERVING)) {
-					bicsymbols = generateOrderPreserving(currentPattern, timeProfile, bicK, minAllowed, maxAllowed);
+					bicsymbols = generateOrderPreserving(realValued, currentPattern, bicK, minAllowed, maxAllowed);
 
 
 				}
 				else if (currentPattern.contains(PatternType.CONSTANT)){
-					bicsymbols = generateConstant(currentPattern, bicK, minAllowed, maxAllowed);
+					bicsymbols = generateConstant(realValued, currentPattern, bicK, minAllowed, maxAllowed);
 				}
 
 				
@@ -407,521 +409,7 @@ public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 		}
 		return data;
 	}
-
-	private Double[][] generateMultiplicativeFactors(BiclusterPattern pattern, NumericBicluster<Double> bicK, double minAllowed,
-			double maxAllowed) throws ExceedBiclusterBoundsException {
-
-		Double[][] bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
-
-		PatternType rowType = pattern.getRowsPattern();
-		PatternType columnType = pattern.getColumnsPattern();
-
-		double seed;
-		double maxContribution;
-		double minContribution;
-
-		seed = minAllowed + (maxAllowed - minAllowed) * random.nextDouble();
-
-		if(!realValued) {
-			if(Double.compare(Math.round(seed), minAllowed) >= 0 && 
-					Double.compare(Math.round(seed), maxAllowed) <= 0)
-				seed = Math.round(seed);
-			else
-				seed = (int) seed;
-		}
-
-		bicK.setSeed(seed);
-
-		//System.out.println("Seed = " + seed);
-
-		if(Double.compare(seed, 0.0) == 0) {
-			minContribution = minAllowed;
-			maxContribution = maxAllowed;
-		}
-		else {
-			minContribution = minAllowed / seed;
-			maxContribution = maxAllowed / seed;
-		}
-
-
-		//System.out.println("Row MinContribution = " + minContribution);
-		//System.out.println("Row MaxContribution = " + maxContribution);
-
-		double minRowCont = maxContribution;
-		double maxRowCont = minContribution;
-
-		double minColCont = maxContribution;
-		double maxColCont = minContribution;
-
-		if(rowType.equals(PatternType.MULTIPLICATIVE)) {
-			for(int r = 0; r < bicK.getNumRows(); r++) {
-
-				double factor = minContribution + (maxContribution - minContribution) * 
-						random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(factor), minContribution) >= 0 && 
-							Double.compare(Math.round(factor), maxContribution) <= 0)
-						factor = Math.round(factor);
-					else
-						factor = (int) factor;
-				}
-
-				bicK.setRowFactor(r, factor);
-
-				maxRowCont = bicK.getRowFactor(r) > maxRowCont ? bicK.getRowFactor(r) : maxRowCont;
-				minRowCont = bicK.getRowFactor(r) < minRowCont ? bicK.getRowFactor(r) : minRowCont;
-				//System.out.println("Row " + r + " = " + tricK.getRowFactor(r));
-			}
-		}
-		else {
-			for(int r = 0; r < bicK.getNumRows(); r++) {
-				bicK.setRowFactor(r, 1.0);
-
-				maxRowCont = 1.0;
-				minRowCont = 1.0;
-			}
-		}
-
-		if(columnType.equals(PatternType.MULTIPLICATIVE)) {
-
-			if (minAllowed >= 0) {
-
-				maxContribution = maxAllowed / (seed * maxRowCont);
-				minContribution = minAllowed / (seed * minRowCont);
-			}
-			else if (minAllowed < 0 && maxAllowed >= 0){
-
-				if (seed >= 0) {
-
-					if(minRowCont >= 0 && maxRowCont >=0) {
-
-						maxContribution = maxAllowed / (seed * maxRowCont);
-						minContribution = minAllowed / (seed * maxRowCont);
-					}
-					else if(minRowCont < 0 && maxRowCont >= 0) {
-
-						double int1Min = maxAllowed / (seed * minRowCont);
-						double int1Max = minAllowed / (seed * minRowCont);
-
-						double int2Min = minAllowed / (seed * maxRowCont);
-						double int2Max = maxAllowed / (seed * maxRowCont);
-
-						minContribution = (int1Min > int2Min) ? int1Min : int2Min;
-						maxContribution = (int1Max < int2Max) ? int1Max : int2Max;
-					}
-					else {
-
-						maxContribution = minAllowed / (seed * minRowCont);
-						minContribution = maxAllowed / (seed * minRowCont);
-					}
-				}
-				else {
-
-					if(minRowCont >= 0 && maxRowCont >=0) {
-
-						maxContribution = minAllowed / (seed * maxRowCont);
-						minContribution = maxAllowed / (seed * maxRowCont);
-					}
-					else if(minRowCont < 0 && maxRowCont >= 0) {
-
-						double int1Min = minAllowed / (seed * minRowCont);
-						double int1Max = maxAllowed / (seed * minRowCont);
-
-						double int2Min = maxAllowed / (seed * maxRowCont);
-						double int2Max = minAllowed / (seed * maxRowCont);
-
-						minContribution = (int1Min > int2Min) ? int1Min : int2Min;
-						maxContribution = (int1Max < int2Max) ? int1Max : int2Max;
-					}
-					else {
-
-						maxContribution = maxAllowed / (seed * minRowCont);
-						minContribution = minAllowed / (seed * minRowCont);
-					}
-				}
-			}
-			else {
-				//not implemented (negative dataset)
-			}
-
-			//System.out.println("Col MinContribution = " + minContribution);
-			//System.out.println("Col MaxContribution = " + maxContribution);
-
-			for(int c = 0; c < bicK.getNumCols(); c++) {
-
-				double factor = minContribution + (maxContribution - minContribution) * 
-						random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(factor), minContribution) >= 0 && 
-							Double.compare(Math.round(factor), maxContribution) <= 0)
-						factor = Math.round(factor);
-					else
-						factor = (int) factor;
-				}
-
-				bicK.setColumnFactor(c, factor);
-
-				maxColCont = bicK.getColumnFactor(c) > maxColCont ? bicK.getColumnFactor(c) : maxColCont;
-				minColCont = bicK.getColumnFactor(c) < minColCont ? bicK.getColumnFactor(c) : minColCont;
-				//System.out.println("Col " + c + " = " + tricK.getColumnFactor(c));
-			}
-		}
-		else {
-			for(int c = 0; c < bicK.getNumCols(); c++)
-				bicK.setColumnFactor(c, 1.0);
-
-			maxColCont = 1.0;
-			minColCont = 1.0;
-		}
-
-		//criar o bic
-		
-		for(int row = 0; row < bicK.getNumRows(); row++)
-			for(int col = 0; col < bicK.getNumCols(); col++) {
-
-				double value = seed * bicK.getRowFactor(row) * bicK.getColumnFactor(col);
-
-				if(Double.compare(value,  minAllowed) < 0 && Double.compare(Math.abs(value - minAllowed), 0.2) <= 0)
-					value = minAllowed;
-
-				if(Double.compare(value,  maxAllowed) > 0 && Double.compare(Math.abs(value - maxAllowed), 0.2) <= 0)
-					value = maxAllowed;
-
-				bicsymbols[row][col] = value;
-
-				if(!realValued)
-					bicsymbols[row][col] = (double) bicsymbols[row][col].intValue();
-
-				if (Double.compare(bicsymbols[row][col], minAllowed) < 0 || Double.compare(bicsymbols[row][col], maxAllowed) > 0) 
-					throw new ExceedBiclusterBoundsException("Exceeded Bicluster limits: Value = " + bicsymbols[row][col]);
-
-			}
-		return bicsymbols;
-	}
-
-	private Double[][] generateAdditiveFactors(BiclusterPattern pattern, NumericBicluster<Double> bicK, double min, double max) throws ExceedBiclusterBoundsException {
-
-		Double[][] bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
-
-		PatternType rowType = pattern.getRowsPattern();
-		PatternType columnType = pattern.getColumnsPattern();
-
-		double seed = min + (max - min) * random.nextDouble();
-
-		if(!realValued) {
-			if(Double.compare(Math.round(seed), min) >= 0 && Double.compare(Math.round(seed), max) <= 0)
-				seed = Math.round(seed);
-			else
-				seed = (int) seed;
-		}
-
-		bicK.setSeed(seed);
-
-		//System.out.println("Seed:" +  seed);
-
-		double minContribution = 0;
-		double maxContribution = 0;
-
-		double minRowCont = 0;
-		double maxRowCont = 0;
-		double minColCont = 0;
-		double maxColCont = 0;
-
-		double factor;
-
-		if(rowType.equals(PatternType.ADDITIVE)) {
-
-			minContribution = min - seed;
-			maxContribution = max - seed;
-
-			minRowCont = maxContribution;
-			maxRowCont = minContribution;
-			minColCont = maxContribution;
-			maxColCont = minContribution;
-
-			for(int r = 0; r < bicK.getNumRows(); r++) {
-				//System.out.println("*** Row " + r + " ***");
-				//System.out.println("MinContribution: " + minContribution);
-				//System.out.println("MaxContribution: " + maxContribution);
-				factor = minContribution + (maxContribution - minContribution) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(factor), minContribution) >= 0 && Double.compare(Math.round(factor), maxContribution) <= 0)
-						factor = Math.round(factor);
-					else
-						factor = (int) factor;
-				}
-
-				bicK.setRowFactor(r, factor);
-				//System.out.println("Factor: " + factor);
-				maxRowCont = bicK.getRowFactor(r) > maxRowCont ? bicK.getRowFactor(r) : maxRowCont;
-				minRowCont = bicK.getRowFactor(r) < minRowCont ? bicK.getRowFactor(r) : minRowCont;
-				//System.out.println("******");
-			}
-		}
-		else {
-			for(int r = 0; r < bicK.getNumRows(); r++)
-				bicK.setRowFactor(r, 0.0);
-
-			maxRowCont = 0.0;
-			minRowCont = 0.0;
-		}
-
-		//System.out.println("\nMinRowCont:" + minRowCont);
-		//System.out.println("MaxRowCont:" + maxRowCont + "\n");
-
-		if(columnType.equals(PatternType.ADDITIVE)) {
-
-			minContribution = min - (seed + minRowCont);
-			maxContribution = max - (seed + maxRowCont);
-
-			for(int c = 0; c < bicK.getNumCols(); c++) {
-
-				//System.out.println("*** Column " + c + " ***");
-				//System.out.println("MinContribution: " + minContribution);
-				//System.out.println("MaxContribution: " + maxContribution);
-				factor = minContribution + (maxContribution - minContribution) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(factor), minContribution) >= 0 && Double.compare(Math.round(factor), maxContribution) <= 0)
-						factor = Math.round(factor);
-					else
-						factor = (int) factor;
-				}
-
-				bicK.setColumnFactor(c, factor);
-				//System.out.println("Factor: " + factor);
-				maxColCont = bicK.getColumnFactor(c) > maxColCont ? bicK.getColumnFactor(c) : maxColCont;
-				minColCont = bicK.getColumnFactor(c) < minColCont ? bicK.getColumnFactor(c) : minColCont;
-				//System.out.println("******");
-			}
-
-		}
-		else {
-
-			for(int c = 0; c < bicK.getNumCols(); c++)
-				bicK.setColumnFactor(c, 0.0);
-
-			maxColCont = 0.0;
-			minColCont = 0.0;
-		}
-
-		//System.out.println("\nMinColCont:" + minColCont);
-		//System.out.println("MaxColCont:" + maxColCont + "\n");
-
-		//criar o bic
-		
-		for(int r = 0; r < bicK.getNumRows(); r++)
-			for(int c = 0; c < bicK.getNumCols(); c++) {
-				bicsymbols[r][c] = seed + bicK.getRowFactor(r) +  bicK.getColumnFactor(c);
-				if(Double.compare(bicsymbols[r][c], min) < 0 || Double.compare(bicsymbols[r][c], max) > 0) 
-					throw new ExceedBiclusterBoundsException("Exceeded Bicluster limits: Value = " + bicsymbols[r][c]);
-
-
-			}
-
-		return bicsymbols;
-	}
-
-	private Double[][] generateOrderPreserving(BiclusterPattern pattern, TimeProfile timeProfile, NumericBicluster<Double> bicK, double min, double max) {
-
-		Double[][] bicsymbols = null;
-
-		PatternType rowType = pattern.getRowsPattern();
-		PatternType columnType = pattern.getColumnsPattern();
-		
-		if(rowType.equals(PatternType.ORDER_PRESERVING)) {
-
-			bicsymbols = new Double[bicK.getNumCols()][bicK.getNumRows()];
-			Integer[] order = generateOrder(bicK.getNumRows());
-				
-			
-			for(int col = 0; col < bicK.getNumCols(); col++) {
-
-				double minValue = min;
-				double maxValue = max;
-
-				for (int row = 0; row < bicK.getNumRows(); row++) {
-
-					bicsymbols[col][row] = minValue + (maxValue - minValue) * random.nextDouble();
-
-					if(!realValued) {
-						if(Double.compare(Math.round(bicsymbols[col][row]), minValue) >= 0 && 
-								Double.compare(Math.round(bicsymbols[col][row]), maxValue) <= 0)
-							bicsymbols[col][row] = (double) Math.round(bicsymbols[col][row]);
-						else
-							bicsymbols[col][row] = (double) bicsymbols[col][row].intValue();
-					}	
-				}
-				Arrays.parallelSort(bicsymbols[col]);
-				bicsymbols[col] = shuffle(order, bicsymbols[col]);
-			}
-			
-			bicsymbols = transposeMatrix(bicsymbols, "x", "y");
-		}
-		else if(columnType.equals(PatternType.ORDER_PRESERVING)) {
-
-			bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
-			
-			Integer[] order = null;
-			if(timeProfile.equals(TimeProfile.RANDOM))
-				order = generateOrder(bicK.getNumRows());
-			
-			
-			for(int row = 0; row < bicK.getNumRows(); row++) {
-				for(int col = 0; col < bicK.getNumCols(); col++) {
-					
-
-					double minValue = min;
-					double maxValue = max;
-
-					bicsymbols[row][col] = minValue + (maxValue - minValue) * random.nextDouble();
-
-					if(!realValued) {
-						if(Double.compare(Math.round(bicsymbols[row][col]), minValue) >= 0 && 
-								Double.compare(Math.round(bicsymbols[row][col]), maxValue) <= 0)
-							bicsymbols[row][col] = (double) Math.round(bicsymbols[row][col]);
-						else
-							bicsymbols[row][col] = (double) bicsymbols[row][col].intValue();
-					}	
-				}
-				
-				if(timeProfile.equals(TimeProfile.RANDOM)) {
-					Arrays.parallelSort(bicsymbols[row]);
-					bicsymbols[row] = shuffle(order, bicsymbols[row]);
-				}
-				else if(timeProfile.equals(TimeProfile.MONONICALLY_INCREASING))
-					Arrays.sort(bicsymbols[row]);
-				
-				else
-					Arrays.sort(bicsymbols[row], Collections.reverseOrder());
-			}
-		}
-		return bicsymbols;
-	}
-
-	private Integer[] generateOrder(int size) {
-		Integer[] order = new Integer[size];
-		for(int i = 0; i < size; i++)
-			order[i] = i;
-		Collections.shuffle(Arrays.asList(order));
-		return order;
-	}
 	
-	private Double[] shuffle(Integer[] order, Double[] array) {
-		
-		Double[] newArray = new Double[array.length];
-		
-		for(int i = 0; i < order.length; i++) {
-			newArray[order[i]] = array[i];
-		}
-		
-		return newArray;
-	}
-	
-	private Double[][] generateConstant(BiclusterPattern pattern, NumericBicluster<Double> bicK, double min, double max){
-
-		Double[][] bicsymbols = new Double[bicK.getNumRows()][bicK.getNumCols()];
-
-		PatternType rowType = pattern.getRowsPattern();
-		PatternType columnType = pattern.getColumnsPattern();
-
-		double seed;
-		double maxValue = max;
-		double minValue = min;
-
-		if(rowType.equals(PatternType.CONSTANT) && columnType.equals(PatternType.CONSTANT)) {
-
-			//System.out.println("MaxValue = " + maxValue);
-			//System.out.println("MinValue = " + minValue);
-
-			seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-			if(!realValued) {
-				if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-					seed = Math.round(seed);
-				else
-					seed = (int) seed;
-			}	
-
-			//System.out.println("Seed: " +  seed);
-
-			
-			for(int row = 0; row < bicK.getNumRows(); row++) 
-				for (int col = 0; col < bicK.getNumCols(); col++)
-					bicsymbols[row][col] = seed;	
-									
-			bicK.setSeed(bicsymbols);
-		}
-		else if(columnType.equals(PatternType.CONSTANT)) {
-			
-			for (int row = 0; row < bicK.getNumRows(); row++) {
-
-				seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-						seed = Math.round(seed);
-					else
-						seed = (int) seed;
-				}
-
-				for(int col = 0; col < bicK.getNumCols(); col++)
-					bicsymbols[row][col] = seed;
-			}
-			
-		}
-		else if(rowType.equals(PatternType.CONSTANT)) {
-			for (int col = 0; col < bicK.getNumCols(); col++) {
-
-				seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-				if(!realValued) {
-					if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-						seed = Math.round(seed);
-					else
-						seed = (int) seed;
-				}
-
-				for(int row = 0; row < bicK.getNumRows(); row++)
-					bicsymbols[row][col] = seed;
-			}
-		}
-		else {
-
-			for(int row = 0; row < bicK.getNumRows(); row++) {
-				for (int col = 0; col < bicK.getNumCols(); col++) {
-					seed = minValue + (maxValue - minValue) * random.nextDouble();
-
-					if(!realValued) {
-						if(Double.compare(Math.round(seed), minValue) >= 0 && Double.compare(Math.round(seed), maxValue) <= 0)
-							seed = Math.round(seed);
-						else
-							seed = (int) seed;
-					}
-
-					bicsymbols[row][col] = seed;
-				}
-			}
-			bicK.setSeed(bicsymbols);
-		}
-
-		return bicsymbols;
-	}
-
-	private Pair<Double, Double> getCombinedContributions(double minRowCont, double maxRowCont, double minColCont,
-			double maxColCont){
-
-		double[] conts = {minRowCont * minColCont, minRowCont * maxColCont,	maxRowCont * maxColCont,
-				maxRowCont * minColCont};
-
-		Arrays.parallelSort(conts);
-
-		return new Pair<>(conts[0], conts[3]);
-	}
-
 	private Pair<Double, Double> getLimitsOnOverlappedArea(Set<String> existingValues, int[] rows, int[] cols) {
 
 		double min = this.data.getMaxM().doubleValue() + 1;

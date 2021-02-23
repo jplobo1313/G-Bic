@@ -8,8 +8,10 @@
 
 package com.gbic.domain.bicluster;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.json.JSONObject;
 
@@ -26,13 +28,6 @@ public abstract class Bicluster {
 	private SortedSet<Integer> columns;
 	private SortedSet<Integer> rows;
 	
-	//Row and column patterns of the bicluster
-	private PatternType rowPattern;
-	private PatternType columnPattern;
-	
-	private TimeProfile timeProfile;
-	private PlaidCoherency plaidPattern;
-	
 	private int numOfMissings;
 	private int numOfNoisy;
 	private int numOfErrors;
@@ -44,33 +39,21 @@ public abstract class Bicluster {
 	 * @param rowPattern The bicluster's row pattern
 	 * @param columnPattern The bicluster's column pattern
 	 */
-	public Bicluster(int id, SortedSet<Integer> rows, SortedSet<Integer> cols, PatternType rowPattern, PatternType columnPattern, PlaidCoherency plaidPattern) {
+	public Bicluster(int id, SortedSet<Integer> rows, SortedSet<Integer> cols) {
 		
 		this.id = id;
-		this.rowPattern = rowPattern;
-		this.columnPattern = columnPattern;
 		this.rows = rows;
 		this.columns = cols;
-		this.plaidPattern = plaidPattern;
 	}
 	
-	/**
-	 * Constructor
-	 * @param rows The bicluster's set of rows
-	 * @param cols The bicluster's set of columns
-	 * @param rowPattern The bicluster's row pattern
-	 * @param columnPattern The bicluster's column pattern
-	 */
-	public Bicluster(int id, SortedSet<Integer> rows, SortedSet<Integer> cols, PatternType rowPattern, PatternType columnPattern, PlaidCoherency plaidPattern,
-			TimeProfile timeProfile) {
+	public Bicluster(int id, SortedSet<Integer> rows, SortedSet<Integer> numericCols, SortedSet<Integer> symbolicCols) {
 		
 		this.id = id;
-		this.rowPattern = rowPattern;
-		this.columnPattern = columnPattern;
 		this.rows = rows;
-		this.columns = cols;
-		this.plaidPattern = plaidPattern;
-		this.timeProfile = timeProfile;
+		
+		this.columns = new TreeSet<>();
+		this.columns.addAll((Collection<? extends Integer>) numericCols);
+		this.columns.addAll((Collection<? extends Integer>) symbolicCols);
 	}
 	
 	public int getSize() {
@@ -84,20 +67,6 @@ public abstract class Bicluster {
 	public int getNumCols() {
 		return this.columns.size();
 	}
-	
-	/**
-	 * @return the timeProfile
-	 */
-	public TimeProfile getTimeProfile() {
-		return timeProfile;
-	}
-
-	/**
-	 * @param timeProfile the timeProfile to set
-	 */
-	public void setTimeProfile(TimeProfile timeProfile) {
-		this.timeProfile = timeProfile;
-	}
 
 	/**
 	 * Get the triclster's ID
@@ -105,50 +74,6 @@ public abstract class Bicluster {
 	 */
 	public int getId() {
 		return this.id;
-	}
-	
-	/**
-	 * Get trilcuster's plaid coherency
-	 * @return the plaid pattern
-	 */
-	public PlaidCoherency getPlaidCoherency() {
-		return this.plaidPattern;
-	}
-	
-	public void setPlaidCoherency(PlaidCoherency plaidPattern) {
-		this.plaidPattern = plaidPattern;
-	}
-	
-	/**
-	 * Get the bicluster's row pattern
-	 * @return The row pattern
-	 */
-	public PatternType getRowPattern() {
-		return rowPattern;
-	}
-
-	/**
-	 * Set the bicluster's row pattern
-	 * @param rowPattern the row pattern
-	 */
-	public void setRowPattern(PatternType rowPattern) {
-		this.rowPattern = rowPattern;
-	}
-
-	/**
-	 * Get the bicluster's column pattern
-	 * @return The column pattern
-	 */
-	public PatternType getColumnPattern() {
-		return columnPattern;
-	}
-
-	/**
-	 * Set the bicluster's column pattern
-	 * @param rowPattern the column pattern
-	 */
-	public void setColumnPattern(PatternType columnPattern) {
-		this.columnPattern = columnPattern;
 	}
 	
 	/**
@@ -172,7 +97,7 @@ public abstract class Bicluster {
 	 * 
 	 * @return
 	 */
-	public Set<Integer> getRows() {
+	public SortedSet<Integer> getRows() {
 		return rows;
 	}
 
@@ -181,7 +106,7 @@ public abstract class Bicluster {
 	 * 
 	 * @return
 	 */
-	public Set<Integer> getColumns() {
+	public SortedSet<Integer> getColumns() {
 		return columns;
 	}
 
@@ -261,6 +186,6 @@ public abstract class Bicluster {
 	 * @param generatedDataset The dataset generated
 	 * @return JSONObject with tricluster representation
 	 */
-	public abstract JSONObject toStringJSON(Dataset generatedDataset);
+	public abstract JSONObject toStringJSON(Dataset generatedDataset, boolean heterogeneous);
 
 }
