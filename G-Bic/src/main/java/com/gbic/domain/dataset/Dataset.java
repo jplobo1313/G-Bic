@@ -19,13 +19,13 @@ import com.gbic.domain.bicluster.Bicluster;
 import com.gbic.types.Background;
 
 public abstract class Dataset {
-
-	private static final double MISSING = 999999;
-
 	
 	private int numRows;
 	private int numCols;
 	private int numBics;
+	
+	//TODO: Use when replacing columns with new feature abstraction
+	private List<Feature> features;
 	
 	//private Background background;
 	private int backgroundSize;
