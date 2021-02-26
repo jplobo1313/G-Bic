@@ -477,7 +477,7 @@ public class GenerateDataset{
 
 		startTimeGen = System.currentTimeMillis();
 		generator = new MixedDatasetGenerator(realValued, numRows, numericCols, symbolicCols, numBics, numericBackground,
-				symbolicBackground, min, max, alphabet);
+				symbolicBackground, min, max, alphabet, -1);
 		stopTimeGen = System.currentTimeMillis();
 		
 		System.out.println("(BackgroundGenerator) Execution Time: " + ((double)(stopTimeGen - startTimeGen)) / 1000);
@@ -611,7 +611,7 @@ public class GenerateDataset{
 		GBicService serv = new GBicService();
 		serv.setPath("/Users/atticus/git/G-Bic/G-Bic/temp/");
 		serv.setSingleFileOutput(true);
-		serv.saveResult(generatedDataset, bicDataFileName, datasetFileName);
+		serv.saveHeterogeneousResult(generatedDataset, bicDataFileName, datasetFileName);
 
 		//IOUtils.generateHeatMap(bicDataFileName, datasetFileName);
 		

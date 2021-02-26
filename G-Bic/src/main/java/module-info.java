@@ -7,6 +7,7 @@ module GBic {
 	requires java.desktop;
 	requires commons.math3;
 	requires java.instrument;
+	requires javafx.base;
 	
 	opens com.gbic.app.GBic to javafx.fxml;
 	opens com.gbic.utils to javafx.base;

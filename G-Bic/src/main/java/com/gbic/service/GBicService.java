@@ -16,12 +16,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.apache.commons.math3.util.Pair;
 import org.json.JSONObject;
 
 import com.gbic.domain.dataset.Dataset;
@@ -31,9 +33,11 @@ import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.generator.NumericDatasetGenerator;
 import com.gbic.generator.SymbolicDatasetGenerator;
 import com.gbic.generator.BiclusterDatasetGenerator;
+import com.gbic.generator.MixedDatasetGenerator;
 import com.gbic.tests.OutputWriterThread;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
+import com.gbic.types.BiclusterType;
 import com.gbic.types.Contiguity;
 import com.gbic.types.Distribution;
 import com.gbic.types.PatternType;
@@ -42,8 +46,10 @@ import com.gbic.types.TimeProfile;
 import com.gbic.utils.IOUtils;
 import com.gbic.utils.OverlappingSettings;
 import com.gbic.utils.QualitySettings;
+import com.gbic.utils.SingleBiclusterPattern;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
+import com.gbic.utils.ComposedBiclusterPattern;
 
 public class GBicService extends Observable implements Observer {
 
@@ -54,25 +60,28 @@ public class GBicService extends Observable implements Observer {
 	//Helper class to organize the tricluster's patterns
 	public class BiclusterPatternWrapper{
 		
+		String biclusterType;
 		String rowPattern;
 		String columnPattern;
 		String timeProfile;
 		String imagePath;
 		
-		public BiclusterPatternWrapper(String rowPattern, String columnPattern,
-				String imagePath) {
+		public BiclusterPatternWrapper(String biclusterType, String rowPattern, String columnPattern, String imagePath) {
+			this.biclusterType = biclusterType;
 			this.rowPattern = rowPattern;
 			this.columnPattern = columnPattern;
 			this.imagePath = imagePath;
 		}
 		
-		public BiclusterPatternWrapper(String rowPattern, String columnPattern,
-				String timeProfile, String imagePath) {
+		public BiclusterPatternWrapper(String biclusterType, String rowPattern, String columnPattern, String timeProfile, String imagePath) {
+			this.biclusterType = biclusterType;
 			this.rowPattern = rowPattern;
 			this.columnPattern = columnPattern;	
 			this.timeProfile = timeProfile;
 			this.imagePath = imagePath;
 		}
+		
+		
 
 		public String getRowPattern() {
 			return rowPattern;
@@ -100,8 +109,22 @@ public class GBicService extends Observable implements Observer {
 			this.timeProfile = timeProfile;
 		}
 
+		/**
+		 * @return the biclusterType
+		 */
+		public String getBiclusterType() {
+			return biclusterType;
+		}
+
+		/**
+		 * @param biclusterType the biclusterType to set
+		 */
+		public void setBiclusterType(String biclusterType) {
+			this.biclusterType = biclusterType;
+		}
+
 		public String toString() {
-			return rowPattern + "|" + columnPattern;
+			return this.biclusterType + " -> " + rowPattern + "|" + columnPattern;
 		}
 		
 	}
@@ -117,6 +140,7 @@ public class GBicService extends Observable implements Observer {
 	//Paths to files with symbolic and numerics patterns
 	private static final String SYMBOLIC_PATTERNS_PATH = "src/main/java/com/gbic/app/service/symbolicPatterns.csv";
 	private static final String NUMERIC_PATTERNS_PATH = "src/main/java/com/gbic/app/service/numericPatterns.csv";
+	private List<String> datasetTypes;
 	private List<String> numericDatasetDataTypes;
 	private List<String> datasetBackground;
 	private List<String> distributions;
@@ -124,6 +148,7 @@ public class GBicService extends Observable implements Observer {
 	private List<String> plaidCoherency;
 	private List<BiclusterPatternWrapper> symbolicPatterns;
 	private List<BiclusterPatternWrapper> numericPatterns;
+	private List<BiclusterPatternWrapper> mixedPatterns;
 	private List<String> symbolType;
 	
 	//Dataset Properties
@@ -131,6 +156,8 @@ public class GBicService extends Observable implements Observer {
 	private String datasetType;
 	private int numRows;
 	private int numCols;
+	private int numericCols;
+	private int symbolicCols;
 	
 	//Numeric dataset
 	private boolean realValued;
@@ -142,7 +169,8 @@ public class GBicService extends Observable implements Observer {
 	private int numberOfSymbols;
 	private List<String> listOfSymbols;
 	
-	private Background background;
+	private Background singleBackground;
+	private Background composedBackground;
 	
 	//BiclusterProperties
 	private int numbics;
@@ -163,6 +191,9 @@ public class GBicService extends Observable implements Observer {
 	public GBicService() {
 		
 		this.currentProgress = 0;
+		
+		this.datasetTypes = new ArrayList<>();
+		fillDatasetTypes();
 		
 		numericDatasetDataTypes = new ArrayList<>();
 		fillNumericDatasetDataTypes();
@@ -239,7 +270,7 @@ public class GBicService extends Observable implements Observer {
 			    String img = "";
 			    if(data.length == 4)
 			    	img = data[3];
-			    numericPatterns.add(new BiclusterPatternWrapper(data[0], data[1], img));
+			    numericPatterns.add(new BiclusterPatternWrapper("Numeric", data[0], data[1], img));
 			    //System.out.println("Added: (" + data[0] + ", " + data[1] + ", " + data[2] + ")");
 			    
 			}
@@ -268,7 +299,7 @@ public class GBicService extends Observable implements Observer {
 			    String img = "";
 			    if(data.length == 4)
 			    	img = data[3];
-			    symbolicPatterns.add(new BiclusterPatternWrapper(data[0], data[1], img));
+			    symbolicPatterns.add(new BiclusterPatternWrapper("Symbolic", data[0], data[1], img));
 			    //System.out.println("Added: (" + data[0] + ", " + data[1] + ", " + data[2] + ")");
 			    
 			}
@@ -325,12 +356,25 @@ public class GBicService extends Observable implements Observer {
 		numericDatasetDataTypes.add("Integer");
 		numericDatasetDataTypes.add("Real Valued");
 	}
+	
+	private void fillDatasetTypes() {
+		datasetTypes.add("Symbolic");
+		datasetTypes.add("Numeric");
+		datasetTypes.add("Heterogeneous");
+	}
 
 	/**
 	 * @return the list of available data types
 	 */
 	public List<String> getDataTypes(){
 		return this.numericDatasetDataTypes;
+	}
+	
+	/**
+	 * @return the list of available data types
+	 */
+	public List<String> getDatasetTypes(){
+		return this.datasetTypes;
 	}
 	
 	/**
@@ -379,6 +423,10 @@ public class GBicService extends Observable implements Observer {
 		return this.numericPatterns;
 	}
 	
+	public List<BiclusterPatternWrapper> getMixedPatterns(){
+		return this.mixedPatterns;
+	}
+	
 	/**
 	 * Set numeric dataset's properties
 	* @param numRows Dataset's number of rows
@@ -416,10 +464,10 @@ public class GBicService extends Observable implements Observer {
 			backgroundType = BackgroundType.MISSING;
 		
 		
-		this.background = new Background(backgroundType);
-		this.background.setParam1(backgroundParam1);
-		this.background.setParam2(backgroundParam2);
-		this.background.setParam3(backgroundParam3);
+		this.singleBackground = new Background(backgroundType);
+		this.singleBackground.setParam1(backgroundParam1);
+		this.singleBackground.setParam2(backgroundParam2);
+		this.singleBackground.setParam3(backgroundParam3);
 	}
 	
 	/**
@@ -459,10 +507,75 @@ public class GBicService extends Observable implements Observer {
 			backgroundType = BackgroundType.MISSING;
 		
 		
-		this.background = new Background(backgroundType);
-		this.background.setParam1(backgroundParam1);
-		this.background.setParam2(backgroundParam2);
-		this.background.setParam3(backgroundParam3);
+		this.singleBackground = new Background(backgroundType);
+		this.singleBackground.setParam1(backgroundParam1);
+		this.singleBackground.setParam2(backgroundParam2);
+		this.singleBackground.setParam3(backgroundParam3);
+	}
+	
+	public void setDatasetProperties(int numRows, int numCols, double colsRatio, boolean realValued, double minM, double maxM, 
+			int alphabetLength, String[] symbols, 
+			String singleBackground, double singleBackgroundParam1, double singleBackgroundParam2, double[] singleBackgroundParam3,
+			String composedBackground, double composedBackgroundParam1, double composedBackgroundParam2, double[] composedBackgroundParam3) {
+		
+		this.numRows = numRows;
+		this.numCols = numCols;
+		this.numericCols = (int) Math.round(((double) this.numCols) * colsRatio);
+		this.symbolicCols = this.numCols - this.numericCols;
+		this.realValued = realValued;
+		this.minM = minM;
+		this.maxM = maxM;
+		
+		this.defaultSymbols = symbols == null;
+		
+		if(symbols == null)
+			this.numberOfSymbols = alphabetLength;
+		else
+			this.listOfSymbols = Arrays.asList(symbols);
+		
+		BackgroundType singleBackgroundType = null;
+		BackgroundType composedBackgroundType = null;
+		
+		switch(singleBackground) {
+		case "Normal":
+			singleBackgroundType = BackgroundType.NORMAL;
+			break;
+		case "Uniform":
+			singleBackgroundType = BackgroundType.UNIFORM;
+			break;
+		case "Discrete":
+			singleBackgroundType = BackgroundType.DISCRETE;
+			break;
+		default:
+			singleBackgroundType = BackgroundType.MISSING;
+			break;
+		}
+		
+		switch(composedBackground) {
+		case "Normal":
+			composedBackgroundType = BackgroundType.NORMAL;
+			break;
+		case "Uniform":
+			composedBackgroundType = BackgroundType.UNIFORM;
+			break;
+		case "Discrete":
+			composedBackgroundType = BackgroundType.DISCRETE;
+			break;
+		default:
+			composedBackgroundType = BackgroundType.MISSING;
+			break;
+		}
+		
+		
+		this.singleBackground = new Background(singleBackgroundType);
+		this.singleBackground.setParam1(singleBackgroundParam1);
+		this.singleBackground.setParam2(singleBackgroundParam2);
+		this.singleBackground.setParam3(singleBackgroundParam3);
+		
+		this.composedBackground = new Background(composedBackgroundType);
+		this.composedBackground.setParam1(composedBackgroundParam1);
+		this.composedBackground.setParam2(composedBackgroundParam2);
+		this.composedBackground.setParam3(composedBackgroundParam3);
 	}
 	
 	/**
@@ -508,16 +621,90 @@ public class GBicService extends Observable implements Observer {
 	}
 	
 	
-	public void setBiclusterPatterns(List<BiclusterPatternWrapper> patterns) {
+	public void setBiclusterPatterns(List<BiclusterPatternWrapper> patterns, String datasetType) {
+		
+		Random r = new Random();
+		BiclusterType type = null;
 		
 		this.bicPatterns = new ArrayList<>();
+		List<BiclusterPatternWrapper> numericPatterns = new ArrayList<>();
+		List<BiclusterPatternWrapper> symbolicPatterns = new ArrayList<>();
 		
 		for(BiclusterPatternWrapper p : patterns) {
-			BiclusterPattern tp = new BiclusterPattern(getPatternType(p.rowPattern), getPatternType(p.columnPattern));
-			if(tp.getColumnsPattern().equals(PatternType.ORDER_PRESERVING))
-				tp.setTimeProfile(getTimeProfile(p.getTimeProfile()));
-			System.out.println(getPatternType(p.rowPattern));
-			this.bicPatterns.add(tp);
+			if(p.getBiclusterType().equals("Numeric"))
+				numericPatterns.add(p);
+			else
+				symbolicPatterns.add(p);
+		}
+		
+		if(datasetType.equals("Heterogeneous")) {
+			int numMixedBics = 0;
+			int numNumericBics = 0;
+			int numSymbolicBics = 0;
+			
+			int totalBics = this.numbics;
+			
+			if(!numericPatterns.isEmpty() && !symbolicPatterns.isEmpty()) {
+				numMixedBics = r.nextInt(totalBics - 2) + 1;
+				totalBics -= numMixedBics;
+			}
+			
+			if(!numericPatterns.isEmpty() && symbolicPatterns.isEmpty())
+				numNumericBics = totalBics;
+			else if(numericPatterns.isEmpty() && !symbolicPatterns.isEmpty())
+				numSymbolicBics = totalBics;
+			else {
+				numNumericBics = r.nextInt(totalBics - 1) + 1;
+				totalBics -= numNumericBics;
+				numSymbolicBics = totalBics;
+			}
+			
+			
+			//gerar padroes p/cada tipo
+			for(int s = 0; s < numSymbolicBics; s++) {
+				BiclusterPatternWrapper p = symbolicPatterns.get(r.nextInt(symbolicPatterns.size()));
+				BiclusterPattern tp = new SingleBiclusterPattern(BiclusterType.SYMBOLIC, getPatternType(p.rowPattern), 
+						getPatternType(p.columnPattern), getTimeProfile(p.timeProfile));
+				this.bicPatterns.add(tp);
+			}
+			
+			for(int n = 0; n < numNumericBics; n++) {
+				BiclusterPatternWrapper p = numericPatterns.get(r.nextInt(numericPatterns.size()));
+				BiclusterPattern tp = new SingleBiclusterPattern(BiclusterType.NUMERIC, getPatternType(p.rowPattern), 
+						getPatternType(p.columnPattern), getTimeProfile(p.timeProfile));
+				this.bicPatterns.add(tp);
+			}
+			
+			for(int m = 0; m < numMixedBics; m++) {
+				BiclusterPatternWrapper numericP = numericPatterns.get(r.nextInt(numericPatterns.size()));
+				BiclusterPatternWrapper symbolicP = symbolicPatterns.get(r.nextInt(symbolicPatterns.size()));
+				
+				Pair<PatternType, PatternType> numericComponent = new Pair<>(getPatternType(numericP.rowPattern), 
+						getPatternType(numericP.columnPattern));
+				
+				Pair<PatternType, PatternType> symbolicComponent = new Pair<>(getPatternType(symbolicP.rowPattern), 
+						getPatternType(symbolicP.columnPattern));
+				
+				BiclusterPattern tp = new ComposedBiclusterPattern(BiclusterType.MIXED, numericComponent, getTimeProfile(numericP.timeProfile),
+						symbolicComponent, getTimeProfile(symbolicP.timeProfile));
+				
+				this.bicPatterns.add(tp);
+			}
+		}
+		else {
+			
+			if(datasetType.equals("Numeric"))
+				type = BiclusterType.NUMERIC;
+			else
+				type = BiclusterType.SYMBOLIC;
+			
+			for(BiclusterPatternWrapper p : patterns) {
+				BiclusterPattern tp = new SingleBiclusterPattern(type, getPatternType(p.rowPattern), getPatternType(p.columnPattern), null);
+				if(((SingleBiclusterPattern) tp).getColumnsPattern().equals(PatternType.ORDER_PRESERVING))
+					((SingleBiclusterPattern) tp).setTimeProfile(getTimeProfile(p.getTimeProfile()));
+				System.out.println(getPatternType(p.rowPattern));
+				this.bicPatterns.add(tp);
+			}
 		}
 	}
 	
@@ -543,12 +730,14 @@ public class GBicService extends Observable implements Observer {
 		
 		TimeProfile res = null;
 		System.out.println(type);
-		if(type.contains("Random"))
-			res = TimeProfile.RANDOM;
-		else if(type.contains("Up-Regulated"))
-			res = TimeProfile.MONONICALLY_INCREASING;
-		else
-			res = TimeProfile.MONONICALLY_DECREASING;
+		if(type != null) {
+			if(type.contains("Random"))
+				res = TimeProfile.RANDOM;
+			else if(type.contains("Up-Regulated"))
+				res = TimeProfile.MONONICALLY_INCREASING;
+			else
+				res = TimeProfile.MONONICALLY_DECREASING;
+		}
 		
 		return res;
 	}
@@ -640,20 +829,9 @@ public class GBicService extends Observable implements Observer {
 		String tricDataFileName;
 		String datasetFileName;
 		
-		if(this.filename.isEmpty()) {
-			if(bicPatterns.size() == 1) {
-			tricDataFileName = "tric_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols;
-
-			datasetFileName = "data_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols;
-			}
-			else {
-				tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols;
-				datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols;
-			}
+		if(this.filename.isEmpty()) {	
+			tricDataFileName = "dataset" + "_" + numRows + "x" + numCols;
+			datasetFileName = "dataset" + "_" + numRows + "x" + numCols;
 		}
 		else {
 			tricDataFileName = this.filename + "_bics";
@@ -661,7 +839,7 @@ public class GBicService extends Observable implements Observer {
 		}
 		
 		startTimeGen = System.currentTimeMillis();
-		generator = new NumericDatasetGenerator(realValued, numRows, numCols, numbics, background, minM, maxM);
+		generator = new NumericDatasetGenerator(realValued, numRows, numCols, numbics, singleBackground, minM, maxM);
 		stopTimeGen = System.currentTimeMillis();
 		
 		generator.addObserver(this);
@@ -716,7 +894,100 @@ public class GBicService extends Observable implements Observer {
 		//Print Maximum available memory
 		System.out.println("Max Memory:" + runtime.maxMemory() / mb);
 		
-		saveResult(generatedDataset, tricDataFileName, datasetFileName);
+		saveNumericResult(generatedDataset, tricDataFileName, datasetFileName);
+		
+		//updateProgressStatusAndMessage(100, "Completed!");
+	}
+	
+	public void generateHeterogeneousDataset() throws Exception {
+		
+		long startTimeGen;
+		long stopTimeGen;
+		long startTimeBics;
+		long stopTimeBics;
+		MixedDatasetGenerator generator;
+		
+		printDatasetSettings();
+		
+		this.progressUpdate.accept(5, 100);
+		this.messageUpdate.accept("Generating Background...");
+		
+		String tricDataFileName;
+		String datasetFileName;
+		
+		if(this.filename.isEmpty()) {	
+			tricDataFileName = "dataset" + "_" + numRows + "x" + numCols;
+			datasetFileName = "dataset" + "_" + numRows + "x" + numCols;
+		}
+		else {
+			tricDataFileName = this.filename + "_bics";
+			datasetFileName = this.filename + "_data";
+		}
+		
+		startTimeGen = System.currentTimeMillis();
+		
+		String[] symbols = null;
+		
+		if(!(this.listOfSymbols == null))
+			symbols = this.listOfSymbols.toArray(new String[0]);
+		
+		generator = new MixedDatasetGenerator(realValued, numRows, numericCols, symbolicCols, numbics, this.composedBackground,
+				this.singleBackground, this.minM, this.maxM, symbols, this.numberOfSymbols);
+		stopTimeGen = System.currentTimeMillis();
+		
+		generator.addObserver(this);
+		
+		System.out.println("(TricDatasetGenerator) Execution Time: " + ((double)(stopTimeGen - startTimeGen)) / 1000);
+		
+		updateProgressStatusAndMessage(20, "Generating Biclusters...");
+		
+		startTimeBics = System.currentTimeMillis();
+		HeterogeneousDataset generatedDataset = (HeterogeneousDataset) generator.generate(bicPatterns, bicStructure, overlappingSettings);
+		stopTimeBics = System.currentTimeMillis();
+
+		System.out.println("(GeneratePlaidRealBics) Execution Time: " + ((double) (stopTimeBics - startTimeBics)) / 1000);
+		
+		updateProgressStatusAndMessage(80, "Generating Missings...");
+		System.out.println("Generating Missings...");
+		generatedDataset.plantMissingElements(this.qualitySettings.getPercMissingsOnBackground(), this.qualitySettings.getPercMissingsOnBics());
+		
+		updateProgressStatusAndMessage(85, "Generating Noise...");
+		System.out.println("Generating Noise...");
+		generatedDataset.plantNoisyElements(this.qualitySettings.getPercNoiseOnBackground(), this.qualitySettings.getPercNoiseOnBics(), this.qualitySettings.getNoiseDeviation());
+		
+		updateProgressStatusAndMessage(90, "Generating Errors...");
+		System.out.println("Generating Errors...");
+		generatedDataset.plantErrors(this.qualitySettings.getPercErrorsOnBackground(), this.qualitySettings.getPercErrorsOnBics(), this.qualitySettings.getNoiseDeviation());
+		
+		updateProgressStatusAndMessage(95, "Writing output...");
+		
+		this.generatedDataset = generatedDataset;
+		this.generatedDataset.destroyElementsMap();
+		
+		System.gc();
+		
+		int mb = 1024*1024;
+
+		//Getting the runtime reference from system
+		Runtime runtime = Runtime.getRuntime();
+		
+		System.out.println("##### Heap utilization statistics [MB] #####");
+
+		//Print used memory
+		System.out.println("Used Memory:"
+			+ (runtime.totalMemory() - runtime.freeMemory()) / mb);
+
+		//Print free memory
+		System.out.println("Free Memory:"
+			+ runtime.freeMemory() / mb);
+
+		//Print total available memory
+		System.out.println("Total Memory:" + runtime.totalMemory() / mb);
+
+		//Print Maximum available memory
+		System.out.println("Max Memory:" + runtime.maxMemory() / mb);
+		
+		saveHeterogeneousResult(generatedDataset, tricDataFileName, datasetFileName);
 		
 		//updateProgressStatusAndMessage(100, "Completed!");
 	}
@@ -751,11 +1022,11 @@ public class GBicService extends Observable implements Observer {
 
 		if(!this.defaultSymbols) {
 			String[] symbols = this.listOfSymbols.toArray(new String[0]);
-			generator = new SymbolicDatasetGenerator(numRows,numCols, numbics, background, symbols,
+			generator = new SymbolicDatasetGenerator(numRows,numCols, numbics, singleBackground, symbols,
 					false);
 		}
 		else
-			generator = new SymbolicDatasetGenerator(numRows,numCols, numbics, background, numberOfSymbols, false);
+			generator = new SymbolicDatasetGenerator(numRows,numCols, numbics, singleBackground, numberOfSymbols, false);
 		stopTimeGen = System.currentTimeMillis();
 
 		generator.addObserver(this);
@@ -788,19 +1059,8 @@ public class GBicService extends Observable implements Observer {
 		updateProgressStatusAndMessage(95, "Writing output...");
 		
 		if(filename.isEmpty()) {
-			if(bicPatterns.size() == 1) {
-			tricDataFileName = "tric_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols;
-
-			datasetFileName = "data_" + bicPatterns.get(0).getRowsPattern().name().charAt(0) 
-					+ bicPatterns.get(0).getColumnsPattern().name().charAt(0) 
-					+ "_" + numRows + "x" + numCols;
-			}
-			else {
-				tricDataFileName = "tric_multiple" + "_" + numRows + "x" + numCols;
-				datasetFileName = "data_multiple" + "_" + numRows + "x" + numCols;
-			}
+			tricDataFileName = "dataset" + "_" + numRows + "x" + numCols;
+			datasetFileName = "dataset" + "_" + numRows + "x" + numCols;
 		}
 		else {
 			tricDataFileName = filename + "_bics";
@@ -833,7 +1093,7 @@ public class GBicService extends Observable implements Observer {
 		//Print Maximum available memory
 		System.out.println("Max Memory:" + runtime.maxMemory() / mb);
 		
-		saveResult(generatedDataset, tricDataFileName, datasetFileName);
+		saveSymbolicResult(generatedDataset, tricDataFileName, datasetFileName);
 		
 		//updateProgressStatusAndMessage(100, "Completed!");
 	}
@@ -845,9 +1105,9 @@ public class GBicService extends Observable implements Observer {
 	 * @param datasetFileName The name of the dataset file
 	 * @throws Exception
 	 */
-	public void saveResult(NumericDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
+	public void saveNumericResult(NumericDataset<? extends Number> generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
 
-		System.out.println("Writting output...");
+		System.out.println("numWritting output...");
 		
 		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
 		System.out.println("Biclusters txt file written!");
@@ -896,9 +1156,9 @@ public class GBicService extends Observable implements Observer {
 	 * @param datasetFileName The name of the dataset file
 	 * @throws Exception
 	 */
-	public void saveResult(SymbolicDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
+	public void saveSymbolicResult(SymbolicDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
 
-		System.out.println("Writting output...");
+		System.out.println("symbWritting output...");
 		
 		IOUtils.writeFile(path, tricDataFileName + ".txt",generatedDataset.getBicsInfo(), false);
 		System.out.println("Biclusters txt file written!");
@@ -946,7 +1206,7 @@ public class GBicService extends Observable implements Observer {
 	 * @param datasetFileName The name of the dataset file
 	 * @throws Exception
 	 */
-	public void saveResult(HeterogeneousDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
+	public void saveHeterogeneousResult(HeterogeneousDataset generatedDataset, String tricDataFileName, String datasetFileName) throws Exception {
 
 		System.out.println("Writting output...");
 		
@@ -957,6 +1217,17 @@ public class GBicService extends Observable implements Observer {
 		IOUtils.writeFile(path, tricDataFileName + ".json", this.biclustersJSON.toString(), false);
 		System.out.println("Biclusters JSON file written!");
 		
+		for(String k : this.biclustersJSON.getJSONObject("NumericBiclusters").keySet()) {
+			this.biclustersJSON.put(k, this.biclustersJSON.getJSONObject("NumericBiclusters").get(k));
+		}
+		
+		for(String k : this.biclustersJSON.getJSONObject("SymbolicBiclusters").keySet()) {
+			this.biclustersJSON.put(k, this.biclustersJSON.getJSONObject("SymbolicBiclusters").get(k));
+		}
+		
+		for(String k : this.biclustersJSON.getJSONObject("MixedBiclusters").keySet()) {
+			this.biclustersJSON.put(k, this.biclustersJSON.getJSONObject("MixedBiclusters").get(k));
+		}
 		
 		//this.biclustersJSON = this.biclustersJSON.getJSONObject("biclusters");
 		
@@ -1035,6 +1306,7 @@ public class GBicService extends Observable implements Observer {
 	private void printDatasetSettings() {
 		
 		System.out.println("*** Dataset Properties ***");
+		System.out.println("Dataset type: " + this.datasetType);
 		System.out.println("NumRows: " + this.numRows);
 		System.out.println("NumCols: " + this.numCols);
 		
@@ -1051,13 +1323,13 @@ public class GBicService extends Observable implements Observer {
 				System.out.println("List of Symbols: " + Arrays.toString(this.listOfSymbols.toArray()));
 		}
 		
-		System.out.println("Background: " + this.background.getType().toString());
-		if(this.background.getType().equals(BackgroundType.NORMAL)){
-			System.out.println("Background Mean: " + background.getParam1());
-			System.out.println("Background Std: " + background.getParam2());
+		System.out.println("Background: " + this.singleBackground.getType().toString());
+		if(this.singleBackground.getType().equals(BackgroundType.NORMAL)){
+			System.out.println("Background Mean: " + singleBackground.getParam1());
+			System.out.println("Background Std: " + singleBackground.getParam2());
 		}
-		else if(this.background.getType().equals(BackgroundType.DISCRETE))
-			System.out.println("Probabilities: " + Arrays.toString(this.background.getParam3()));
+		else if(this.singleBackground.getType().equals(BackgroundType.DISCRETE))
+			System.out.println("Probabilities: " + Arrays.toString(this.singleBackground.getParam3()));
 		
 		System.out.println("\n*** Biclusters Properties ***");
 		System.out.println("NumBics: " + this.numbics);
@@ -1079,10 +1351,12 @@ public class GBicService extends Observable implements Observer {
 		System.out.println("Max % of overlapping cols: " + this.overlappingSettings.getPercOfOverlappingColumns());
 		
 		System.out.println("\n*** Patterns ***");
+		//TODO
+		
 		for(int p = 0; p < this.bicPatterns.size(); p++) {
-			System.out.println("Pattern " + p + ": (" + this.bicPatterns.get(p).getRowsPattern().toString() +
-					", " + this.bicPatterns.get(p).getColumnsPattern().toString() + ")");
+			System.out.println(this.bicPatterns.get(p).toString());
 		}
+		
 		
 		System.out.println("\n*** Missing/Noise/Error Settings ***");
 		System.out.println("% of missings on background: " + this.qualitySettings.getPercMissingsOnBackground());

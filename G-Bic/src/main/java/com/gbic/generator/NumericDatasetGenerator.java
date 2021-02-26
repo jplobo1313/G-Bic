@@ -174,7 +174,7 @@ public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 				System.out.println("Columns: " + bicsCols[k].length);
 			
 				System.out.println("Bic " + (k+1) + " - Generating rows...");
-				bicsRows[k] = generateRows(numRows, numRowsBics, overlappingRowsPerc, bicsRows, bicsWithOverlap,
+				bicsRows[k] = generateRows(numRowsBics, numRows, overlappingRowsPerc, bicsRows, bicsWithOverlap,
 						bicsExcluded, bicsCols[k], data.getElements());
 				System.out.println("Rows: " + bicsRows[k].length);
 				

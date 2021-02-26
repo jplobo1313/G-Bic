@@ -47,7 +47,7 @@ public class HeterogeneousDataset extends Dataset {
 	private List<MixedBicluster> plantedMixedBics;
 
 	public HeterogeneousDataset(int numRows, int numericCols, int symbolicCols, int numBics, Background numericBackground, 
-			Background symbolicBackground, Double minM, Double maxM, boolean realValued, String[] alphabet) {
+			Background symbolicBackground, Double minM, Double maxM, boolean realValued, String[] alphabet, int alphabetL) {
 
 		super(numRows, numericCols + symbolicCols, numBics);
 
@@ -59,7 +59,14 @@ public class HeterogeneousDataset extends Dataset {
 		this.minM = minM;
 		this.maxM = maxM;
 		this.realValued = realValued;
-		this.alphabet = alphabet;
+		
+		if(alphabet == null) {
+			this.alphabet = new String[alphabetL];
+			for (int i = 0; i < alphabetL; i++)
+				this.alphabet[i] = Integer.toString(i);
+		}
+		else
+			this.alphabet = alphabet;
 
 		this.numericFeatures = new TreeSet<Integer>();
 		this.symbolicFeatures = new TreeSet<Integer>();
@@ -136,10 +143,10 @@ public class HeterogeneousDataset extends Dataset {
 		JSONObject symbolicBiclusters = new JSONObject();
 		JSONObject mixedBiclusters = new JSONObject();
 
-		for(Bicluster bic : plantedNumericBics) 
+		for(NumericBicluster bic : plantedNumericBics) 
 			numericBiclusters.putOpt(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset, true));
 
-		for(Bicluster bic : plantedSymbolicBics) 
+		for(SymbolicBicluster bic : plantedSymbolicBics) 
 			symbolicBiclusters.putOpt(String.valueOf(bic.getId()), bic.toStringJSON(generatedDataset, true));
 
 		for(MixedBicluster bic : plantedMixedBics) 

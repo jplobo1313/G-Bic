@@ -15,4 +15,6 @@ public abstract class BiclusterPattern {
 	public BiclusterType getBiclusterType() {
 		return this.bicType;
 	}
+	
+	public abstract String toString();
 }

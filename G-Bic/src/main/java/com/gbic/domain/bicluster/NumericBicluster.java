@@ -232,7 +232,6 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 	
 	@Override
 	public String toString() {
-
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
 
@@ -301,6 +300,8 @@ public class NumericBicluster<T extends Number> extends Bicluster{
 		Set<Integer> columns = getColumns();
 		T numericSeed = getNumericSeed();
 		
+		
+		bicluster.put("Type", "Numeric");
 		bicluster.put("#rows", rows.size());
 		bicluster.put("#columns", columns.size());
 		

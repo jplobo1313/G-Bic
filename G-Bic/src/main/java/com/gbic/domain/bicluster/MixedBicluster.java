@@ -141,6 +141,8 @@ public class MixedBicluster extends Bicluster{
 		Set<Integer> columns = getColumns();
 		Double numericSeed = this.numericComponent.getNumericSeed();
 		
+		bicluster.put("Type", "Mixed");
+		
 		bicluster.put("#rows", rows.size());
 		bicluster.put("#columns", columns.size());
 		
@@ -225,14 +227,15 @@ public class MixedBicluster extends Bicluster{
 				
 				if(((HeterogeneousDataset)generatedDataset).isSymbolicFeature(colsArray[col])) 
 					rowData.put(((HeterogeneousDataset)generatedDataset).getSymbolicElement(rowsArray[row], colsArray[col]));
-				else
+				else {
 					value = ((HeterogeneousDataset)generatedDataset).getNumericElement(rowsArray[row], colsArray[col]).doubleValue();
-				
-				if(Double.compare(value, Integer.MIN_VALUE) == 0)
-					rowData.put("");
-				else
-					rowData.put(df.format(value));
-				
+					
+					if(Double.compare(value, Integer.MIN_VALUE) == 0)
+						rowData.put("");
+					else
+						rowData.put(df.format(value));
+				}
+
 			}
 			bicData.put(rowData);
     	}

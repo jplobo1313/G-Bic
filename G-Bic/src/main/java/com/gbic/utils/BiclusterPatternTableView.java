@@ -17,7 +17,7 @@ import javafx.stage.Stage;
 
 public class BiclusterPatternTableView {
 
-	private Integer num;
+	private String biclusterType;
 	private String rowPattern;
 	private String columnPattern;
 	private String imageName;
@@ -25,14 +25,14 @@ public class BiclusterPatternTableView {
 	private Button example;
 	private CheckBox select;
 	
-	public BiclusterPatternTableView(Integer num, String rowPattern, String columnPattern, String imageName,
-			ComboBox<String> timeProfile, Button example, CheckBox select) {
-		this.num = num;
+	public BiclusterPatternTableView(String biclusterType, String rowPattern, String columnPattern, String imageName,
+			ComboBox<String> timeProfile, CheckBox select) {
+		this.biclusterType = biclusterType;
 		this.rowPattern = rowPattern;
 		this.columnPattern = columnPattern;
 		this.timeProfile = timeProfile;
 		this.select = select;
-		this.example = example;
+		//this.example = example;
 		this.imageName = imageName;
 		
 		
@@ -49,6 +49,7 @@ public class BiclusterPatternTableView {
 			this.timeProfile.setValue("Not applicable");
 		}
 		
+		/*
 		this.example.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -71,6 +72,7 @@ public class BiclusterPatternTableView {
                 secondStage.show();
             }
 		});
+		*/
 	}
 
 	public String getImageName() {
@@ -109,12 +111,12 @@ public class BiclusterPatternTableView {
 		this.select = select;
 	}
 	
-	public void setNum(int num) {
-		this.num = num;
+	public void setBiclusterType(String biclusterType) {
+		this.biclusterType = biclusterType;
 	}
 	
-	public Integer getNum() {
-		return this.num;
+	public String getBiclusterType() {
+		return this.biclusterType;
 	}
 
 	/**

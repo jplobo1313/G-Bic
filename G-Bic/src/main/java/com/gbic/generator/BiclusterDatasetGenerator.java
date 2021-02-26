@@ -431,7 +431,10 @@ public abstract class BiclusterDatasetGenerator extends Observable {
 						else {
 							for (int j = 0, val = -1; j < nrOverlapVals && i < nBicDim; j++) {
 								val = vecsL[vecID][j];
-								if (set.contains(val) || val < range.getFirst() || val >= range.getSecond())
+								
+								boolean isInRange = (range != null) && (val < range.getFirst() || val >= range.getSecond());
+								
+								if (set.contains(val) || isInRange)
 									continue;
 								set.add(val);
 								result[i++] = val;
@@ -466,12 +469,20 @@ public abstract class BiclusterDatasetGenerator extends Observable {
 						result[i] = result[i-1] + 1;
 				}
 				else {
-					do
+					
+					boolean existsOrExcluded = false;
+					boolean isInRange = false;
+					
+					do {
 						if(range == null)
 							val = random.nextInt(nDim);
 						else
 							val = random.nextInt(range.getSecond()-range.getFirst()) + range.getFirst();
-					while (set.contains(val) || setExc.contains(val) || val < range.getFirst() || val >= range.getSecond());
+					
+					existsOrExcluded = set.contains(val) || setExc.contains(val);
+					isInRange = (range != null) && (val < range.getFirst() || val >= range.getSecond());
+					
+					}while (existsOrExcluded || isInRange);
 					set.add(val);
 					result[i] = val;
 				}

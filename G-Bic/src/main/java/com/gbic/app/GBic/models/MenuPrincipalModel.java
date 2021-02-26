@@ -26,21 +26,28 @@ public class MenuPrincipalModel {
 	//Dataset Settings
 	private final IntegerProperty numRows;
 	private final IntegerProperty numColumns;
+	private final ObservableList<String> datasetType;
 	private final ObservableList<String> dataType;
 	private final SimpleDoubleProperty minValue;
 	private final SimpleDoubleProperty maxValue;
-	private final ObservableList<String> backgroundType;
-	private final SimpleDoubleProperty distMeanValue;
-	private final SimpleDoubleProperty distStdValue;
+	private final ObservableList<String> singleBackgroundType;
+	private final SimpleDoubleProperty singleDistMeanValue;
+	private final SimpleDoubleProperty singleDistStdValue;
+	private final StringProperty datasetTypeEscolhido;
 	private final StringProperty dataTypeEscolhido;
-	private final StringProperty backgroundTypeEscolhido;
+	private final StringProperty singleBackgroundTypeEscolhido;
 	
-	private final ObservableList<String> symbolType;
-	private final StringProperty symbolTypeEscolhido;
-	private final StringProperty symbolList;
-	private final SimpleIntegerProperty numberOfSymbols;
+	private final ObservableList<String> singleSymbolType;
+	private final StringProperty singleSymbolTypeEscolhido;
+	private final StringProperty singleSymbolList;
+	private final SimpleIntegerProperty singleNumberOfSymbols;
+	private ObservableList<DiscreteProbabilitiesTableView> singleDiscreteProbs;
 	
-	private ObservableList<DiscreteProbabilitiesTableView> discreteProbs;
+	private final ObservableList<String> composedBackgroundType;
+	private final SimpleDoubleProperty composedDistMeanValue;
+	private final SimpleDoubleProperty composedDistStdValue;
+	private final StringProperty composedBackgroundTypeEscolhido;
+	private ObservableList<DiscreteProbabilitiesTableView> composedDiscreteProbs;
 	
 	//Biclusters Properties
 	private final IntegerProperty numBics;
@@ -59,6 +66,7 @@ public class MenuPrincipalModel {
 	private boolean symbolicType;
 	private final ObservableList<BiclusterPatternTableView> numericPatternsList;
 	private final ObservableList<BiclusterPatternTableView> symbolicPatternsList;
+	private final ObservableList<BiclusterPatternTableView> mixedPatternsList;
 	
 	//Overlapping
 	private final ObservableList<String> plaidCoherency;
@@ -94,33 +102,47 @@ public class MenuPrincipalModel {
 		this.numRows = new SimpleIntegerProperty();
 		this.numColumns = new SimpleIntegerProperty();
 		this.dataType = FXCollections.observableArrayList();
+		this.datasetType = FXCollections.observableArrayList();
 		this.dataTypeEscolhido = new SimpleStringProperty();
 		this.minValue = new SimpleDoubleProperty();
 		this.minValue.setValue(-10);
 		this.maxValue = new SimpleDoubleProperty();
 		this.maxValue.setValue(10);
-		this.backgroundType = FXCollections.observableArrayList();
-		this.backgroundTypeEscolhido = new SimpleStringProperty();
+		this.singleBackgroundType = FXCollections.observableArrayList();
+		this.singleBackgroundTypeEscolhido = new SimpleStringProperty();
+		this.composedBackgroundType = FXCollections.observableArrayList();
+		this.composedBackgroundTypeEscolhido = new SimpleStringProperty();
 		
-		this.symbolType = FXCollections.observableArrayList();
-		this.symbolTypeEscolhido = new SimpleStringProperty();
+		this.singleSymbolType = FXCollections.observableArrayList();
+		this.singleSymbolTypeEscolhido = new SimpleStringProperty();
 		
-		gBicService.getSymbolType().forEach(t->this.symbolType.add(t));
-		this.symbolTypeEscolhido.setValue(this.symbolType.get(0));
+		gBicService.getSymbolType().forEach(t->this.singleSymbolType.add(t));
+		this.singleSymbolTypeEscolhido.setValue(this.singleSymbolType.get(0));
 		
-		this.symbolList = new SimpleStringProperty();
-		this.numberOfSymbols = new SimpleIntegerProperty();
+		this.singleSymbolList = new SimpleStringProperty();
+		this.singleNumberOfSymbols = new SimpleIntegerProperty();
 		
-		this.distMeanValue = new SimpleDoubleProperty();
-		this.distStdValue = new SimpleDoubleProperty();
+		this.singleDistMeanValue = new SimpleDoubleProperty();
+		this.singleDistStdValue = new SimpleDoubleProperty();
+		
+		this.composedDistMeanValue = new SimpleDoubleProperty();
+		this.composedDistStdValue = new SimpleDoubleProperty();
 
 		gBicService.getDataTypes().forEach(t->this.dataType.add(t));
 		this.dataTypeEscolhido.setValue(this.dataType.get(0));
 		
-		gBicService.getDatasetBackground().forEach(b->this.backgroundType.add(b));
-		this.backgroundTypeEscolhido.setValue(this.backgroundType.get(0));
+		this.datasetTypeEscolhido = new SimpleStringProperty();
+		gBicService.getDatasetTypes().forEach(t->this.datasetType.add(t));
+		this.datasetTypeEscolhido.setValue(this.datasetType.get(0));
 		
-		this.discreteProbs = FXCollections.observableArrayList();
+		gBicService.getDatasetBackground().forEach(b->this.singleBackgroundType.add(b));
+		this.singleBackgroundTypeEscolhido.setValue(this.singleBackgroundType.get(0));
+		
+		gBicService.getDatasetBackground().forEach(b->this.composedBackgroundType.add(b));
+		this.composedBackgroundTypeEscolhido.setValue(this.composedBackgroundType.get(0));
+		
+		this.singleDiscreteProbs = FXCollections.observableArrayList();
+		this.composedDiscreteProbs = FXCollections.observableArrayList();
 		
 		//Biclusters Properties
 		this.numBics = new SimpleIntegerProperty();
@@ -154,29 +176,32 @@ public class MenuPrincipalModel {
 		this.contiguityEscolhida.setValue((this.contiguity.get(0)));
 		
 		//Biclusters Patterns
+		this.mixedPatternsList = FXCollections.observableArrayList();
 		this.numericPatternsList = FXCollections.observableArrayList();
 		int i = 1;
 		for(BiclusterPatternWrapper p : gBicService.getNumericPatterns()) {
-			BiclusterPatternTableView t = new BiclusterPatternTableView(i, p.getRowPattern(), p.getColumnPattern(), 
-					p.getImagePath(), new ComboBox<String>(), new Button("See"), new CheckBox());
+			BiclusterPatternTableView t = new BiclusterPatternTableView("Numeric", p.getRowPattern(), p.getColumnPattern(), 
+					p.getImagePath(), new ComboBox<String>(), new CheckBox());
 			
 			if(i == 1)
 				t.getSelect().setSelected(true);
 			
 			this.numericPatternsList.add(t);
+			this.mixedPatternsList.add(t);
 			i++;
 		}
 		
 		this.symbolicPatternsList = FXCollections.observableArrayList();
 		i = 1;
 		for(BiclusterPatternWrapper p : gBicService.getSymbolicPatterns()) {
-			BiclusterPatternTableView t = new BiclusterPatternTableView(i, p.getRowPattern(), p.getColumnPattern(), 
-					p.getImagePath(), new ComboBox<String>(), new Button("See"), new CheckBox());
+			BiclusterPatternTableView t = new BiclusterPatternTableView("Symbolic", p.getRowPattern(), p.getColumnPattern(), 
+					p.getImagePath(), new ComboBox<String>(), new CheckBox());
 			
 			if(i == 1)
 				t.getSelect().setSelected(true);
 			
-			this.symbolicPatternsList.add(t);				
+			this.symbolicPatternsList.add(t);	
+			this.mixedPatternsList.add(t);
 			i++;
 		}
 		
@@ -288,6 +313,22 @@ public class MenuPrincipalModel {
 
 		return this.dataTypeEscolhido.get();
 	}
+	
+	public ObservableList<String> getDatasetTypes() {
+
+		return this.datasetType;
+	}
+
+
+	public String getDatasetTypeEscolhido() {
+
+		return this.datasetTypeEscolhido.get();
+	}
+	
+	public void setDatasetTypeEscolhido(String datasetType) {
+
+		this.datasetTypeEscolhido.set(datasetType);
+	}
 
 	public SimpleDoubleProperty getMinValueProperty() {
 
@@ -309,13 +350,22 @@ public class MenuPrincipalModel {
 		return this.maxValue.get();
 	}
 	
-	public ObservableList<String> getBackgroundTypes() {
+	public ObservableList<String> getSingleBackgroundTypes() {
 
-		return this.backgroundType;
+		return this.singleBackgroundType;
+	}
+	
+	public ObservableList<String> getComposedBackgroundTypes() {
+
+		return this.composedBackgroundType;
 	}
 
-	public String getBackgroundTypeEscolhido() {
-		return this.backgroundTypeEscolhido.get();
+	public String getSingleBackgroundTypeEscolhido() {
+		return this.singleBackgroundTypeEscolhido.get();
+	}
+	
+	public String getComposedBackgroundTypeEscolhido() {
+		return this.composedBackgroundTypeEscolhido.get();
 	}
 
 	public void setDataTypeEscolhido(String value) {
@@ -323,67 +373,92 @@ public class MenuPrincipalModel {
 		this.dataTypeEscolhido.set(value);
 	}
 
-	public void setBackgroundTypeEscolhido(String value) {
+	public void setSingleBackgroundTypeEscolhido(String value) {
 
-		this.backgroundTypeEscolhido.set(value);
+		this.singleBackgroundTypeEscolhido.set(value);
 	}
 	
-	public SimpleDoubleProperty getDistMeanProperty() {
+	public void setComposedBackgroundTypeEscolhido(String value) {
 
-		return this.distMeanValue;
-	}
-
-	public double getDistMean() {
-
-		return this.distMeanValue.get();
+		this.composedBackgroundTypeEscolhido.set(value);
 	}
 	
-	public SimpleDoubleProperty getDistStdProperty() {
+	public SimpleDoubleProperty getSingleDistMeanProperty() {
 
-		return this.distStdValue;
+		return this.singleDistMeanValue;
 	}
 
-	public double getDistStd() {
+	public double getSingleDistMean() {
 
-		return this.distStdValue.get();
+		return this.singleDistMeanValue.get();
+	}
+	
+	public SimpleDoubleProperty getSingleDistStdProperty() {
+
+		return this.singleDistStdValue;
+	}
+
+	public double getSingleDistStd() {
+
+		return this.singleDistStdValue.get();
+	}
+	
+	public SimpleDoubleProperty getComposedDistMeanProperty() {
+
+		return this.composedDistMeanValue;
+	}
+
+	public double getComposedDistMean() {
+
+		return this.composedDistMeanValue.get();
+	}
+	
+	public SimpleDoubleProperty getComposedDistStdProperty() {
+
+		return this.composedDistStdValue;
+	}
+
+	public double getComposedDistStd() {
+
+		return this.composedDistStdValue.get();
 	}
 	
 	public ObservableList<String> getSymbolTypes() {
 
-		return this.symbolType;
+		return this.singleSymbolType;
 	}
 
 	public String getSymbolTypeEscolhido() {
-		return this.symbolTypeEscolhido.get();
+		return this.singleSymbolTypeEscolhido.get();
 	}
 
 	public void setSymbolTypeEscolhido(String value) {
 
-		this.symbolTypeEscolhido.set(value);
+		this.singleSymbolTypeEscolhido.set(value);
 	}
 	
 	public SimpleIntegerProperty getNumberOfSymbolsProperty() {
 
-		return this.numberOfSymbols;
+		return this.singleNumberOfSymbols;
 	}
 
 	public int getNumberOfSymbols() {
 
-		return this.numberOfSymbols.get();
+		return this.singleNumberOfSymbols.get();
 	}
 	
 	public void setNumberOfSymbols(int numberOfSymbols) {
-		this.numberOfSymbols.set(numberOfSymbols);
+		this.singleNumberOfSymbols.set(numberOfSymbols);
 	}
 	
 	public StringProperty getListOfSymbolsProperty() {
 
-		return this.symbolList;
+		return this.singleSymbolList;
 	}
 
 	public ObservableList<String> getListOfSymbols() {
 
-		String[] tokens = this.symbolList.get().strip().split(",");
+		String[] tokens = this.singleSymbolList.get().strip().split(",");
 		List<String> symbols = Arrays.asList(tokens);
 		ObservableList<String> listOfSymbols = FXCollections.observableArrayList(symbols);
 		
@@ -391,7 +466,7 @@ public class MenuPrincipalModel {
 	}
 	
 	public void setListOfSymbols(String symbolList) {
-		this.symbolList.set(symbolList);
+		this.singleSymbolList.set(symbolList);
 	}
 	
 	//Biclusters Properties
@@ -496,6 +571,11 @@ public class MenuPrincipalModel {
 	public ObservableList<BiclusterPatternTableView> getNumericPatterns() {
 
 		return this.numericPatternsList;
+	}
+	
+	public ObservableList<BiclusterPatternTableView> getMixedPatterns() {
+
+		return this.mixedPatternsList;
 	}
 	
 	public ObservableList<BiclusterPatternTableView> getSymbolicPatterns() {
@@ -681,12 +761,20 @@ public class MenuPrincipalModel {
 		this.fileNameTF.set(name);
 	}
 	
-	public void setDiscreteProbabilities(ObservableList<DiscreteProbabilitiesTableView> probs) {
-		this.discreteProbs = probs;
+	public void setSingleDiscreteProbabilities(ObservableList<DiscreteProbabilitiesTableView> probs) {
+		this.singleDiscreteProbs = probs;
 	}
 	
-	public ObservableList<DiscreteProbabilitiesTableView> getDiscreteProbabilities(){
-		return this.discreteProbs;
+	public void setComposedDiscreteProbabilities(ObservableList<DiscreteProbabilitiesTableView> probs) {
+		this.composedDiscreteProbs = probs;
+	}
+	
+	public ObservableList<DiscreteProbabilitiesTableView> getSingleDiscreteProbabilities(){
+		return this.singleDiscreteProbs;
+	}
+	
+	public ObservableList<DiscreteProbabilitiesTableView> getComposedDiscreteProbabilities(){
+		return this.composedDiscreteProbs;
 	}
 	/*
 	public void clearProperties() {

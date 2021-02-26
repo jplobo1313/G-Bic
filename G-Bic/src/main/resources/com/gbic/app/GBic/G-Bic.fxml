@@ -8,6 +8,7 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -34,157 +35,230 @@
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="696.0" prefWidth="1300.0">
                            <children>
-                              <GridPane layoutX="42.0" layoutY="44.0" prefHeight="405.0" prefWidth="1229.0">
-                                <columnConstraints>
-                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="260.0" />
-                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="544.0" minWidth="10.0" prefWidth="156.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="544.0" minWidth="10.0" prefWidth="118.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="544.0" minWidth="10.0" prefWidth="163.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="736.0" minWidth="0.0" prefWidth="192.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="583.0" minWidth="10.0" prefWidth="106.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="602.0" minWidth="10.0" prefWidth="133.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="583.0" minWidth="10.0" prefWidth="99.0" />
-                                </columnConstraints>
-                                <rowConstraints>
-                                  <RowConstraints maxHeight="64.0" minHeight="10.0" prefHeight="64.0" vgrow="SOMETIMES" />
-                                  <RowConstraints maxHeight="82.0" minHeight="10.0" prefHeight="82.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="69.0" minHeight="10.0" prefHeight="63.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="92.0" minHeight="7.0" prefHeight="75.0" vgrow="SOMETIMES" />
-                                    <RowConstraints maxHeight="196.0" minHeight="10.0" prefHeight="47.0" vgrow="SOMETIMES" />
-                                </rowConstraints>
+                              <Pane fx:id="singleBackgroundParamsPane" layoutX="14.0" layoutY="483.0" prefHeight="223.0" prefWidth="200.0">
                                  <children>
-                                    <TextField fx:id="numRowsTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="1">
-                                       <font>
-                                          <Font size="17.0" />
-                                       </font></TextField>
-                                    <Label text="Number of Rows:">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <Label text="Number of Columns:" GridPane.rowIndex="1">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <TextField fx:id="numColumnsTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                       <font>
-                                          <Font size="17.0" />
-                                       </font></TextField>
-                                    <Label fx:id="dataTypeLB" text="Data type: " GridPane.columnIndex="2" GridPane.rowIndex="3">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <Label fx:id="minValueLB" text="Min value:" GridPane.columnIndex="4" GridPane.rowIndex="3">
-                                       <padding>
-                                          <Insets left="90.0" />
-                                       </padding>
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <Label fx:id="maxValueLB" text="Max value:" GridPane.columnIndex="6" GridPane.rowIndex="3">
-                                       <padding>
-                                          <Insets left="30.0" />
-                                       </padding>
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <Label text="Background type: " GridPane.rowIndex="4">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <TextField fx:id="minValueTF" prefHeight="27.0" prefWidth="345.0" promptText="-10" GridPane.columnIndex="5" GridPane.rowIndex="3">
-                                       <font>
-                                          <Font size="17.0" />
-                                       </font></TextField>
-                                    <TextField fx:id="maxValueTF" prefHeight="27.0" prefWidth="345.0" promptText="10" GridPane.columnIndex="7" GridPane.rowIndex="3">
-                                       <font>
-                                          <Font size="17.0" />
-                                       </font></TextField>
-                                    <ComboBox fx:id="dataTypeCB" editable="true" onAction="#dataTypeSelecionado" prefHeight="32.0" prefWidth="163.0" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                                    <ComboBox fx:id="backgroundTypeCB" editable="true" onAction="#backgroundTypeSelecionado" prefHeight="32.0" prefWidth="163.0" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                    <Label text="Dataset Type:" GridPane.rowIndex="2">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <RadioButton fx:id="symbolicTypeRB" mnemonicParsing="false" onAction="#symbolicTypeSelected" text="Symbolic" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                       <toggleGroup>
-                                          <ToggleGroup fx:id="datasetTypeGroup" />
-                                       </toggleGroup>
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font>
-                                    </RadioButton>
-                                    <RadioButton fx:id="numericTypeRB" mnemonicParsing="false" onAction="#numericTypeSelected" text="Numeric" toggleGroup="$datasetTypeGroup" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></RadioButton>
-                                    <Label fx:id="symbolTypeLB" text="Symbol Type:" GridPane.columnIndex="2" GridPane.rowIndex="2">
-                                       <font>
-                                          <Font size="18.0" />
-                                       </font></Label>
-                                    <ComboBox fx:id="symbolTypeCB" editable="true" minHeight="-Infinity" minWidth="-Infinity" onAction="#symbolTypeSelected" prefHeight="32.0" prefWidth="163.0" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="2">
-                                       <styleClass>
-                                          <String fx:value="combo-box-base" />
-                                          <String fx:value="text" />
-                                       </styleClass></ComboBox>
-                                    <Label fx:id="symbolTypeParamLB" text="Number of symbols:" GridPane.columnIndex="4" GridPane.rowIndex="2">
-                                       <padding>
-                                          <Insets left="30.0" />
-                                       </padding>
+                                    <Label fx:id="distMeanLabel" layoutY="63.0" text="Mean:">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
                                     </Label>
-                                    <TextField fx:id="symbolTypeParamTF" GridPane.columnIndex="5" GridPane.rowIndex="2">
+                                    <TextField fx:id="singleDistMeanTF" layoutX="83.0" layoutY="58.0" prefHeight="34.0" prefWidth="92.0" promptText="5">
                                        <font>
                                           <Font size="17.0" />
-                                       </font></TextField>
-                                    <Pane fx:id="discreteProbsPane" prefHeight="272.0" prefWidth="283.0" GridPane.columnIndex="3" GridPane.rowIndex="4">
-                                       <children>
-                                          <TableView fx:id="discreteProbsTV" layoutY="32.0" prefHeight="296.0" prefWidth="353.0" style="-fx-font-size: 18px;">
-                                            <columns>
-                                              <TableColumn fx:id="symbolTC" prefWidth="181.0" text="Symbol" />
-                                              <TableColumn fx:id="probTC" prefWidth="170.0" text="Probability" />
-                                            </columns>
-                                          </TableView>
-                                          <Text layoutY="22.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each symbol:">
-                                             <font>
-                                                <Font size="18.0" />
-                                             </font></Text>
-                                       </children>
-                                       <padding>
-                                          <Insets top="10.0" />
-                                       </padding>
-                                       <GridPane.margin>
-                                          <Insets top="20.0" />
-                                       </GridPane.margin>
-                                    </Pane>
-                                 </children>
-                              </GridPane>
-                              <Pane fx:id="backgroundParamsPane" layoutX="42.0" layoutY="438.0" prefHeight="186.0" prefWidth="454.0">
-                                 <children>
-                                    <Label fx:id="distMeanLabel" layoutY="35.0" text="Distribution's Mean: ">
+                                       </font>
+                                    </TextField>
+                                    <Label fx:id="distStdLabel" layoutY="133.0" text="Std. Dev.:">
                                        <font>
                                           <Font size="18.0" />
-                                       </font></Label>
-                                    <TextField fx:id="distMeanTF" layoutX="258.0" layoutY="30.0" prefHeight="27.0" prefWidth="184.0" promptText="5">
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="singleDistStdTF" layoutX="82.0" layoutY="128.0" prefHeight="34.0" prefWidth="93.0" promptText="2">
                                        <font>
                                           <Font size="17.0" />
-                                       </font></TextField>
-                                    <Label fx:id="distStdLabel" layoutY="111.0" text="Distribution's Standard Deviation: ">
+                                       </font>
+                                    </TextField>
+                                    <Label layoutY="6.0" text="Distribution Parameters:">
                                        <font>
                                           <Font size="18.0" />
-                                       </font></Label>
-                                    <TextField fx:id="distStdTF" layoutX="258.0" layoutY="106.0" prefHeight="27.0" prefWidth="184.0" promptText="2">
-                                       <font>
-                                          <Font size="17.0" />
-                                       </font></TextField>
+                                       </font>
+                                    </Label>
                                  </children>
                               </Pane>
+                              <Label layoutX="14.0" layoutY="429.0" text="Background type: ">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <ComboBox fx:id="singleBackgroundTypeCB" editable="true" layoutX="200.0" layoutY="423.0" onAction="#singleBackgroundTypeSelecionado" prefHeight="32.0" prefWidth="157.0" style="-fx-font-size: 18px;" />
+                              <Slider fx:id="featuresSlicer" blockIncrement="1.0" layoutX="678.0" layoutY="284.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="16.0" prefWidth="187.0" showTickLabels="true" showTickMarks="true" value="50.0" />
+                              <Label fx:id="featuresLB" layoutX="438.0" layoutY="280.0" text="Features:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="symbolicLB" layoutX="921.0" layoutY="280.0" prefHeight="23.0" prefWidth="75.0" text="Symbolic" textAlignment="RIGHT">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                                 <padding>
+                                    <Insets left="5.0" />
+                                 </padding>
+                              </Label>
+                              <Label fx:id="numericLB" alignment="CENTER_RIGHT" layoutX="529.0" layoutY="280.0" prefHeight="23.0" prefWidth="77.0" text="Numeric" textAlignment="RIGHT">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="numericPercLB" alignment="CENTER_RIGHT" layoutX="618.0" layoutY="280.0" prefHeight="23.0" prefWidth="46.0" text="50%" textAlignment="RIGHT">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="symbolicPercLB" layoutX="870.0" layoutY="280.0" prefHeight="23.0" prefWidth="61.0" text="50%" textAlignment="RIGHT">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                                 <padding>
+                                    <Insets left="10.0" />
+                                 </padding>
+                              </Label>
+                              <Label fx:id="dataTypeLB" layoutX="438.0" layoutY="212.0" text="Data type: ">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="minValueLB" contentDisplay="CENTER" layoutX="807.0" layoutY="212.0" prefHeight="23.0" prefWidth="94.0" text="Min value:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="maxValueLB" layoutX="1026.0" layoutY="212.0" text="Max value:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <TextField fx:id="minValueTF" layoutX="900.0" layoutY="207.0" prefHeight="34.0" prefWidth="78.0" promptText="-10">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="maxValueTF" layoutX="1141.0" layoutY="207.0" prefHeight="34.0" prefWidth="78.0" promptText="10">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </TextField>
+                              <ComboBox fx:id="dataTypeCB" editable="true" layoutX="588.0" layoutY="206.0" onAction="#dataTypeSelecionado" prefHeight="35.0" prefWidth="150.0" style="-fx-font-size: 18px;" />
+                              <Label layoutX="27.0" layoutY="144.0" text="Dataset Type:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="symbolTypeLB" layoutX="438.0" layoutY="144.0" text="Symbol Type:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <ComboBox fx:id="symbolTypeCB" editable="true" layoutX="588.0" layoutY="140.0" minHeight="-Infinity" minWidth="-Infinity" onAction="#symbolTypeSelected" prefHeight="32.0" prefWidth="151.0" style="-fx-font-size: 18px;">
+                                 <styleClass>
+                                    <String fx:value="combo-box-base" />
+                                    <String fx:value="text" />
+                                 </styleClass>
+                              </ComboBox>
+                              <Label fx:id="symbolTypeParamLB" layoutX="776.0" layoutY="144.0" prefHeight="23.0" prefWidth="259.0" text="Number of symbols:">
+                                 <padding>
+                                    <Insets left="30.0" />
+                                 </padding>
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <TextField fx:id="symbolTypeParamTF" layoutX="974.0" layoutY="139.0" prefHeight="34.0" prefWidth="174.0">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </TextField>
+                              <ComboBox fx:id="datasetTypeCB" editable="true" layoutX="200.0" layoutY="138.0" onAction="#datasetTypeSelecionado" prefHeight="35.0" prefWidth="195.0" style="-fx-font-size: 18px;" />
+                              <TextField fx:id="numRowsTF" layoutX="200.0" layoutY="39.0" maxWidth="-Infinity" prefHeight="34.0" prefWidth="114.0" promptText="10">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </TextField>
+                              <Label layoutX="27.0" layoutY="44.0" text="Number of Rows:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label layoutX="27.0" layoutY="94.0" text="Number of Columns:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <TextField fx:id="numColumnsTF" layoutX="200.0" layoutY="88.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="34.0" prefWidth="113.0" promptText="10">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </TextField>
+                              <Pane fx:id="singleDiscreteProbsPane" layoutX="248.0" layoutY="469.0" prefHeight="293.0" prefWidth="281.0">
+                                 <children>
+                                    <TableView fx:id="singleDiscreteProbsTV" layoutX="19.0" layoutY="96.0" prefHeight="178.0" prefWidth="244.0" style="-fx-font-size: 18px;">
+                                      <columns>
+                                        <TableColumn fx:id="singleSymbolTC" prefWidth="123.0" text="Symbol" />
+                                        <TableColumn fx:id="singleProbTC" prefWidth="120.0" text="Probability" />
+                                      </columns>
+                                    </TableView>
+                                    <Text layoutX="20.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each symbol:" wrappingWidth="241.650390625">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Text>
+                                 </children>
+                              </Pane>
+                              <Pane fx:id="composedBackgroundParamsPane" layoutX="663.0" layoutY="469.0" prefHeight="223.0" prefWidth="200.0">
+                                 <children>
+                                    <Label fx:id="distMeanLabel1" layoutY="63.0" text="Mean:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="composedDistMeanTF" layoutX="83.0" layoutY="58.0" prefHeight="34.0" prefWidth="92.0" promptText="5">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font>
+                                    </TextField>
+                                    <Label fx:id="distStdLabel1" layoutY="133.0" text="Std. Dev.:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="composedDistStdTF" layoutX="82.0" layoutY="128.0" prefHeight="34.0" prefWidth="93.0" promptText="2">
+                                       <font>
+                                          <Font size="17.0" />
+                                       </font>
+                                    </TextField>
+                                    <Label layoutY="6.0" text="Distribution Parameters:">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </Pane>
+                              <Label fx:id="composedBackgroundTypeLB" layoutX="663.0" layoutY="429.0" text="Background type: ">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <ComboBox fx:id="composedBackgroundTypeCB" editable="true" layoutX="849.0" layoutY="423.0" onAction="#composedBackgroundTypeSelecionado" prefHeight="32.0" prefWidth="157.0" style="-fx-font-size: 18px;" />
+                              <Pane fx:id="composedDiscreteProbsPane" layoutX="895.0" layoutY="469.0" prefHeight="293.0" prefWidth="281.0">
+                                 <children>
+                                    <TableView fx:id="composedDiscreteProbsTV" layoutX="19.0" layoutY="88.0" prefHeight="192.0" prefWidth="244.0" style="-fx-font-size: 18px;">
+                                       <columns>
+                                          <TableColumn fx:id="composedSymbolTC" prefWidth="123.0" text="Symbol" />
+                                          <TableColumn fx:id="composedProbTC" prefWidth="120.0" text="Probability" />
+                                       </columns>
+                                    </TableView>
+                                    <Text layoutX="20.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each symbol:" wrappingWidth="241.650390625">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Text>
+                                 </children>
+                              </Pane>
+                              <Separator fx:id="backgroundSeparator" layoutX="588.0" layoutY="393.0" orientation="VERTICAL" prefHeight="344.0" prefWidth="27.0" />
+                              <Label fx:id="singleBackgroundLB" layoutX="14.0" layoutY="357.0" text="Symbolic Background:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="composedBackgroundLB" layoutX="654.0" layoutY="357.0" text="Symbolic Background:">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
                            </children>
                         </AnchorPane>
                   </content>
                 </Tab>
-                <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Triclusters Properties">
+                <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Biclusters Properties">
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="750.0" prefWidth="1300.0">
                            <children>
@@ -221,7 +295,7 @@
                                        </font>
                                     </TextField>
                                     <ComboBox fx:id="rowStructureDistCB" editable="true" layoutX="230.0" layoutY="131.0" onAction="#rowStructureDistSelecionada" prefHeight="32.0" prefWidth="200.0" style="-fx-font-size: 18px;" />
-                                    <Label layoutX="40.0" layoutY="42.0" text="Number of Triclusters:">
+                                    <Label layoutX="40.0" layoutY="42.0" text="Number of Biclusters:">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -276,18 +350,17 @@
                            </children></AnchorPane>
                   </content>
                 </Tab>
-                  <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Triclusters Patterns">
+                  <Tab style="-fx-font-size: 16; -fx-tab-min-width: 100px;" text="Biclusters Patterns">
                      <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                            <children>
                               <TableView fx:id="patternsTV" layoutX="24.0" layoutY="24.0" prefHeight="516.0" prefWidth="840.0" style="-fx-font-size: 18px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                 <columns>
-                                    <TableColumn fx:id="numTC" prefWidth="39.0" style="-fx-alignment: CENTER;" text="#" />
-                                  <TableColumn fx:id="rowTC" prefWidth="296.0" style="-fx-alignment: CENTER;" text="Row Pattern" />
-                                  <TableColumn fx:id="columnTC" minWidth="0.0" prefWidth="321.0" style="-fx-alignment: CENTER;" text="Columns Pattern" />
-                                    <TableColumn fx:id="timeProfileTC" minWidth="0.0" prefWidth="283.0" style="-fx-alignment: CENTER;" text="Time Profile" />
-                                    <TableColumn fx:id="exampleTC" maxWidth="398.0" minWidth="0.0" prefWidth="231.0" style="-fx-alignment: CENTER;" text="Example" />
-                                    <TableColumn fx:id="selectTC" prefWidth="129.0" style="-fx-alignment: CENTER;" text="Select" />
+                                    <TableColumn fx:id="bicTypeTC" prefWidth="139.0" style="-fx-alignment: CENTER;" text="Bicluster Type" />
+                                  <TableColumn fx:id="rowTC" prefWidth="272.0" style="-fx-alignment: CENTER;" text="Row Pattern" />
+                                  <TableColumn fx:id="columnTC" minWidth="0.0" prefWidth="300.0" style="-fx-alignment: CENTER;" text="Columns Pattern" />
+                                    <TableColumn fx:id="timeProfileTC" minWidth="0.0" prefWidth="307.0" style="-fx-alignment: CENTER;" text="Time Profile" />
+                                    <TableColumn fx:id="selectTC" prefWidth="280.0" style="-fx-alignment: CENTER;" text="Select" />
                                 </columns>
                                  <opaqueInsets>
                                     <Insets />
@@ -399,7 +472,7 @@
                                           <Font size="18.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="60.0" layoutY="596.0" text="\% of errors on planted triclusters:">
+                                    <Label layoutX="60.0" layoutY="596.0" text="\% of errors on planted biclusters:">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -432,7 +505,7 @@
                                           <Font size="18.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="60.0" layoutY="358.0" text="\% of noise on planted triclusters:">
+                                    <Label layoutX="60.0" layoutY="358.0" text="\% of noise on planted biclusters:">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -474,7 +547,7 @@
                                           <Font size="18.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="60.0" layoutY="166.0" text="\% of missing values on planted triclusters:">
+                                    <Label layoutX="60.0" layoutY="166.0" text="\% of missing values on planted biclusters:">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -618,7 +691,8 @@
                                  <font>
                                     <Font size="18.0" />
                                  </font></Text>
-                              <Button fx:id="heatMapB" layoutX="988.0" layoutY="74.0" mnemonicParsing="false" onAction="#showHeatMap" prefHeight="36.0" prefWidth="153.0" text="Show" />
+                              <Button fx:id="singleHeatMapB" layoutX="859.0" layoutY="74.0" mnemonicParsing="false" onAction="#showSingleHeatMap" prefHeight="36.0" prefWidth="153.0" text="Show" />
+                              <Button fx:id="composedHeatMapB" layoutX="1041.0" layoutY="74.0" mnemonicParsing="false" onAction="#showComposedHeatMap" prefHeight="36.0" prefWidth="153.0" text="Show" />
                            </children>
                         </AnchorPane>
                     </content>

@@ -47,4 +47,16 @@ public class SingleBiclusterPattern extends BiclusterPattern {
 		this.timeProfile = timeProfile;
 	}
 
+	@Override
+	public String toString() {
+		
+		StringBuilder sb = new StringBuilder("Type: " + super.bicType);
+		sb.append("Row Pattern: " + this.getRowsPattern());
+		sb.append("Column Pattern: " + this.getColumnsPattern());
+		sb.append("Time Profile:" + this.getTimeProfile());
+		
+		
+		return sb.toString();
+	}
+
 }

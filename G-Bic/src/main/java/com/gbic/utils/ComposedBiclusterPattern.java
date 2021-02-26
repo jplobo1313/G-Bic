@@ -91,4 +91,26 @@ public class ComposedBiclusterPattern extends BiclusterPattern {
 		return p;
 	}
 	
+	@Override
+	public String toString() {
+		
+		StringBuilder sb = new StringBuilder("Type: " + super.bicType);
+		
+		sb.append("Numeric Row Pattern: " + this.numericP.getFirst().toString());
+		sb.append("Numeric Column Pattern: " + this.numericP.getSecond().toString());
+		
+		if(this.numericTP != null)
+			sb.append("Numeric Time Profile:" + this.numericTP.toString());
+		
+		sb.append("Symbolic Row Pattern: " + this.symbolicP.getFirst().toString());
+		sb.append("Symbolic Column Pattern: " + this.symbolicP.getSecond().toString());
+		
+		if(this.symbolicTP != null)
+			sb.append("Symbolic Time Profile:" + this.symbolicTP.toString());
+		
+		
+		
+		return sb.toString();
+	}
+	
 }

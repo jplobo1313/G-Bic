@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.function.UnaryOperator;
 
 import org.json.JSONArray;
@@ -21,9 +22,11 @@ import org.knowm.xchart.HeatMapChartBuilder;
 
 import com.gbic.app.GBic.models.MenuPrincipalModel;
 import com.gbic.domain.dataset.Dataset;
+import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
 import com.gbic.domain.bicluster.Bicluster;
+import com.gbic.domain.bicluster.MixedBicluster;
 import com.gbic.service.GBicService;
 import com.gbic.service.GenerateDatasetTask;
 import com.gbic.service.GBicService.BiclusterPatternWrapper;
@@ -36,6 +39,9 @@ import com.gbic.utils.SymbolicHeatMapTableView;
 import com.gbic.utils.BiclusterPatternTableView;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -50,6 +56,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Separator;
+import javafx.scene.control.Slider;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -80,8 +88,17 @@ public class MenuPrincipalController{
 	//Dataset Settings
 	@FXML private TextField numRowsTF;
 	@FXML private TextField numColumnsTF;
-	@FXML private RadioButton symbolicTypeRB;
-	@FXML private RadioButton numericTypeRB;
+	//@FXML private RadioButton symbolicTypeRB;
+	//@FXML private RadioButton numericTypeRB;
+	
+	@FXML private ComboBox<String> datasetTypeCB;
+	@FXML private Label featuresLB;
+	@FXML private Label numericLB;
+	@FXML private Label numericPercLB;
+	@FXML private Label symbolicLB;
+	@FXML private Label symbolicPercLB;
+	@FXML private Slider featuresSlicer;
+	
 	@FXML private Label dataTypeLB;
 	@FXML private ComboBox<String> dataTypeCB;
 	@FXML private Label symbolTypeLB;
@@ -92,17 +109,34 @@ public class MenuPrincipalController{
 	@FXML private Label maxValueLB;
 	@FXML private TextField minValueTF;
 	@FXML private TextField maxValueTF;
-	@FXML private ComboBox<String> backgroundTypeCB;
-	@FXML private TextField distMeanTF;
-	@FXML private TextField distStdTF;
+	
+	//Single background
+	@FXML private Label singleBackgroundLB;
+	@FXML private ComboBox<String> singleBackgroundTypeCB;
+	@FXML private TextField singleDistMeanTF;
+	@FXML private TextField singleDistStdTF;
 	@FXML private Label distMeanLabel;
 	@FXML private Label distStdLabel;
-	@FXML private Pane backgroundParamsPane;
-	@FXML private Pane discreteProbsPane;
+	@FXML private Pane singleBackgroundParamsPane;
+	@FXML private Pane singleDiscreteProbsPane;
+	@FXML private Separator backgroundSeparator;
+	
+	//Composed Background
+	@FXML private Label composedBackgroundLB;
+	@FXML private Label composedBackgroundTypeLB;
+	@FXML private ComboBox<String> composedBackgroundTypeCB;
+	@FXML private Pane composedBackgroundParamsPane;
+	@FXML private Pane composedDiscreteProbsPane;
+	@FXML private TextField composedDistMeanTF;
+	@FXML private TextField composedDistStdTF;
 
-	@FXML private TableView<DiscreteProbabilitiesTableView> discreteProbsTV;
-	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> symbolTC;
-	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> probTC;
+	@FXML private TableView<DiscreteProbabilitiesTableView> singleDiscreteProbsTV;
+	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> singleSymbolTC;
+	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> singleProbTC;
+	
+	@FXML private TableView<DiscreteProbabilitiesTableView> composedDiscreteProbsTV;
+	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> composedSymbolTC;
+	@FXML private TableColumn<DiscreteProbabilitiesTableView, String> composedProbTC;
 
 	//Triclusters Properties
 	@FXML private TextField numBicsTF;
@@ -122,12 +156,11 @@ public class MenuPrincipalController{
 
 	//Triclusters Patterns
 	@FXML private TableView<BiclusterPatternTableView> patternsTV;
-	@FXML private TableColumn<BiclusterPatternTableView, Integer> numTC;
+	@FXML private TableColumn<BiclusterPatternTableView, String> bicTypeTC;
 	@FXML private TableColumn<BiclusterPatternTableView, String> rowTC;
 	@FXML private TableColumn<BiclusterPatternTableView, String> columnTC;
 	@FXML private TableColumn<BiclusterPatternTableView, String> contextTC;
 	@FXML private TableColumn<BiclusterPatternTableView, ComboBox<String>> timeProfileTC;
-	@FXML private TableColumn<BiclusterPatternTableView, Label> exampleTC;
 	@FXML private TableColumn<BiclusterPatternTableView, CheckBox> selectTC;
 	ObservableList<BiclusterPatternTableView> patternList;
 
@@ -169,7 +202,8 @@ public class MenuPrincipalController{
 	@FXML private ComboBox<String> bicIDCB;
 	
 	@FXML private TextFlow bicSummaryTF;
-	@FXML private Button heatMapB;
+	@FXML private Button singleHeatMapB;
+	@FXML private Button composedHeatMapB;
 	
 	private MenuPrincipalModel model;
 
@@ -202,13 +236,16 @@ public class MenuPrincipalController{
 		this.symbolTypeCB.setItems(model.getSymbolTypes());
 		this.symbolTypeCB.setValue(model.getSymbolTypeEscolhido());
 
-		this.symbolicTypeRB.setSelected(true);
+		//this.symbolicTypeRB.setSelected(true);
+		this.datasetTypeCB.setItems(model.getDatasetTypes());
+		this.datasetTypeCB.setValue(model.getDatasetTypeEscolhido());
+		
 		this.symbolTypeParamTF.textProperty().bindBidirectional(model.getNumberOfSymbolsProperty(), new NumberStringConverter());
 		this.symbolTypeParamTF.textProperty().setValue("10");
 		
 		this.symbolTypeParamTF.focusedProperty().addListener((obs, oldText, newText) -> {
-			if(newText == false && oldText == true && model.getBackgroundTypeEscolhido().equals("Discrete")) {
-				initDiscreteTable();
+			if(newText == false && oldText == true && model.getSingleBackgroundTypeEscolhido().equals("Discrete")) {
+				initSingleDiscreteTable();
 			}
 
 			// ...
@@ -216,28 +253,64 @@ public class MenuPrincipalController{
 
 		this.minValueTF.textProperty().bindBidirectional(model.getMinValueProperty(), new NumberStringConverter());
 		this.minValueTF.focusedProperty().addListener((obs, oldText, newText) -> {
-			if(newText == false && oldText == true && model.getBackgroundTypeEscolhido().equals("Discrete")) {
-				initDiscreteTable();
+			if(this.datasetTypeCB.getValue().equals("Numeric")) {
+				if(newText == false && oldText == true && model.getSingleBackgroundTypeEscolhido().equals("Discrete"))
+					initSingleDiscreteTable();
 			}
+			else {
+				if(newText == false && oldText == true && model.getComposedBackgroundTypeEscolhido().equals("Discrete"))
+					initComposedDiscreteTable();
+			}
+					
 		});
 
 		this.maxValueTF.textProperty().bindBidirectional(model.getMaxValueProperty(), new NumberStringConverter());
 		this.maxValueTF.focusedProperty().addListener((obs, oldText, newText) -> {
-			if(newText == false && oldText == true && model.getBackgroundTypeEscolhido().equals("Discrete")) {
-				initDiscreteTable();
+			if(this.datasetTypeCB.getValue().equals("Numeric")) {
+				if(newText == false && oldText == true && model.getSingleBackgroundTypeEscolhido().equals("Discrete"))
+					initSingleDiscreteTable();
+			}
+			else {
+				if(newText == false && oldText == true && model.getComposedBackgroundTypeEscolhido().equals("Discrete"))
+					initComposedDiscreteTable();
 			}
 		});
 
 		setNumericDatasetParametersVisible(false);
+		
+		setHeterogeneousDatasetParametersVisible(false);
+		
+		 this.featuresSlicer.valueProperty().addListener(new ChangeListener<Number>() {
+	            @Override
+	            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+	            	int numericPerc = (int) Math.round(featuresSlicer.getValue());
+	            	int symbolicPerc = 100 - numericPerc;
+	            	numericPercLB.setText(numericPerc + "%");
+	            	symbolicPercLB.setText(symbolicPerc + "%");
+	            }
+	        });
 
-		this.backgroundTypeCB.setItems(model.getBackgroundTypes());
-		this.backgroundTypeCB.setValue(model.getBackgroundTypeEscolhido());
 
-		this.distMeanTF.textProperty().bindBidirectional(model.getDistMeanProperty(), new NumberStringConverter());
-		this.distStdTF.textProperty().bindBidirectional(model.getDistStdProperty(), new NumberStringConverter());
+		this.singleBackgroundTypeCB.setItems(model.getSingleBackgroundTypes());
+		this.singleBackgroundTypeCB.setValue(model.getSingleBackgroundTypeEscolhido());
+		
+		this.composedBackgroundTypeCB.setItems(model.getComposedBackgroundTypes());
+		this.composedBackgroundTypeCB.setValue(model.getComposedBackgroundTypeEscolhido());
 
-		this.backgroundParamsPane.setVisible(false);
-		this.discreteProbsPane.setVisible(false);
+		this.singleDistMeanTF.textProperty().bindBidirectional(model.getSingleDistMeanProperty(), new NumberStringConverter());
+		this.singleDistStdTF.textProperty().bindBidirectional(model.getSingleDistStdProperty(), new NumberStringConverter());
+
+		this.composedDistMeanTF.textProperty().bindBidirectional(model.getComposedDistMeanProperty(), new NumberStringConverter());
+		this.composedDistStdTF.textProperty().bindBidirectional(model.getComposedDistStdProperty(), new NumberStringConverter());
+		
+		this.singleBackgroundParamsPane.setVisible(false);
+		this.singleDiscreteProbsPane.setVisible(false);
+		this.composedBackgroundLB.setVisible(false);
+		this.composedBackgroundTypeLB.setVisible(false);
+		this.composedBackgroundTypeCB.setVisible(false);
+		this.composedBackgroundParamsPane.setVisible(false);
+		this.composedDiscreteProbsPane.setVisible(false);
+		this.backgroundSeparator.setVisible(false);
 
 		//Biclusters properties
 		this.numBicsTF.textProperty().bindBidirectional(model.getNumBicsProperty(), new NumberStringConverter());
@@ -258,11 +331,10 @@ public class MenuPrincipalController{
 
 		//Biclusters Patterns
 		this.patternsTV.setItems(model.getSymbolicPatterns());
-		this.numTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Integer>("num"));
+		this.bicTypeTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("biclusterType"));
 		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
 		this.columnTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("columnPattern"));
 		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, ComboBox<String>>("timeProfile"));
-		this.exampleTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Label>("example"));
 		this.selectTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, CheckBox>("select"));
 
 		//Overlapping
@@ -290,6 +362,9 @@ public class MenuPrincipalController{
 		this.statusT.setVisible(false);
 		this.statusLB.setVisible(false);
 
+		this.composedHeatMapB.setVisible(false);
+		this.composedHeatMapB.setText("Show Symbolic");
+		
 		this.directoryChooserTF.textProperty().bindBidirectional(model.getDirectoryChooserProperty());
 		model.setDirectory(System.getProperty("user.dir"));
 
@@ -313,6 +388,16 @@ public class MenuPrincipalController{
 		this.symbolTypeCB.setVisible(b);
 		this.symbolTypeParamLB.setVisible(b);
 		this.symbolTypeParamTF.setVisible(b);
+	}
+	
+	private void setHeterogeneousDatasetParametersVisible(boolean b) {
+
+		this.featuresLB.setVisible(b);
+		this.featuresSlicer.setVisible(b);
+		this.numericLB.setVisible(b);
+		this.numericPercLB.setVisible(b);
+		this.symbolicLB.setVisible(b);
+		this.symbolicPercLB.setVisible(b);
 	}
 
 	@FXML
@@ -399,7 +484,7 @@ public class MenuPrincipalController{
 	@FXML
 	void dataTypeSelecionado(ActionEvent event) {
 
-		if(model.getBackgroundTypeEscolhido().equals("Discrete")) {
+		if(model.getSingleBackgroundTypeEscolhido().equals("Discrete")) {
 			Alert alert = new Alert(AlertType.ERROR);
 			alert.setTitle("Error Dialog");
 			alert.setHeaderText("Input data error");
@@ -413,32 +498,34 @@ public class MenuPrincipalController{
 	}
 
 	@FXML
-	void backgroundTypeSelecionado(ActionEvent event) {
-		String option = this.backgroundTypeCB.getValue();
-		model.setBackgroundTypeEscolhido(option);
+	void singleBackgroundTypeSelecionado(ActionEvent event) {		
+		String option = this.singleBackgroundTypeCB.getValue();
+		model.setSingleBackgroundTypeEscolhido(option);
 
 		if(option.equals("Normal")) {
-			this.backgroundParamsPane.setVisible(true);
-			this.discreteProbsPane.setVisible(false);
+			this.singleBackgroundParamsPane.setVisible(true);
+			this.singleDiscreteProbsPane.setVisible(false);
 		}
 		else if(option.equals("Discrete")) {
 
 			boolean error = false;
 			String errorMsg = "";
 
-			if(this.numericTypeRB.isSelected() && model.getDataTypeEscolhido().equals("Real Valued")) {
+			if(this.datasetTypeCB.getValue().equals("Numeric") && model.getDataTypeEscolhido().equals("Real Valued")) {
 				error = true;
 				errorMsg = "Discrete background is not available on Real Valued datasets";
 			}
-			else if(this.numericTypeRB.isSelected() && (this.maxValueTF.getText().isEmpty() || this.minValueTF.getText().isEmpty())) {
+			else if(this.datasetTypeCB.getValue().equals("Numeric") && (this.maxValueTF.getText().isEmpty() || this.minValueTF.getText().isEmpty())) {
 				error = true;
 				errorMsg = "The dataset's min and mac values must be defined before setting a discrete background";
 
 			}
-			else if(this.symbolicTypeRB.isSelected() && this.symbolTypeParamTF.getText().isEmpty()) {
+			else if((this.datasetTypeCB.getValue().equals("Heterogeneous") || (this.datasetTypeCB.getValue().equals("Symbolic"))) && 
+					this.symbolTypeParamTF.getText().isEmpty()) {
 				error = true;
 				errorMsg = "The dataset's symbols must be defined before setting a discrete background";
 			}
+			
 			if(error) {
 				Alert alert = new Alert(AlertType.ERROR);
 				alert.setTitle("Error Dialog");
@@ -446,36 +533,90 @@ public class MenuPrincipalController{
 				alert.setContentText(errorMsg);
 				alert.showAndWait();
 
-				this.backgroundTypeCB.setValue("Uniform");
-				model.setBackgroundTypeEscolhido(this.backgroundTypeCB.getValue());
-				this.backgroundParamsPane.setVisible(false);
-				this.discreteProbsPane.setVisible(false);
+				this.singleBackgroundTypeCB.setValue("Uniform");
+				model.setSingleBackgroundTypeEscolhido(this.singleBackgroundTypeCB.getValue());
+				this.singleBackgroundParamsPane.setVisible(false);
+				this.singleDiscreteProbsPane.setVisible(false);
 			}
 			else {
-				this.backgroundParamsPane.setVisible(false);
-				this.discreteProbsPane.setVisible(true);
+				this.singleBackgroundParamsPane.setVisible(false);
+				this.singleDiscreteProbsPane.setVisible(true);
 
-				initDiscreteTable();
+				initSingleDiscreteTable();
 			}
 
 		}
 		else {			
-			this.backgroundParamsPane.setVisible(false);
-			this.discreteProbsPane.setVisible(false);
+			this.singleBackgroundParamsPane.setVisible(false);
+			this.singleDiscreteProbsPane.setVisible(false);
+		}
+
+	}
+	
+	@FXML
+	void composedBackgroundTypeSelecionado(ActionEvent event) {		
+		String option = this.composedBackgroundTypeCB.getValue();
+		model.setComposedBackgroundTypeEscolhido(option);
+
+		if(option.equals("Normal")) {
+			this.composedBackgroundParamsPane.setVisible(true);
+			this.composedDiscreteProbsPane.setVisible(false);
+		}
+		else if(option.equals("Discrete")) {
+
+			boolean error = false;
+			String errorMsg = "";
+
+			if((this.datasetTypeCB.getValue().equals("Heterogeneous") || this.datasetTypeCB.getValue().equals("Numeric")) && 
+					model.getDataTypeEscolhido().equals("Real Valued")) {
+				error = true;
+				errorMsg = "Discrete background is not available on Real Valued datasets";
+			}
+			else if((this.datasetTypeCB.getValue().equals("Heterogeneous") || this.datasetTypeCB.getValue().equals("Numeric")) && 
+					(this.maxValueTF.getText().isEmpty() || this.minValueTF.getText().isEmpty())) {
+				error = true;
+				errorMsg = "The dataset's min and mac values must be defined before setting a discrete background";
+
+			}
+			
+			if(error) {
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Error Dialog");
+				alert.setHeaderText("Input data error");
+				alert.setContentText(errorMsg);
+				alert.showAndWait();
+
+				this.composedBackgroundTypeCB.setValue("Uniform");
+				model.setComposedBackgroundTypeEscolhido(this.composedBackgroundTypeCB.getValue());
+				this.composedBackgroundParamsPane.setVisible(false);
+				this.composedDiscreteProbsPane.setVisible(false);
+			}
+			else {
+				this.composedBackgroundParamsPane.setVisible(false);
+				this.composedDiscreteProbsPane.setVisible(true);
+
+				initComposedDiscreteTable();
+			}
+
+		}
+		else {			
+			this.composedBackgroundParamsPane.setVisible(false);
+			this.composedDiscreteProbsPane.setVisible(false);
 		}
 
 	}
 
-	private void initDiscreteTable() {
+	private void initSingleDiscreteTable() {
 
 		ObservableList<DiscreteProbabilitiesTableView> symbols = FXCollections.observableArrayList();
 
-		if(this.numericTypeRB.isSelected()) {
+		if(this.datasetTypeCB.getValue().equals("Numeric")) {
 			for(int i = (int) model.getMinValue(); i <= (int) model.getMaxValue(); i++)
 				symbols.add(new DiscreteProbabilitiesTableView(String.valueOf(i), String.valueOf(0.0)));
 			System.out.println("hi from numeric");
 		}
-		else if(this.symbolicTypeRB.isSelected() && model.getSymbolTypeEscolhido().equals("Default")) {
+		else if((this.datasetTypeCB.getValue().equals("Heterogeneous") || (this.datasetTypeCB.getValue().equals("Symbolic"))) 
+				&& model.getSymbolTypeEscolhido().equals("Default")) {
 			for(int i = 1; i <= model.getNumberOfSymbols(); i++)
 				symbols.add(new DiscreteProbabilitiesTableView(String.valueOf(i), String.valueOf(0.0)));
 			System.out.println("hi from symbolic default " + symbols.size());
@@ -486,15 +627,38 @@ public class MenuPrincipalController{
 			System.out.println("hi from symbolic custom");
 		}
 
-		this.discreteProbsTV.setEditable(true);
+		this.singleDiscreteProbsTV.setEditable(true);
 
-		this.discreteProbsTV.setItems(symbols);
+		this.singleDiscreteProbsTV.setItems(symbols);
 
-		this.symbolTC.setCellValueFactory(new PropertyValueFactory<>("Symbol"));
-		this.probTC.setCellValueFactory(new PropertyValueFactory<>("Prob"));
-		this.probTC.setCellFactory(TextFieldTableCell.forTableColumn());
+		this.singleSymbolTC.setCellValueFactory(new PropertyValueFactory<>("Symbol"));
+		this.singleProbTC.setCellValueFactory(new PropertyValueFactory<>("Prob"));
+		this.singleProbTC.setCellFactory(TextFieldTableCell.forTableColumn());
 
-		this.probTC.setOnEditCommit(e -> {
+		this.singleProbTC.setOnEditCommit(e -> {
+			e.getTableView().getItems().get(e.getTablePosition().getRow()).setProb(e.getNewValue());
+		});
+	}
+	
+	private void initComposedDiscreteTable() {
+
+		ObservableList<DiscreteProbabilitiesTableView> symbols = FXCollections.observableArrayList();
+
+		
+		for(int i = (int) model.getMinValue(); i <= (int) model.getMaxValue(); i++)
+			symbols.add(new DiscreteProbabilitiesTableView(String.valueOf(i), String.valueOf(0.0)));
+		System.out.println("hi from numeric");
+	
+
+		this.composedDiscreteProbsTV.setEditable(true);
+
+		this.composedDiscreteProbsTV.setItems(symbols);
+
+		this.composedSymbolTC.setCellValueFactory(new PropertyValueFactory<>("Symbol"));
+		this.composedProbTC.setCellValueFactory(new PropertyValueFactory<>("Prob"));
+		this.composedProbTC.setCellFactory(TextFieldTableCell.forTableColumn());
+
+		this.composedProbTC.setOnEditCommit(e -> {
 			e.getTableView().getItems().get(e.getTablePosition().getRow()).setProb(e.getNewValue());
 		});
 	}
@@ -567,46 +731,68 @@ public class MenuPrincipalController{
 	}
 
 	@FXML
-	void symbolicTypeSelected(ActionEvent event) {
-
-		this.setSymbolicDatasetParametersVisible(true);
-		this.setNumericDatasetParametersVisible(false);
-
-		model.setSymbolicTypeBoolean(true);
+	void datasetTypeSelecionado(ActionEvent event) {
 		
-		model.updatePlaidCoherency(false);
-		this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
+		model.setDatasetTypeEscolhido(this.datasetTypeCB.getValue());
+		
+		if(this.datasetTypeCB.getValue().equals("Symbolic")) {
+			this.setComposedBackgroundParametersVisible(false);
+			this.setSymbolicDatasetParametersVisible(true);
+			this.setNumericDatasetParametersVisible(false);
+			this.setHeterogeneousDatasetParametersVisible(false);
+			this.singleBackgroundLB.setText("Symbolic Background");
 
-		this.patternsTV.setItems(model.getSymbolicPatterns());
-		this.numTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Integer>("num"));
+			model.setSymbolicTypeBoolean(true);
+			
+			this.patternsTV.setItems(model.getSymbolicPatterns());
+			model.updatePlaidCoherency(false);
+			this.plaidCoherencyCB.setItems(model.getPlaidCoherency());
+			this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
+		}
+		else if(this.datasetTypeCB.getValue().equals("Numeric")) {
+			this.setComposedBackgroundParametersVisible(false);
+			this.setSymbolicDatasetParametersVisible(false);
+			this.setNumericDatasetParametersVisible(true);
+			this.setHeterogeneousDatasetParametersVisible(false);
+			this.singleBackgroundLB.setText("Numeric Background");
+
+			this.patternsTV.setItems(model.getNumericPatterns());
+			model.setSymbolicTypeBoolean(false);
+			model.updatePlaidCoherency(true);
+			this.plaidCoherencyCB.setItems(model.getPlaidCoherency());
+			this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
+		}
+		else {
+			this.singleBackgroundLB.setText("Symbolic Background");
+			this.setComposedBackgroundParametersVisible(true);
+			this.setHeterogeneousDatasetParametersVisible(true);
+			this.setSymbolicDatasetParametersVisible(true);
+			this.setNumericDatasetParametersVisible(true);
+			
+			this.patternsTV.setItems(model.getMixedPatterns());
+			model.setSymbolicTypeBoolean(false);
+			model.updatePlaidCoherency(true);
+			this.plaidCoherencyCB.setItems(model.getPlaidCoherency());
+			this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
+		}
+		
+		
+		
+		this.bicTypeTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("biclusterType"));
 		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
 		this.columnTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("columnPattern"));
-		this.contextTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("contextPattern"));
 		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, ComboBox<String>>("timeProfile"));
-		this.exampleTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Label>("example"));
 		this.selectTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, CheckBox>("select"));
 	}
 
-	@FXML
-	void numericTypeSelected(ActionEvent event) {
-
-		this.setSymbolicDatasetParametersVisible(false);
-		this.setNumericDatasetParametersVisible(true);
-
-		model.setSymbolicTypeBoolean(false);
-		model.updatePlaidCoherency(true);
-		this.plaidCoherencyCB.setValue(model.getPlaidCoherencyEscolhida());
-		
-		this.patternsTV.setItems(model.getNumericPatterns());
-		this.numTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Integer>("num"));
-		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
-		this.columnTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("columnPattern"));
-		this.timeProfileTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, ComboBox<String>>("timeProfile"));
-		this.exampleTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, Label>("example"));
-		this.selectTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, CheckBox>("select"));
-
+	private void setComposedBackgroundParametersVisible(boolean visible) {
+		this.composedBackgroundLB.setText("Numeric Background");
+		this.composedBackgroundLB.setVisible(visible);
+		this.composedBackgroundTypeLB.setVisible(visible);
+		this.composedBackgroundTypeCB.setVisible(visible);
+		this.backgroundSeparator.setVisible(visible);
 	}
-
+	
 	@FXML
 	void symbolTypeSelected(ActionEvent event) {
 		model.setSymbolTypeEscolhido(this.symbolTypeCB.getValue());
@@ -633,10 +819,18 @@ public class MenuPrincipalController{
 
 		String errors = null;
 
-		if(model.getBackgroundTypeEscolhido().equals("Discrete")) {
-			model.setDiscreteProbabilities(this.discreteProbsTV.getItems());
+		if(model.getSingleBackgroundTypeEscolhido().equals("Discrete")) {
+			model.setSingleDiscreteProbabilities(this.singleDiscreteProbsTV.getItems());
 
-			for(DiscreteProbabilitiesTableView p : model.getDiscreteProbabilities())
+			for(DiscreteProbabilitiesTableView p : model.getSingleDiscreteProbabilities())
+				System.out.println(p.getSymbol() + " -> " + p.getProb());
+
+		}
+		
+		if(this.composedBackgroundTypeCB.getValue().equals("Discrete")) {
+			model.setComposedDiscreteProbabilities(this.composedDiscreteProbsTV.getItems());
+
+			for(DiscreteProbabilitiesTableView p : model.getComposedDiscreteProbabilities())
 				System.out.println(p.getSymbol() + " -> " + p.getProb());
 
 		}
@@ -652,43 +846,80 @@ public class MenuPrincipalController{
 				gBicService.setMessageUpdate((message) -> updateMessage(message));
 
 				//call triGen setters
-				double backgroundParam1 = 0;
-				double backgroundParam2 = 0;
-				double[] backgroundParam3 = null;
+				double singleBackgroundParam1 = 0;
+				double composedBackgroundParam1 = 0;
+				double singleBackgroundParam2 = 0;
+				double composedBackgroundParam2 = 0;
+				double[] singleBackgroundParam3 = null;
+				double[] composedBackgroundParam3 = null;
 
 				//Set background type and validate input
-				if(model.getBackgroundTypeEscolhido().equals("Normal")) {
-					backgroundParam1 = model.getDistMean();
-					backgroundParam2 = model.getDistStd();
+				if(model.getSingleBackgroundTypeEscolhido().equals("Normal")) {
+					singleBackgroundParam1 = model.getSingleDistMean();
+					singleBackgroundParam2 = model.getSingleDistStd();
 				}
-				else if(model.getBackgroundTypeEscolhido().equals("Discrete")) {
+				else if(model.getSingleBackgroundTypeEscolhido().equals("Discrete")) {
 					int index = 0;
-					backgroundParam3 = new double[model.getDiscreteProbabilities().size()];
-					for(DiscreteProbabilitiesTableView p : model.getDiscreteProbabilities()) {
-						backgroundParam3[index] = Double.parseDouble(p.getProb());
+					singleBackgroundParam3 = new double[model.getSingleDiscreteProbabilities().size()];
+					for(DiscreteProbabilitiesTableView p : model.getSingleDiscreteProbabilities()) {
+						singleBackgroundParam3[index] = Double.parseDouble(p.getProb());
 						index++;
 					}
 				}
-
-				if(!model.isSymbolic()) {
+				
+				if(datasetTypeCB.getValue().equals("Numeric")) {
 
 					this.gBicService.setDatasetType("Numeric");
 					boolean realValued = model.getDataTypeEscolhido().equals("Real Valued");
 
 					this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), realValued, 
-							model.getMinValue(), model.getMaxValue(), model.getBackgroundTypeEscolhido(), backgroundParam1,
-							backgroundParam2, backgroundParam3);
+							model.getMinValue(), model.getMaxValue(), model.getSingleBackgroundTypeEscolhido(), singleBackgroundParam1,
+							singleBackgroundParam2, singleBackgroundParam3);
 				}
-				else {
+				else if(datasetTypeCB.getValue().equals("Symbolic")) {
 					this.gBicService.setDatasetType("Symbolic");
 					if(model.getSymbolTypeEscolhido().equals("Default")) {
 						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), true, model.getNumberOfSymbols(), 
-								null, model.getBackgroundTypeEscolhido(), backgroundParam1, backgroundParam2, backgroundParam3);
+								null, model.getSingleBackgroundTypeEscolhido(), singleBackgroundParam1, singleBackgroundParam2, singleBackgroundParam3);
 					}
 					else {
 						String[] symbols = model.getListOfSymbols().toArray(new String[0]);
 						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), false, -1, 
-								symbols, model.getBackgroundTypeEscolhido(), backgroundParam1, backgroundParam2, backgroundParam3);
+								symbols, model.getSingleBackgroundTypeEscolhido(), singleBackgroundParam1, singleBackgroundParam2, singleBackgroundParam3);
+					}
+				}
+				else {
+					this.gBicService.setDatasetType("Heterogeneous");
+					boolean realValued = model.getDataTypeEscolhido().equals("Real Valued");
+
+					//Set background type and validate input for heterogeneous dataset
+					if(model.getComposedBackgroundTypeEscolhido().equals("Normal")) {
+						composedBackgroundParam1 = model.getComposedDistMean();
+						composedBackgroundParam2 = model.getComposedDistStd();
+					}
+					else if(model.getComposedBackgroundTypeEscolhido().equals("Discrete")) {
+						int index = 0;
+						composedBackgroundParam3 = new double[model.getComposedDiscreteProbabilities().size()];
+						for(DiscreteProbabilitiesTableView p : model.getComposedDiscreteProbabilities()) {
+							composedBackgroundParam3[index] = Double.parseDouble(p.getProb());
+							index++;
+						}
+					}
+
+					if(model.getSymbolTypeEscolhido().equals("Default")) {
+						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), featuresSlicer.getValue(), realValued, model.getMinValue(), model.getMaxValue(), 
+								model.getNumberOfSymbols(), null, model.getSingleBackgroundTypeEscolhido(), singleBackgroundParam1, singleBackgroundParam2, 
+								singleBackgroundParam3, model.getComposedBackgroundTypeEscolhido(), composedBackgroundParam1, composedBackgroundParam2,
+								composedBackgroundParam3);
+					
+					}
+					else {
+						String[] symbols = model.getListOfSymbols().toArray(new String[0]);
+						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), featuresSlicer.getValue()/100, realValued, model.getMinValue(), model.getMaxValue(), 
+								-1, symbols, model.getSingleBackgroundTypeEscolhido(), singleBackgroundParam1, singleBackgroundParam2, 
+								singleBackgroundParam3, model.getComposedBackgroundTypeEscolhido(), composedBackgroundParam1, composedBackgroundParam2,
+								composedBackgroundParam3);
+					
 					}
 				}
 
@@ -700,23 +931,27 @@ public class MenuPrincipalController{
 				List<BiclusterPatternWrapper> listPatterns = new ArrayList<>();
 				List<BiclusterPatternTableView> availablePatterns = null;
 
-				if(model.isSymbolic())
+				if(datasetTypeCB.getValue().equals("Symbolic"))
 					availablePatterns = model.getSymbolicPatterns();
-				else
+				else if(datasetTypeCB.getValue().equals("Numeric"))
 					availablePatterns = model.getNumericPatterns();
+				else {
+					availablePatterns = model.getSymbolicPatterns();
+					availablePatterns.addAll(model.getNumericPatterns());
+				}
 
 				for(BiclusterPatternTableView p : availablePatterns) {
 					if(p.getSelect().isSelected()) {
 						BiclusterPatternWrapper bic;
 						if(p.getColumnPattern().equals("Order Preserving"))
-							bic = this.gBicService.new BiclusterPatternWrapper(p.getRowPattern(), p.getColumnPattern(), p.getTimeProfile().getValue(), null);
+							bic = this.gBicService.new BiclusterPatternWrapper(p.getBiclusterType(), p.getRowPattern(), p.getColumnPattern(), p.getTimeProfile().getValue(), null);
 						else
-							bic = this.gBicService.new BiclusterPatternWrapper(p.getRowPattern(), p.getColumnPattern(), null);
+							bic = this.gBicService.new BiclusterPatternWrapper(p.getBiclusterType(), p.getRowPattern(), p.getColumnPattern(), null);
 						System.out.println(bic.toString());
 						listPatterns.add(bic);
 					}
 				}
-				this.gBicService.setBiclusterPatterns(listPatterns);
+				this.gBicService.setBiclusterPatterns(listPatterns, datasetTypeCB.getValue());
 
 				this.gBicService.setOverlappingSettings(model.getPlaidCoherencyEscolhida(), model.getPercOverlappingBics() / 100, model.getMaxOverlappingBics(),
 						model.getPercOverlappingElements() / 100, model.getPercOverlappingRows() / 100, model.getPercOverlappingColumns() / 100);
@@ -742,10 +977,12 @@ public class MenuPrincipalController{
 					this.gBicService.setSingleFileOutput(false);
 
 				try {
-					if(model.isSymbolic())
+					if(datasetTypeCB.getValue().equals("Symbolic"))
 						this.gBicService.generateSymbolicDataset();
-					else
+					else if(datasetTypeCB.getValue().equals("Numeric"))
 						this.gBicService.generateNumericDataset();
+					else
+						this.gBicService.generateHeterogeneousDataset();
 					
 					System.out.println(gBicService.getGeneratedDataset().getNumBics());
 					System.out.println(model.getNumBics());
@@ -862,7 +1099,7 @@ public class MenuPrincipalController{
 		List<BiclusterPatternTableView> patterns = null;
 		boolean errorsOnDatasetProperties = false;
 
-		if(model.isSymbolic()) {
+		if(datasetTypeCB.getValue() == "Symbolic") {
 
 			if(model.getSymbolTypeEscolhido().equals("Default")) {
 				messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(), 
@@ -875,12 +1112,19 @@ public class MenuPrincipalController{
 
 			patterns = model.getSymbolicPatterns();
 		}
-		else {
+		else if(datasetTypeCB.getValue() == "Numeric") {
 
 			messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(),
 					this.minValueTF.getText(), this.maxValueTF.getText()));
 
 			patterns = model.getNumericPatterns();
+		}
+		else {
+			//messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(),
+			//		this.minValueTF.getText(), this.maxValueTF.getText()));
+
+			patterns = model.getNumericPatterns();
+			patterns.addAll(model.getSymbolicPatterns());
 		}
 
 		errorsOnDatasetProperties = messages.length() > 1;
@@ -892,11 +1136,11 @@ public class MenuPrincipalController{
 		if(!selectedPattern)
 			messages.append("(Bicluster Patterns) Error: At least one pattern should be selected!\n");
 
-		if(model.getBackgroundTypeEscolhido().equals("Normal")) {
-			messages.append(InputValidation.validateBackgroundSettings(this.distMeanTF.getText(), this.distStdTF.getText()));
+		if(model.getSingleBackgroundTypeEscolhido().equals("Normal")) {
+			messages.append(InputValidation.validateBackgroundSettings(this.singleDistMeanTF.getText(), this.singleDistStdTF.getText()));
 		}
-		else if(model.getBackgroundTypeEscolhido().equals("Discrete")){
-			List<DiscreteProbabilitiesTableView> probs = model.getDiscreteProbabilities();
+		else if(model.getSingleBackgroundTypeEscolhido().equals("Discrete")){
+			List<DiscreteProbabilitiesTableView> probs = model.getSingleDiscreteProbabilities();
 			messages.append(InputValidation.validateBackgroundSettings(probs));
 		}
 
@@ -950,6 +1194,20 @@ public class MenuPrincipalController{
 			
 			JSONObject bic = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(currentTriclusterVisualization));
 			
+			if(bic.getString("Type").contentEquals("Symbolic")) {
+				this.composedHeatMapB.setVisible(false);
+				this.singleHeatMapB.setText("Show");
+			}
+			else if(bic.getString("Type").contentEquals("Numeric")) {
+				this.composedHeatMapB.setVisible(false);
+				this.singleHeatMapB.setText("Show");
+			}
+			else {
+				this.composedHeatMapB.setVisible(true);
+				this.singleHeatMapB.setText("Show Numeric");
+				this.composedHeatMapB.setText("Show Symbolic");
+			}
+			
 			Task<Void> nextContext = new Task<Void>() {
 				@Override
 				protected Void call() throws Exception {
@@ -958,59 +1216,132 @@ public class MenuPrincipalController{
 						@Override
 						public void run() {
 							
+							boolean isMixed = bic.has("NumericColumns");
+							
 							bicSummaryTF.getChildren().clear();
 							
+						
 							Text title = new Text("Tricluster " + bicID + " information: \n\n");
 							title.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
+							Text type = new Text("Type:\t\t\t\t" + bic.getString("Type") + "\n\n");
+							type.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
 							Text dimensions = new Text("Dimensions:\t\t" + bic.getInt("#rows") + "x" + bic.getInt("#columns") + "\n\n");
 							dimensions.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							Text rows = new Text("Rows:\t\t\t\t" + bic.getJSONArray("X").toString() + "\n\n");
-							Text cols = new Text("Columns:\t\t\t" + bic.getJSONArray("Y").toString() + "\n\n");
+							Text rows = null;
 							
+							if(bic.has("X"))
+								rows = new Text("Rows:\t\t\t\t" + bic.getJSONArray("X").toString() + "\n\n");
+							else
+								rows = new Text("Rows:\t\t\t\t" + bic.getJSONArray("Rows").toString() + "\n\n");
 							rows.setFont(Font.font("System", FontPosture.REGULAR, 14));
-							cols.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							Text rowPattern = new Text("Row Pattern:\t\t" + bic.getString("RowPattern").toString() + "\n\n");
-							Text colPattern = new Text("Column Pattern:\t" + bic.getString("ColumnPattern").toString() + "\n\n");
+							bicSummaryTF.getChildren().addAll(title, type, dimensions, rows);
 							
-							rowPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
-							colPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
-							
-							bicSummaryTF.getChildren().addAll(title, dimensions, rows, cols, rowPattern, colPattern);
-							
-							if(bic.getString("ColumnPattern").toString().equals("OrderPreserving")) {
-								Text timeProfile = new Text("Time Profile:\t\t" + bic.getString("TimeProfile").toString() + "\n\n");
-								timeProfile.setFont(Font.font("System", FontPosture.REGULAR, 14));
-								bicSummaryTF.getChildren().add(timeProfile);
-							}
-							
-							
-							if(bic.has("Seed")) {
-								Text seed = new Text("Seed:\t\t\t\t" + bic.getString("Seed").toString() + "\n\n");
-								Text rowFactors = new Text("Row Factors:\t\t" + bic.getString("RowFactors").toString() + "\n\n");
-								Text colFactors = new Text("Column Factors:\t" + bic.getString("ColumnFactors").toString() + "\n\n");
+							if(isMixed) {
+								Text numCols = new Text("Numeric Columns:\t\t\t" + bic.getJSONArray("NumericColumns").toString() + "\n\n");
+								Text symbCols = new Text("Symbolic Columns:\t\t\t" + bic.getJSONArray("SymbolicColumns").toString() + "\n\n");
+								rows.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								numCols.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								symbCols.setFont(Font.font("System", FontPosture.REGULAR, 14));
 								
-								seed.setFont(Font.font("System", FontPosture.REGULAR, 14));
-								rowFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
-								colFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								bicSummaryTF.getChildren().addAll(numCols, symbCols);
+								
+								JSONObject numericProps = bic.getJSONObject("NumericProperties");
+								JSONObject symbolicProps = bic.getJSONObject("SymbolicProperties");
+								
+								Text numRowPattern = new Text("Numeric Row Pattern:\t\t" + numericProps.getString("RowPattern").toString() + "\n\n");
+								Text numColPattern = new Text("Numeric Column Pattern:\t" + numericProps.getString("ColumnPattern").toString() + "\n\n");
+								
+								numRowPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								numColPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								
+								if(numericProps.has("TimeProfile")) {
+									Text timeProfile = new Text("Numeric TimeProfile:\t\t" + numericProps.getString("TimeProfile").toString() + "\n\n");
+									bicSummaryTF.getChildren().addAll(numRowPattern, numColPattern, timeProfile);
+								}
+								else {
+									bicSummaryTF.getChildren().addAll(numRowPattern, numColPattern);
+								}
+								
+								Text symbRowPattern = new Text("Symbolic Row Pattern:\t\t" + symbolicProps.getString("RowPattern").toString() + "\n\n");
+								Text symbColPattern = new Text("Symbolic Column Pattern:\t" + symbolicProps.getString("ColumnPattern").toString() + "\n\n");
+								
+								symbRowPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								symbColPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								
+								if(symbolicProps.has("TimeProfile")) {
+									Text timeProfile = new Text("Symbolic TimeProfile:\t\t" + symbolicProps.getString("TimeProfile").toString() + "\n\n");
+									bicSummaryTF.getChildren().addAll(symbRowPattern, symbColPattern, timeProfile);
+								}
+								else {
+									bicSummaryTF.getChildren().addAll(symbRowPattern, symbColPattern);
+								}
+								
+								Text plaid = new Text("Plaid Coherency:\t" + numericProps.getString("PlaidCoherency").toString() + "\n\n");
+								plaid.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								
+								bicSummaryTF.getChildren().addAll(plaid);
+							}
+							else {
+								Text cols = new Text("Columns:\t\t\t" + bic.getJSONArray("Y").toString() + "\n\n");
+								cols.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								
+								Text rowPattern = new Text("Row Pattern:\t\t" + bic.getString("RowPattern").toString() + "\n\n");
+								Text colPattern = new Text("Column Pattern:\t" + bic.getString("ColumnPattern").toString() + "\n\n");
+								
+								rowPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								colPattern.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								
+								bicSummaryTF.getChildren().addAll(cols, rowPattern, colPattern);
+								
+								if(bic.getString("ColumnPattern").toString().equals("OrderPreserving")) {
+									Text timeProfile = new Text("Time Profile:\t\t" + bic.getString("TimeProfile").toString() + "\n\n");
+									timeProfile.setFont(Font.font("System", FontPosture.REGULAR, 14));
+									bicSummaryTF.getChildren().add(timeProfile);
+								}
+								
+								Text plaid = new Text("Plaid Coherency:\t" + bic.getString("PlaidCoherency").toString() + "\n\n");
+								plaid.setFont(Font.font("System", FontPosture.REGULAR, 14));
+								
+								bicSummaryTF.getChildren().addAll(plaid);
+							}
+
+							
+							if(bic.has("Seed") || isMixed) {
+								
+								JSONObject o = null;
+								
+								if(bic.has("Seed"))
+									o = bic;
+								else if(bic.getJSONObject("NumericProperties").has("Seed"))
+									o = bic.getJSONObject("NumericProperties");
+								
+								if(o != null) {
+									Text seed = new Text("Seed:\t\t\t\t" + o.getString("Seed").toString() + "\n\n");
+									Text rowFactors = new Text("Row Factors:\t\t" + o.getString("RowFactors").toString() + "\n\n");
+									Text colFactors = new Text("Column Factors:\t" + o.getString("ColumnFactors").toString() + "\n\n");
 									
-								bicSummaryTF.getChildren().addAll(seed, rowFactors, colFactors);
+									seed.setFont(Font.font("System", FontPosture.REGULAR, 14));
+									rowFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
+									colFactors.setFont(Font.font("System", FontPosture.REGULAR, 14));
+										
+									bicSummaryTF.getChildren().addAll(seed, rowFactors, colFactors);
+								}
 							}
 							
-							Text plaid = new Text("Plaid Coherency:\t" + bic.getString("PlaidCoherency").toString() + "\n\n");
 							Text missings = new Text("Missings:\t\t\t" + bic.getString("%Missings").toString() + "%" + "\n\n");
 							Text noise = new Text("Noise:\t\t\t\t" + bic.getString("%Noise").toString() + "%" + "\n\n");
 							Text errors = new Text("Errors:\t\t\t\t" + bic.getString("%Errors").toString() + "%" + "\n\n");
 							
-							plaid.setFont(Font.font("System", FontPosture.REGULAR, 14));
+							
 							missings.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							noise.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							errors.setFont(Font.font("System", FontPosture.REGULAR, 14));
 							
-							bicSummaryTF.getChildren().addAll(plaid, missings, noise, errors);
+							bicSummaryTF.getChildren().addAll(missings, noise, errors);
 						}
 					});
 					return null;
@@ -1033,11 +1364,25 @@ public class MenuPrincipalController{
 	
 	private HeatMapTableView generateTriclusterVizData(int id) {
 
+		HeatMapTableView bicChart = null;
 		System.out.println("Generating chartData");
-		//get generated dataset
+		
+		if(gBicService.getBiclustersJSON().getJSONObject(String.valueOf(id)).getString("Type").equals("Mixed")) {
+			bicChart = generateNumericComponentBiclusterViz(id);
+		} 
+		else {
+			bicChart = generateSingleBiclusterViz(id);
+		}
+		
+		return bicChart;
+	}
+	
+	private HeatMapTableView generateSingleBiclusterViz(int id) {
+		
 		Dataset dataset = gBicService.getGeneratedDataset();
-		//get context's slices for the desired tricluster
+		HeatMapTableView bicChart = null;
 		JSONArray data = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(id)).getJSONArray("Data");
+		String bicType = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(id)).getString("Type");
 		//get the tricluster to obtain rows/columns/contexts
 		Bicluster t = dataset.getBiclusterById(id);
 		//ObservableList<HeatMapTableView> contextList = FXCollections.observableArrayList();
@@ -1053,14 +1398,10 @@ public class MenuPrincipalController{
 		Collections.reverse(yTicks);
 
 		//int chartNumber = 1;
-
-		
-		HeatMapTableView bicChart = null;
-		
 		String title = "Bicluster " + id;
 		HeatMapData sliceHeatMap = null;
 		
-		if(model.isSymbolic()) {
+		if(bicType.equals("Symbolic")) {
 			String[][] chartData = new String[t.getRows().size()][t.getColumns().size()];
 			System.out.println(data.toString());
 			System.out.println(data.length());
@@ -1071,9 +1412,13 @@ public class MenuPrincipalController{
 					System.out.println("Row " + s + " Column " + c);
 					chartData[s][c] = data.getJSONArray(s).get(c).toString();
 				}
-					
-
-			String[] alphabet = ((SymbolicDataset) this.gBicService.getGeneratedDataset()).getAlphabet();
+			
+			String[] alphabet = null;
+			if(datasetTypeCB.getValue().equals("Heterogeneous"))
+				alphabet = ((HeterogeneousDataset)this.gBicService.getGeneratedDataset()).getAlphabet();
+			else
+				alphabet = ((SymbolicDataset)this.gBicService.getGeneratedDataset()).getAlphabet();
+			
 			bicChart = new SymbolicHeatMapTableView(xTicks, yTicks, alphabet, title, chartData, id);
 		}
 		else {
@@ -1094,19 +1439,134 @@ public class MenuPrincipalController{
 						
 				}
 			}
-			double min = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMinM().doubleValue();
-			double max = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMaxM().doubleValue();
+			double min = 0;
+			double max = 0;
+			
+			if(datasetTypeCB.getValue().equals("Heterogeneous")) {
+				min = ((HeterogeneousDataset) this.gBicService.getGeneratedDataset()).getMinM().doubleValue();
+				max = ((HeterogeneousDataset) this.gBicService.getGeneratedDataset()).getMaxM().doubleValue();
+			}
+			else {
+				min = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMinM().doubleValue();
+				max = ((NumericDataset) this.gBicService.getGeneratedDataset()).getMaxM().doubleValue();
+			}
+			
 			bicChart = new NumericHeatMapTableView(xTicks, yTicks, min, max, title, chartData, id);
 		}
 		
 		return bicChart;
 	}
 	
+	private HeatMapTableView generateNumericComponentBiclusterViz(int id) {
+		
+		Dataset dataset = gBicService.getGeneratedDataset();
+		HeatMapTableView bicChart = null;
+		JSONArray data = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(id)).getJSONArray("Data");
+	
+		//get the tricluster to obtain rows/columns/contexts
+		MixedBicluster t = (MixedBicluster) dataset.getBiclusterById(id);
+		//ObservableList<HeatMapTableView> contextList = FXCollections.observableArrayList();
+		
+		List<String> yTicks = new ArrayList<>();
+		List<String> xTicks = new ArrayList<>();
+
+		SortedSet<Integer> cols = t.getNumericComponent().getColumns();
+		
+		for(Integer r : t.getRows())
+			yTicks.add("x" + r);
+
+		for(Integer c : cols)
+			xTicks.add("y" + c);
+		Collections.reverse(yTicks);
+
+		//int chartNumber = 1;
+		String title = "Bicluster " + id;
+		HeatMapData sliceHeatMap = null;
+		
+		
+		Number[][] chartData = new Number[t.getRows().size()][cols.size()];
+			
+		for(int s = 0; s < data.length(); s++) {
+			for(int c = 0; c < cols.size(); c++) {
+				if(data.getJSONArray(s).get(c) == null)
+					chartData[s][c] = null;
+				else {
+					String value = data.getJSONArray(s).get(c).toString();
+					value = value.replaceAll(",","");
+					if(value.equals(""))
+						chartData[s][c] = null;
+					else
+						chartData[s][c] = (Number) new Double(value);
+				}
+					
+			}
+		}
+		
+		double min = ((HeterogeneousDataset) this.gBicService.getGeneratedDataset()).getMinM().doubleValue();
+		double max = ((HeterogeneousDataset) this.gBicService.getGeneratedDataset()).getMaxM().doubleValue();
+		
+		bicChart = new NumericHeatMapTableView(xTicks, yTicks, min, max, title, chartData, id);
+	
+		
+		return bicChart;
+	}
+	
+	private HeatMapTableView generateSymbolicComponentBiclusterViz(int id) {
+		
+		Dataset dataset = gBicService.getGeneratedDataset();
+		HeatMapTableView bicChart = null;
+		JSONArray data = gBicService.getBiclustersJSON().getJSONObject(String.valueOf(id)).getJSONArray("Data");
+	
+		//get the tricluster to obtain rows/columns/contexts
+		MixedBicluster t = (MixedBicluster) dataset.getBiclusterById(id);
+		//ObservableList<HeatMapTableView> contextList = FXCollections.observableArrayList();
+		
+		List<String> yTicks = new ArrayList<>();
+		List<String> xTicks = new ArrayList<>();
+
+		SortedSet<Integer> cols = t.getSymbolicComponent().getColumns();
+		
+		for(Integer r : t.getRows())
+			yTicks.add("x" + r);
+
+		for(Integer c : cols)
+			xTicks.add("y" + c);
+		Collections.reverse(yTicks);
+
+		//int chartNumber = 1;
+		String title = "Bicluster " + id;
+		
+		String[][] chartData = new String[t.getRows().size()][cols.size()];
+		int offset = 0;
+		for(int s = 0; s < data.length(); s++) { 
+			offset = data.getJSONArray(s).length() - cols.size();
+			for(int c = 0; c < cols.size(); c++) {
+				chartData[s][c] = data.getJSONArray(s).get(c + offset).toString();
+			}
+		}
+		
+		String[] alphabet = ((HeterogeneousDataset)this.gBicService.getGeneratedDataset()).getAlphabet();
+		
+		bicChart = new SymbolicHeatMapTableView(xTicks, yTicks, alphabet, title, chartData, id);
+		
+		return bicChart;
+	}
+	
 	@FXML
-	private void showHeatMap(ActionEvent event) {
+	private void showSingleHeatMap(ActionEvent event) {
 		
 		int bicID = Integer.parseInt(this.bicIDCB.getValue().split(" ")[1].strip());
 		HeatMapTableView chartData = generateTriclusterVizData(bicID);
+		chartData.produceChart();
+		
+		
+	}
+	
+	@FXML
+	private void showComposedHeatMap(ActionEvent event) {
+		
+		int bicID = Integer.parseInt(this.bicIDCB.getValue().split(" ")[1].strip());
+		HeatMapTableView chartData = generateSymbolicComponentBiclusterViz(bicID);
 		chartData.produceChart();
 		
 		

@@ -172,7 +172,7 @@ public class SymbolicBicluster extends Bicluster{
 	@Override
 	public JSONObject toStringJSON(Dataset generatedDataset, boolean heterogeneous) {
 
-		JSONObject tricluster = new JSONObject();
+		JSONObject bicluster = new JSONObject();
 		
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -180,29 +180,31 @@ public class SymbolicBicluster extends Bicluster{
 		Set<Integer> rows = getRows();
 		Set<Integer> columns = getColumns();
 		
-		tricluster.put("#rows", rows.size());
-		tricluster.put("#columns", columns.size());
+		bicluster.put("Type", "Symbolic");
 		
-		tricluster.put("X", rows);
-		tricluster.put("Y", columns);
+		bicluster.put("#rows", rows.size());
+		bicluster.put("#columns", columns.size());
 		
-		tricluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
+		bicluster.put("X", rows);
+		bicluster.put("Y", columns);
 		
-		tricluster.put("RowPattern", new String(getRowPattern().toString()));
-		tricluster.put("ColumnPattern", new String(getColumnPattern().toString()));
+		bicluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
+		
+		bicluster.put("RowPattern", new String(getRowPattern().toString()));
+		bicluster.put("ColumnPattern", new String(getColumnPattern().toString()));
 		
 		double missingsPerc = ((double) this.getNumberOfMissings()) / ((double) this.getSize()) * 100;
 		double noisePerc = ((double) this.getNumberOfNoisy()) / ((double) this.getSize()) * 100;
 		double errorsPerc = ((double) this.getNumberOfErrors()) / ((double) this.getSize()) * 100;
 
 		if(getColumnPattern().equals(PatternType.ORDER_PRESERVING))
-			tricluster.put("TimeProfile",new String(getTimeProfile().toString()));
+			bicluster.put("TimeProfile",new String(getTimeProfile().toString()));
 		
-		tricluster.put("%Missings", df.format(missingsPerc));
-		tricluster.put("%Noise", df.format(noisePerc));
-		tricluster.put("%Errors", df.format(errorsPerc));
+		bicluster.put("%Missings", df.format(missingsPerc));
+		bicluster.put("%Noise", df.format(noisePerc));
+		bicluster.put("%Errors", df.format(errorsPerc));
 		
-		tricluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
+		bicluster.put("PlaidCoherency", new String(getPlaidCoherency().toString()));
 		
 		Integer[] rowsArray = new Integer[rows.size()];
 	    rows.toArray(rowsArray);
@@ -224,9 +226,9 @@ public class SymbolicBicluster extends Bicluster{
 			bicData.put(rowData);
     	}
     	
-        tricluster.put("Data", bicData);
+        bicluster.put("Data", bicData);
 	    
-		return tricluster;
+		return bicluster;
 	}
 	
 }

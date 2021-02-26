@@ -59,13 +59,13 @@ public class MixedDatasetGenerator extends BiclusterDatasetGenerator {
 	 * @param maxM the dataset's maximum alphabet value
 	 */
 	public MixedDatasetGenerator(boolean realValued, int numRows, int numericCols, int symbolicCols, int numBics, Background numericBackground,
-			Background symbolicBackground, double minM, double maxM, String[] alphabet) {
+			Background symbolicBackground, double minM, double maxM, String[] alphabet, int alphabetL) {
 
 		this.realValued = realValued;
 		this.numBics = numBics;
 
 		this.data = new HeterogeneousDataset(numRows, numericCols, symbolicCols, numBics, numericBackground, symbolicBackground,
-				minM, maxM, realValued, alphabet);
+				minM, maxM, realValued, alphabet, alphabetL);
 	}
 
 	@Override
@@ -356,7 +356,7 @@ public class MixedDatasetGenerator extends BiclusterDatasetGenerator {
 			
 			symbolicCols = generateNonOverlappingOthers(numSymbolicColsBics, data.getNumCols(), chosenCols, bicStructure.getContiguity().equals(Contiguity.COLUMNS),
 					rangeSymbolic);
-			System.out.println("Numeric Columns: " + symbolicCols.length);
+			System.out.println("Symbolic Columns: " + symbolicCols.length);
 			
 			bicsCols[k] = new int[numericCols.length + symbolicCols.length];
 			
