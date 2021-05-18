@@ -35,11 +35,12 @@ import com.gbic.utils.BiclusterStructure;
 import com.gbic.utils.ComposedBiclusterPattern;
 import com.gbic.utils.OverlappingSettings;
 import com.gbic.utils.SingleBiclusterPattern;
+import com.gbic.utils.RandomObject;
 
 public class MixedDatasetGenerator extends BiclusterDatasetGenerator {
 
 	private HeterogeneousDataset data;
-	private Random random = new Random();
+	private Random random = RandomObject.getInstance();
 	private boolean allowsOverlap = false;
 	private boolean realValued;
 	private int numBics;
@@ -176,6 +177,9 @@ public class MixedDatasetGenerator extends BiclusterDatasetGenerator {
 
 		numRowsBics = structure.get("rows");
 		
+		
+		System.out.println(structure.get("columns"));
+		
 		if(currentPattern.getBiclusterType().equals(BiclusterType.NUMERIC))
 			numColsBics = Math.min(structure.get("columns"), data.getNumericCols());
 			
@@ -183,6 +187,9 @@ public class MixedDatasetGenerator extends BiclusterDatasetGenerator {
 			numColsBics = Math.min(structure.get("columns"), data.getSymbolicCols());	
 
 
+		System.out.println(numColsBics);
+		System.out.println(data.getNumericCols());
+		System.out.println(data.getSymbolicCols());
 		/** PART V: generate rows and columns using overlapping constraints **/
 		int bicSize = numRowsBics * numColsBics;
 		

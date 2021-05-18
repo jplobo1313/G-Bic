@@ -22,10 +22,11 @@ import com.gbic.domain.bicluster.Bicluster;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
 import com.gbic.utils.IOUtils;
+import com.gbic.utils.RandomObject;
 
 public class SymbolicDataset extends Dataset {
 
-	private Random r = new Random();
+	private Random r = RandomObject.getInstance();
 	private Background background;
 	private String[] alphabet;
 	//The map that stores the elements
@@ -273,7 +274,7 @@ public class SymbolicDataset extends Dataset {
 
 		int nrMissingsBackground = (int) (this.getBackgroundSize() * percBackground);
 		//System.out.println("Total expected missings: " + nrMissingsBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;
@@ -340,7 +341,7 @@ public class SymbolicDataset extends Dataset {
 
 		int nrNoiseBackground = (int) (this.getBackgroundSize() * percBackground);
 		//System.out.println("Total expected noisy: " + nrNoiseBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;
@@ -434,7 +435,7 @@ public class SymbolicDataset extends Dataset {
 
 		int nrErrorsBackground = (int) (this.getBackgroundSize() * percBackground);
 		//System.out.println("Total expected errors: " + nrErrorsBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;

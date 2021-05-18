@@ -19,10 +19,11 @@ import com.gbic.domain.bicluster.SymbolicBicluster;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
 import com.gbic.utils.IOUtils;
+import com.gbic.utils.RandomObject;
 
 public class HeterogeneousDataset extends Dataset {
 
-	private Random r;
+	private Random r = RandomObject.getInstance();
 	private int numericCols;
 	private int symbolicCols;
 	private SortedSet<Integer> numericFeatures;
@@ -51,7 +52,6 @@ public class HeterogeneousDataset extends Dataset {
 
 		super(numRows, numericCols + symbolicCols, numBics);
 
-		this.r = new Random();
 		this.numericCols = numericCols;
 		this.symbolicCols = symbolicCols;
 		this.numericBackground = numericBackground;
@@ -629,7 +629,7 @@ public class HeterogeneousDataset extends Dataset {
 	public void plantMissingElements(double percBackground, double percBicluster) {
 
 		int nrMissingsBackground = (int) (this.getBackgroundSize() * percBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;
@@ -697,7 +697,7 @@ public class HeterogeneousDataset extends Dataset {
 	public void plantNoisyElements(double percBackground, double percBicluster, double maxDeviation) {
 
 		int nrNoiseBackground = (int) (this.getBackgroundSize() * percBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;
@@ -839,7 +839,7 @@ public class HeterogeneousDataset extends Dataset {
 	public void plantErrors(double percBackground, double percBicluster, double minDeviation) {
 
 		int nrErrorsBackground = (int) (this.getBackgroundSize() * percBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;

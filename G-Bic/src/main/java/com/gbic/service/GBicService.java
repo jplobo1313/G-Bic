@@ -7,8 +7,6 @@
 package com.gbic.service;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -30,10 +28,10 @@ import com.gbic.domain.dataset.Dataset;
 import com.gbic.domain.dataset.HeterogeneousDataset;
 import com.gbic.domain.dataset.NumericDataset;
 import com.gbic.domain.dataset.SymbolicDataset;
-import com.gbic.generator.NumericDatasetGenerator;
-import com.gbic.generator.SymbolicDatasetGenerator;
 import com.gbic.generator.BiclusterDatasetGenerator;
 import com.gbic.generator.MixedDatasetGenerator;
+import com.gbic.generator.NumericDatasetGenerator;
+import com.gbic.generator.SymbolicDatasetGenerator;
 import com.gbic.tests.OutputWriterThread;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
@@ -43,13 +41,14 @@ import com.gbic.types.Distribution;
 import com.gbic.types.PatternType;
 import com.gbic.types.PlaidCoherency;
 import com.gbic.types.TimeProfile;
-import com.gbic.utils.IOUtils;
-import com.gbic.utils.OverlappingSettings;
-import com.gbic.utils.QualitySettings;
-import com.gbic.utils.SingleBiclusterPattern;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
 import com.gbic.utils.ComposedBiclusterPattern;
+import com.gbic.utils.IOUtils;
+import com.gbic.utils.OverlappingSettings;
+import com.gbic.utils.QualitySettings;
+import com.gbic.utils.RandomObject;
+import com.gbic.utils.SingleBiclusterPattern;
 
 public class GBicService extends Observable implements Observer {
 
@@ -623,7 +622,7 @@ public class GBicService extends Observable implements Observer {
 	
 	public void setBiclusterPatterns(List<BiclusterPatternWrapper> patterns, String datasetType) {
 		
-		Random r = new Random();
+		Random r = RandomObject.getInstance();
 		BiclusterType type = null;
 		
 		this.bicPatterns = new ArrayList<>();
@@ -1365,5 +1364,9 @@ public class GBicService extends Observable implements Observer {
 		System.out.println("Max % of noise on bics: " + this.qualitySettings.getPercNoiseOnBics());
 		System.out.println("% of errors on background: " + this.qualitySettings.getPercErrorsOnBackground());
 		System.out.println("Max % of errors on bics: " + this.qualitySettings.getPercErrorsOnBics());
+	}
+
+	public void initializeRandom(int seed) {
+		RandomObject.initialization(seed);
 	}
 }

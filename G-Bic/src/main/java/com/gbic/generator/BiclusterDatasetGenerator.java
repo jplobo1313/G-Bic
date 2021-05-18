@@ -29,6 +29,7 @@ import com.gbic.types.PatternType;
 import com.gbic.types.TimeProfile;
 import com.gbic.utils.OverlappingSettings;
 import com.gbic.utils.SingleBiclusterPattern;
+import com.gbic.utils.RandomObject;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
 
@@ -39,7 +40,7 @@ public abstract class BiclusterDatasetGenerator extends Observable {
 	private String bicsInfoFileName;
 	private String statsFileName;
 	
-	Random random = new Random();
+	Random random = RandomObject.getInstance();
 	
 	/**
 	 * Generate a dataset with planted biclusters
@@ -1149,7 +1150,7 @@ public abstract class BiclusterDatasetGenerator extends Observable {
 		Integer[] order = new Integer[size];
 		for(int i = 0; i < size; i++)
 			order[i] = i;
-		Collections.shuffle(Arrays.asList(order));
+		Collections.shuffle(Arrays.asList(order), RandomObject.getInstance());
 		return order;
 	}
 	

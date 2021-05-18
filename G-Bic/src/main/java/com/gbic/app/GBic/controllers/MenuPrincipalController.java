@@ -196,6 +196,8 @@ public class MenuPrincipalController{
 	@FXML private TextField directoryChooserTF;
 	@FXML private Button directoryChooserB;
 	@FXML private TextField fileNameTF;
+	@FXML private ComboBox<String> randomSeedCB;
+	@FXML private TextField randomSeedTF;
 
 	//Visualization
 	@FXML private Tab visualizationTab;
@@ -330,6 +332,7 @@ public class MenuPrincipalController{
 		this.contiguityCB.setValue(model.getContiguityEscolhida());
 
 		//Biclusters Patterns
+		System.out.println("Hi from controller setModel()!");
 		this.patternsTV.setItems(model.getSymbolicPatterns());
 		this.bicTypeTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("biclusterType"));
 		this.rowTC.setCellValueFactory(new PropertyValueFactory<BiclusterPatternTableView, String>("rowPattern"));
@@ -370,6 +373,10 @@ public class MenuPrincipalController{
 
 		this.fileNameTF.textProperty().bindBidirectional(model.getFileNameProperty());
 		model.setFileName("example_dataset");
+		
+		this.randomSeedTF.setVisible(false);
+		this.randomSeedCB.setItems(model.getRandomSeedOptions());
+		this.randomSeedCB.setValue(model.getRandomSeedEscolhida());
 	}
 
 	private void setNumericDatasetParametersVisible(boolean b) {
@@ -689,6 +696,18 @@ public class MenuPrincipalController{
 	}
 
 	@FXML
+	void randomSeedSelecionada(ActionEvent event) {
+		
+		model.setRandomSeedEscolhida(this.randomSeedCB.getValue());
+		if(model.getRandomSeedEscolhida().equals("Yes")) {
+			this.randomSeedTF.setVisible(true);
+			this.randomSeedTF.setText("100");
+		}
+		else
+			this.randomSeedTF.setVisible(false);
+	}
+	
+	@FXML
 	void plaidCoherencySelecionada(ActionEvent event) {
 		model.setPlaidCoherencyEscolhida(this.plaidCoherencyCB.getValue());
 		if(this.plaidCoherencyCB.getValue().equals("No Overlapping")) {
@@ -732,6 +751,8 @@ public class MenuPrincipalController{
 
 	@FXML
 	void datasetTypeSelecionado(ActionEvent event) {
+		
+		System.out.println("Hi from datasetTypeSelecionado!");
 		
 		model.setDatasetTypeEscolhido(this.datasetTypeCB.getValue());
 		
@@ -837,6 +858,11 @@ public class MenuPrincipalController{
 
 
 		errors = validateInput();
+		
+		if(this.randomSeedCB.getValue().equals("Yes"))
+			gBicService.initializeRandom(Integer.parseInt(this.randomSeedTF.getText()));
+		else
+			gBicService.initializeRandom(-1);
 
 		GenerateDatasetTask<Void> task = new GenerateDatasetTask<Void>(this.gBicService) {
 
@@ -907,7 +933,7 @@ public class MenuPrincipalController{
 					}
 
 					if(model.getSymbolTypeEscolhido().equals("Default")) {
-						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), featuresSlicer.getValue(), realValued, model.getMinValue(), model.getMaxValue(), 
+						this.gBicService.setDatasetProperties(model.getNumRows(), model.getNumColumns(), featuresSlicer.getValue()/100, realValued, model.getMinValue(), model.getMaxValue(), 
 								model.getNumberOfSymbols(), null, model.getSingleBackgroundTypeEscolhido(), singleBackgroundParam1, singleBackgroundParam2, 
 								singleBackgroundParam3, model.getComposedBackgroundTypeEscolhido(), composedBackgroundParam1, composedBackgroundParam2,
 								composedBackgroundParam3);
@@ -1001,6 +1027,8 @@ public class MenuPrincipalController{
 					
 					updateProgress(100, 100);
 					updateMessage("Completed!");
+					
+					//patternsTV.getItems().clear();
 					
 					Task<Void> successBox = new Task<Void>() {
 						@Override
@@ -1099,7 +1127,7 @@ public class MenuPrincipalController{
 		List<BiclusterPatternTableView> patterns = null;
 		boolean errorsOnDatasetProperties = false;
 
-		if(datasetTypeCB.getValue() == "Symbolic") {
+		if(datasetTypeCB.getValue().equals("Symbolic")) {
 
 			if(model.getSymbolTypeEscolhido().equals("Default")) {
 				messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(), 
@@ -1112,7 +1140,7 @@ public class MenuPrincipalController{
 
 			patterns = model.getSymbolicPatterns();
 		}
-		else if(datasetTypeCB.getValue() == "Numeric") {
+		else if(datasetTypeCB.getValue().equals("Numeric")) {
 
 			messages.append(InputValidation.validateDatasetSettings(this.numRowsTF.getText(), this.numColumnsTF.getText(),
 					this.minValueTF.getText(), this.maxValueTF.getText()));

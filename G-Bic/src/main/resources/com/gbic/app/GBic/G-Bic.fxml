@@ -35,7 +35,7 @@
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="696.0" prefWidth="1300.0">
                            <children>
-                              <Pane fx:id="singleBackgroundParamsPane" layoutX="14.0" layoutY="483.0" prefHeight="223.0" prefWidth="200.0">
+                              <Pane fx:id="singleBackgroundParamsPane" layoutX="24.0" layoutY="483.0" prefHeight="223.0" prefWidth="200.0">
                                  <children>
                                     <Label fx:id="distMeanLabel" layoutY="63.0" text="Mean:">
                                        <font>
@@ -64,12 +64,12 @@
                                     </Label>
                                  </children>
                               </Pane>
-                              <Label layoutX="14.0" layoutY="429.0" text="Background type: ">
+                              <Label layoutX="26.0" layoutY="429.0" text="Background type: ">
                                  <font>
                                     <Font size="18.0" />
                                  </font>
                               </Label>
-                              <ComboBox fx:id="singleBackgroundTypeCB" editable="true" layoutX="200.0" layoutY="423.0" onAction="#singleBackgroundTypeSelecionado" prefHeight="32.0" prefWidth="157.0" style="-fx-font-size: 18px;" />
+                              <ComboBox fx:id="singleBackgroundTypeCB" editable="true" layoutX="203.0" layoutY="423.0" onAction="#singleBackgroundTypeSelecionado" prefHeight="32.0" prefWidth="157.0" style="-fx-font-size: 18px;" />
                               <Slider fx:id="featuresSlicer" blockIncrement="1.0" layoutX="678.0" layoutY="284.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="16.0" prefWidth="187.0" showTickLabels="true" showTickMarks="true" value="50.0" />
                               <Label fx:id="featuresLB" layoutX="438.0" layoutY="280.0" text="Features:">
                                  <font>
@@ -180,10 +180,10 @@
                               </TextField>
                               <Pane fx:id="singleDiscreteProbsPane" layoutX="248.0" layoutY="469.0" prefHeight="293.0" prefWidth="281.0">
                                  <children>
-                                    <TableView fx:id="singleDiscreteProbsTV" layoutX="19.0" layoutY="96.0" prefHeight="178.0" prefWidth="244.0" style="-fx-font-size: 18px;">
+                                    <TableView fx:id="singleDiscreteProbsTV" layoutX="19.0" layoutY="63.0" prefHeight="211.0" prefWidth="244.0" style="-fx-font-size: 18px;">
                                       <columns>
-                                        <TableColumn fx:id="singleSymbolTC" prefWidth="123.0" text="Symbol" />
-                                        <TableColumn fx:id="singleProbTC" prefWidth="120.0" text="Probability" />
+                                        <TableColumn fx:id="singleSymbolTC" prefWidth="122.0" text="Symbol" />
+                                        <TableColumn fx:id="singleProbTC" prefWidth="121.0" text="Probability" />
                                       </columns>
                                     </TableView>
                                     <Text layoutX="20.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each symbol:" wrappingWidth="241.650390625">
@@ -193,7 +193,7 @@
                                     </Text>
                                  </children>
                               </Pane>
-                              <Pane fx:id="composedBackgroundParamsPane" layoutX="663.0" layoutY="469.0" prefHeight="223.0" prefWidth="200.0">
+                              <Pane fx:id="composedBackgroundParamsPane" layoutX="663.0" layoutY="484.0" prefHeight="223.0" prefWidth="200.0">
                                  <children>
                                     <Label fx:id="distMeanLabel1" layoutY="63.0" text="Mean:">
                                        <font>
@@ -215,7 +215,7 @@
                                           <Font size="17.0" />
                                        </font>
                                     </TextField>
-                                    <Label layoutY="6.0" text="Distribution Parameters:">
+                                    <Label layoutY="7.0" text="Distribution Parameters:">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -230,13 +230,13 @@
                               <ComboBox fx:id="composedBackgroundTypeCB" editable="true" layoutX="849.0" layoutY="423.0" onAction="#composedBackgroundTypeSelecionado" prefHeight="32.0" prefWidth="157.0" style="-fx-font-size: 18px;" />
                               <Pane fx:id="composedDiscreteProbsPane" layoutX="895.0" layoutY="469.0" prefHeight="293.0" prefWidth="281.0">
                                  <children>
-                                    <TableView fx:id="composedDiscreteProbsTV" layoutX="19.0" layoutY="88.0" prefHeight="192.0" prefWidth="244.0" style="-fx-font-size: 18px;">
+                                    <TableView fx:id="composedDiscreteProbsTV" layoutX="19.0" layoutY="64.0" prefHeight="216.0" prefWidth="244.0" style="-fx-font-size: 18px;">
                                        <columns>
                                           <TableColumn fx:id="composedSymbolTC" prefWidth="123.0" text="Symbol" />
                                           <TableColumn fx:id="composedProbTC" prefWidth="120.0" text="Probability" />
                                        </columns>
                                     </TableView>
-                                    <Text layoutX="20.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each symbol:" wrappingWidth="241.650390625">
+                                    <Text layoutX="20.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the probabily associated to each number:" wrappingWidth="241.650390625">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -244,7 +244,7 @@
                                  </children>
                               </Pane>
                               <Separator fx:id="backgroundSeparator" layoutX="588.0" layoutY="393.0" orientation="VERTICAL" prefHeight="344.0" prefWidth="27.0" />
-                              <Label fx:id="singleBackgroundLB" layoutX="14.0" layoutY="357.0" text="Symbolic Background:">
+                              <Label fx:id="singleBackgroundLB" layoutX="26.0" layoutY="357.0" text="Symbolic Background:">
                                  <font>
                                     <Font size="18.0" />
                                  </font>
@@ -583,7 +583,7 @@
                            <children>
                               <VBox layoutX="274.0" layoutY="121.0" prefHeight="413.0" prefWidth="840.0" AnchorPane.bottomAnchor="103.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                                    <GridPane prefHeight="319.0" prefWidth="1237.0">
+                                    <GridPane prefHeight="500.0" prefWidth="1300.0">
                                       <columnConstraints>
                                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="346.0" minWidth="10.0" prefWidth="345.0" />
                                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="381.0" minWidth="10.0" prefWidth="187.0" />
@@ -594,6 +594,8 @@
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                       </rowConstraints>
                                        <children>
@@ -657,11 +659,33 @@
                                              <font>
                                                 <Font size="18.0" />
                                              </font></RadioButton>
+                                          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Reproducibility:" GridPane.rowIndex="4">
+                                             <font>
+                                                <Font size="20.0" />
+                                             </font>
+                                             <GridPane.margin>
+                                                <Insets left="50.0" top="25.0" />
+                                             </GridPane.margin>
+                                          </Text>
+                                          <Label text="Set Random Seed:" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                             <GridPane.margin>
+                                                <Insets left="25.0" />
+                                             </GridPane.margin>
+                                          </Label>
+                                          <TextField fx:id="randomSeedTF" maxWidth="-Infinity" prefHeight="35.0" prefWidth="144.0" promptText="Random Seed" GridPane.columnIndex="3" GridPane.rowIndex="5">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </TextField>
+                                          <ComboBox fx:id="randomSeedCB" editable="true" maxWidth="-Infinity" onAction="#randomSeedSelecionada" prefHeight="35.0" prefWidth="208.0" style="-fx-font-size: 18px;" GridPane.columnIndex="2" GridPane.rowIndex="5" />
                                        </children>
                                     </GridPane>
                                  </children>
                               </VBox>
-                              <Pane layoutX="-4.0" layoutY="373.0" prefHeight="396.0" prefWidth="1308.0">
+                              <Pane layoutX="-4.0" layoutY="524.0" prefHeight="245.0" prefWidth="1308.0">
                                  <children>
                                     <Button layoutX="371.0" layoutY="43.0" mnemonicParsing="false" onAction="#generateDatasetAction" prefHeight="45.0" prefWidth="566.0" text="Generate Dataset">
                                        <font>

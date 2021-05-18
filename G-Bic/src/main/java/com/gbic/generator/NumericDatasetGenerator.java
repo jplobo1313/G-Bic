@@ -30,13 +30,14 @@ import com.gbic.types.TimeProfile;
 import com.gbic.utils.BicMath;
 import com.gbic.utils.OverlappingSettings;
 import com.gbic.utils.SingleBiclusterPattern;
+import com.gbic.utils.RandomObject;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
 
 public class NumericDatasetGenerator extends BiclusterDatasetGenerator {
 
 	private NumericDataset data;
-	private Random random = new Random();
+	private Random random = RandomObject.getInstance();
 	private boolean allowsOverlap = false;
 	private boolean realValued;
 	private int numBics;

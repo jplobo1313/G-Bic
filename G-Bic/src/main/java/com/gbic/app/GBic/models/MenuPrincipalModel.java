@@ -1,5 +1,6 @@
 package com.gbic.app.GBic.models;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,6 +93,9 @@ public class MenuPrincipalModel {
 	
 	private final StringProperty directoryChooserTF;
 	private final StringProperty fileNameTF;
+	
+	private final ObservableList<String> randomSeed;
+	private final StringProperty randomSeedEscolhida;
 	
 	private final ObservableList<String> biclusterID;
 	private SimpleStringProperty bicIDSelected;
@@ -249,6 +253,14 @@ public class MenuPrincipalModel {
 		
 		this.directoryChooserTF = new SimpleStringProperty();
 		this.fileNameTF = new SimpleStringProperty();
+		
+		this.randomSeed = FXCollections.observableArrayList();
+		this.randomSeedEscolhida = new SimpleStringProperty();
+		List<String> randomSeedOptions = new ArrayList<>();
+		randomSeedOptions.add("No");
+		randomSeedOptions.add("Yes");
+		randomSeedOptions.forEach(s->this.randomSeed.add(s));
+		this.randomSeedEscolhida.setValue(this.randomSeed.get(0));
 		
 		this.biclusterID = FXCollections.observableArrayList();
 		this.bicIDSelected = new SimpleStringProperty();
@@ -569,17 +581,17 @@ public class MenuPrincipalModel {
 	
 	//Bicluster Patterns
 	public ObservableList<BiclusterPatternTableView> getNumericPatterns() {
-
+		System.out.println("Hi from getNumericPatterns()");
 		return this.numericPatternsList;
 	}
 	
 	public ObservableList<BiclusterPatternTableView> getMixedPatterns() {
-
+		System.out.println("Hi from getMixedPatterns()");
 		return this.mixedPatternsList;
 	}
 	
 	public ObservableList<BiclusterPatternTableView> getSymbolicPatterns() {
-
+		System.out.println("Hi from getSymbolicPatterns()");
 		return this.symbolicPatternsList;
 	}
 
@@ -789,6 +801,20 @@ public class MenuPrincipalModel {
 	public void setNumBics(int numBics2) {
 		this.numBics.set(numBics2);
 		
+	}
+	
+	public ObservableList<String> getRandomSeedOptions() {
+
+		return this.randomSeed;
+	}
+
+	public String getRandomSeedEscolhida() {
+		return this.randomSeedEscolhida.get();
+	}
+
+	public void setRandomSeedEscolhida(String value) {
+
+		this.randomSeedEscolhida.set(value);
 	}
 
 }

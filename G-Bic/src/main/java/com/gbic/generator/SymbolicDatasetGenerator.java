@@ -26,6 +26,7 @@ import com.gbic.types.TimeProfile;
 import com.gbic.utils.BicMath;
 import com.gbic.utils.OverlappingSettings;
 import com.gbic.utils.SingleBiclusterPattern;
+import com.gbic.utils.RandomObject;
 import com.gbic.utils.BiclusterPattern;
 import com.gbic.utils.BiclusterStructure;
 
@@ -33,7 +34,7 @@ public class SymbolicDatasetGenerator extends BiclusterDatasetGenerator {
 
 
 	private SymbolicDataset data;
-	private Random random = new Random();
+	private Random random = RandomObject.getInstance();
 	private boolean allowsOverlap = false;
 	private int numBics;
 

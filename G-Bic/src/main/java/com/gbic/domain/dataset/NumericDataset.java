@@ -24,10 +24,11 @@ import com.gbic.domain.bicluster.Bicluster;
 import com.gbic.types.Background;
 import com.gbic.types.BackgroundType;
 import com.gbic.utils.IOUtils;
+import com.gbic.utils.RandomObject;
 
 public class NumericDataset<T extends Number> extends Dataset {
 
-	private Random r = new Random();
+	private Random r = RandomObject.getInstance();
 	private Background background;
 	//The map that stores the elements
 	private Map<String, T> matrix;
@@ -271,7 +272,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 	public void plantMissingElements(double percBackground, double percBicluster) {
 
 		int nrMissingsBackground = (int) (this.getBackgroundSize() * percBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;
@@ -330,8 +331,8 @@ public class NumericDataset<T extends Number> extends Dataset {
 	public void plantNoisyElements(double percBackground, double percBicluster, double maxDeviation) {
 
 		int nrNoiseBackground = (int) (this.getBackgroundSize() * percBackground);
-		Random rand = new Random();
-
+		Random rand = RandomObject.getInstance();
+		
 		int row = -1;
 		int col = -1;
 
@@ -440,7 +441,7 @@ public class NumericDataset<T extends Number> extends Dataset {
 	public void plantErrors(double percBackground, double percBicluster, double minDeviation) {
 
 		int nrErrorsBackground = (int) (this.getBackgroundSize() * percBackground);
-		Random rand = new Random();
+		Random rand = RandomObject.getInstance();
 
 		int row = -1;
 		int col = -1;
